@@ -89,6 +89,16 @@ CREATE TABLE fts_map (rowid INTEGER PRIMARY KEY, entry_id INTEGER NOT NULL);
 `license`, `license_url`, `attribution`, `entry_count`, `built_at`. `build.py` refuses to
 produce a bundle missing any of these.
 
+Optional keys, written when known and ignored by readers that do not need them (adding one does
+not change `schema_version`):
+
+| Key | Meaning |
+|---|---|
+| `kind` | `monolingual` or `bilingual` |
+| `icu_version`, `unicode_version` | the ICU and Unicode versions the pipeline normalized and collated with |
+| `source_converter` | the converter that produced the entries, e.g. `kaikki` |
+| `source_dump_date` | date of the source dump, `YYYY-MM-DD`; becomes `manifest.source.dump_date` |
+
 ## Canonical JSONL record (converter output, `build.py` input)
 
 ```json
