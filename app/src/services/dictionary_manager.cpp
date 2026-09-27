@@ -6,10 +6,14 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QStorageInfo>
 #include <QThreadPool>
+
+#include <algorithm>
 
 using namespace Qt::StringLiterals;
 
@@ -203,6 +207,22 @@ void DictionaryManager::startQueuedDownloads()
     }
 }
 
+qint64 DictionaryManager::missingSpace(const core::CatalogEntry& entry, qint64 alreadyDownloaded) const
+{
+    // The download goes to the cache, the unpacked dictionary to the root; on one
+    // filesystem both must fit at once. (A per-user quota is not visible here; a
+    // failed write still reports it.)
+    QDir().mkpath(m_dictionariesRoot);
+    const QStorageInfo cache(m_cacheDir);
+    const QStorageInfo root(m_dictionariesRoot);
+    const qint64 download = std::max<qint64>(0, entry.sizeCompressed - alreadyDownloaded);
+    if (cache.rootPath() == root.rootPath()) {
+        return std::max<qint64>(0, download + entry.sizeInstalled - cache.bytesAvailable());
+    }
+    return std::max<qint64>(0, download - cache.bytesAvailable()) +
+           std::max<qint64>(0, entry.sizeInstalled - root.bytesAvailable());
+}
+
 void DictionaryManager::beginDownload(const QString& dictId)
 {
     Download* download = findDownload(dictId);
@@ -217,6 +237,13 @@ void DictionaryManager::beginDownload(const QString& dictId)
     const QFileInfo partInfo(partPath);
     if (partInfo.exists()) {
         existingSize = partInfo.size();
+    }
+    if (const qint64 missing = missingSpace(download->entry, existingSize); missing > 0) {
+        failDownload(dictId,
+                     tr("Not enough free space: %1 more is needed")
+                         .arg(QLocale().formattedDataSize(missing, 0, QLocale::DataSizeTraditionalFormat)),
+                     /*keepPartial=*/true);
+        return;
     }
 
     auto file = std::make_unique<QFile>(partPath);
@@ -257,33 +284,54 @@ void DictionaryManager::onReadyRead(const QString& dictId)
         return; // cancelled meanwhile
     }
 
-    if (!download->headerChecked) {
-        download->headerChecked = true;
-        const int status = download->reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (!writeAvailable(*download)) {
+        QNetworkReply* reply = download->reply;
+        download->reply = nullptr;
+        reply->abort();
+        reply->deleteLater();
+        failDownload(dictId, tr("The download could not be saved: %1").arg(download->status.error),
+                     /*keepPartial=*/false);
+        return;
+    }
+    Q_EMIT downloadChanged(download->status);
+}
+
+bool DictionaryManager::writeAvailable(Download& download)
+{
+    if (!download.headerChecked) {
+        download.headerChecked = true;
+        const int status = download.reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         // A Range request answered with anything other than 206 means the
         // server ignored it and is sending the whole file again: restart the
         // part file from scratch instead of appending onto stale data.
-        if (download->resumeOffset > 0 && status != 206) {
-            download->file->close();
-            if (!download->file->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                QNetworkReply* reply = download->reply;
-                download->reply = nullptr;
-                reply->abort();
-                reply->deleteLater();
-                failDownload(dictId,
-                             tr("The download could not be saved: %1").arg(download->file->errorString()),
-                             /*keepPartial=*/true);
-                return;
+        if (download.resumeOffset > 0 && status != 206) {
+            download.file->close();
+            if (!download.file->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                return false;
             }
-            download->status.received = 0;
-            download->resumeOffset = 0;
+            download.status.received = 0;
+            download.resumeOffset = 0;
         }
     }
-
-    const QByteArray chunk = download->reply->readAll();
-    download->file->write(chunk);
-    download->status.received += chunk.size();
-    Q_EMIT downloadChanged(download->status);
+    const QByteArray chunk = download.reply->readAll();
+    if (chunk.isEmpty()) {
+        return true;
+    }
+    // write() may take only part of a large chunk (a quota or a nearly full disk
+    // does this): keep going until it is all on disk or a write fails.
+    qint64 done = 0;
+    while (done < chunk.size()) {
+        const qint64 written = download.file->write(chunk.constData() + done, chunk.size() - done);
+        if (written <= 0) {
+            qCWarning(lcDownloads) << download.status.dictId << "write failed after" << done << "of"
+                                   << chunk.size() << "bytes:" << download.file->errorString();
+            download.status.error = download.file->errorString(); // the system's reason, for the message
+            return false; // a short file must never reach the installer
+        }
+        done += written;
+    }
+    download.status.received += chunk.size();
+    return true;
 }
 
 void DictionaryManager::onDownloadFinished(const QString& dictId)
@@ -293,6 +341,9 @@ void DictionaryManager::onDownloadFinished(const QString& dictId)
         return; // cancelled meanwhile
     }
 
+    // finished() can arrive with bytes still buffered in the reply (a fast local
+    // server sends faster than readyRead is handled): write them before closing.
+    const bool saved = download->file != nullptr && writeAvailable(*download);
     QNetworkReply* reply = download->reply;
     download->reply = nullptr;
     reply->deleteLater();
@@ -315,6 +366,17 @@ void DictionaryManager::onDownloadFinished(const QString& dictId)
         return;
     }
 
+    if (!saved) {
+        failDownload(dictId, tr("The download could not be saved: %1").arg(download->status.error),
+                     /*keepPartial=*/false);
+        return;
+    }
+    if (download->status.received != download->entry.sizeCompressed) {
+        qCWarning(lcDownloads) << dictId << "received" << download->status.received << "of"
+                               << download->entry.sizeCompressed << "bytes";
+        failDownload(dictId, tr("The download ended early; try again"), /*keepPartial=*/true);
+        return;
+    }
     download->status.state = DownloadStatus::Installing;
     Q_EMIT downloadChanged(download->status);
 
@@ -340,6 +402,7 @@ void DictionaryManager::onInstallFinished(const QString& dictId, const core::Res
 
     if (!result) {
         const QString& detail = result.error();
+        qCWarning(lcDownloads) << dictId << "install failed:" << detail; // the numbers the message leaves out
         QString message;
         if (detail.contains(u"checksum"_s)) {
             message = tr("The file did not match the catalogue (checksum)");

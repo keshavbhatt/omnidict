@@ -112,6 +112,8 @@ private:
     void writeCatalogCache(const QByteArray& body) const;
     void startQueuedDownloads();
     void beginDownload(const QString& dictId);
+    /// Bytes of free space still needed to download and unpack `entry`; 0 when it fits.
+    [[nodiscard]] qint64 missingSpace(const core::CatalogEntry& entry, qint64 alreadyDownloaded) const;
     void failDownload(const QString& dictId, const QString& message, bool keepPartial);
     [[nodiscard]] int activeCount() const;
     /// Nothing when `dictId` is not tracked (already cancelled or finished).
@@ -119,6 +121,8 @@ private:
 
     void onCatalogFinished();
     void onReadyRead(const QString& dictId);
+    /// Appends what the reply has buffered to the part file; false when the write fails.
+    [[nodiscard]] static bool writeAvailable(Download& download);
     void onDownloadFinished(const QString& dictId);
     void onInstallFinished(const QString& dictId, const core::Result<QString>& result);
 

@@ -17,6 +17,8 @@ namespace omnidict::ui::icons {
 /// One pixmap at `size` logical pixels for the given device pixel ratio.
 [[nodiscard]] QPixmap pixmap(const QString& name, const QColor& color, int size,
                              qreal devicePixelRatio = 1.0);
+/// Path of a tinted copy of the glyph on disk, for style-sheet url() references.
+[[nodiscard]] QString tintedFile(const QString& name, const QColor& color);
 /// The app icon (hicolor set).
 [[nodiscard]] QIcon brand();
 

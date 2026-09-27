@@ -1,5 +1,7 @@
 #include "ui/style.h"
 
+#include "ui/icons.h"
+
 #include <QHash>
 #include <QLabel>
 
@@ -179,13 +181,22 @@ QTabBar::tab:selected { color: {{text}}; border-bottom: 2px solid {{accent}}; }
 QTabBar::tab:hover { color: {{text}}; }
 QTabWidget::pane { border: none; border-top: 1px solid {{border}}; }
 
+/* Drop-downs look like the header's filter chip (mocks/dictionaries-available.html). */
 QComboBox {
     background: {{input}}; color: {{text}};
-    border: 1px solid {{border}}; border-radius: 8px; min-height: 32px; padding: 0 10px;
+    border: 1px solid {{border}}; border-radius: 8px; min-height: 32px; padding: 0 30px 0 12px;
 }
 QComboBox:hover { background: {{hover}}; }
+QComboBox:focus { border-color: {{accent}}; }
+QComboBox::drop-down {
+    subcontrol-origin: padding; subcontrol-position: center right;
+    width: 26px; border: none; background: transparent;
+}
+QComboBox::down-arrow { image: url({{chevron}}); width: 14px; height: 14px; }
+QComboBox::down-arrow:on { top: 1px; }
 QComboBox QAbstractItemView {
-    background: {{elevated}}; color: {{text}}; border: 1px solid {{border}};
+    background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 8px;
+    padding: 4px; outline: 0;
     selection-background-color: {{hover}}; selection-color: {{text}};
 }
 
@@ -286,6 +297,7 @@ QString styleSheetFor(const Tokens& t)
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
         sheet.replace(u"{{"_s + it.key() + u"}}"_s, it.value().name());
     }
+    sheet.replace(u"{{chevron}}"_s, icons::tintedFile(u"down"_s, t.muted));
     return sheet;
 }
 

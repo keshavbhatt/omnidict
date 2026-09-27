@@ -1,8 +1,11 @@
 #include "ui/icons.h"
 
+#include <QDir>
 #include <QFile>
 #include <QHash>
 #include <QPainter>
+#include <QSaveFile>
+#include <QStandardPaths>
 #include <QSvgRenderer>
 
 using namespace Qt::StringLiterals;
@@ -70,6 +73,21 @@ QIcon themed(const QString& name, const QColor& color, const QColor& disabledCol
         }
     }
     return icon;
+}
+
+QString tintedFile(const QString& name, const QColor& color)
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + u"/icons"_s;
+    QDir().mkpath(dir);
+    const QString path = dir + u'/' + name + u'-' + color.name(QColor::HexRgb).mid(1) + u".svg"_s;
+    if (!QFile::exists(path)) {
+        QSaveFile file(path);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(tintedSvg(name, color));
+            file.commit();
+        }
+    }
+    return path;
 }
 
 QIcon brand()
