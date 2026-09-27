@@ -4,11 +4,15 @@
 qt_add_library(omnidict_core STATIC
     bundle.cpp
     bundle.h
+    catalog.cpp
+    catalog.h
     changelog.cpp
     changelog.h
     entry.h
     entry_renderer.cpp
     entry_renderer.h
+    installer.cpp
+    installer.h
     library.cpp
     library.h
     log_sink.cpp
@@ -39,4 +43,5 @@ target_link_libraries(omnidict_core
     PRIVATE
         SQLite::SQLite3
         ICU::uc
+        Zstd::Zstd
 )

@@ -38,11 +38,12 @@ read -r -a EXTRA_ARGS <<< "${OMNIDICT_CMAKE_ARGS:-}"
 omnidict_prepare_runtime_farm "$BUILD"
 
 # A host compiler without multiarch paths would otherwise find the host's
-# SQLite and ICU instead of the SDK's; FindSQLite3 also trusts the host's
-# pkg-config first, so its paths are given outright. The SDK carries only
-# SQLite's headers and a dangling libsqlite3.so; the library itself is in the
-# core24 base snap, as it is for the shipped snap. It is linked through the
-# farm so the RPATH never points at core24's glibc.
+# SQLite, ICU and zstd instead of the SDK's; FindSQLite3 also trusts the
+# host's pkg-config first, so its paths are given outright. The SDK carries
+# only headers and a dangling libsqlite3.so/libzstd.so; the libraries
+# themselves are in the core24 base snap, as they are for the shipped snap.
+# Both are linked through the farm so the RPATH never points at core24's
+# glibc (ADR-015 for zstd).
 # The CMake root is app/, not the repository root (ADR-010).
 cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DCMAKE_BUILD_TYPE="${OMNIDICT_BUILD_TYPE:-RelWithDebInfo}" \
@@ -50,6 +51,8 @@ cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DCMAKE_LIBRARY_PATH="$SDK/usr/lib/x86_64-linux-gnu" \
     -DSQLite3_INCLUDE_DIR="$SDK/usr/include" \
     -DSQLite3_LIBRARY="$BUILD/core24-libs/libsqlite3.so.0" \
+    -DZstd_INCLUDE_DIR="$SDK/usr/include" \
+    -DZstd_LIBRARY="$BUILD/core24-libs/libzstd.so.1" \
     -DQt6_DIR="$SDK/usr/lib/x86_64-linux-gnu/cmake/Qt6" \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,$SDK/usr/lib/x86_64-linux-gnu -Wl,--allow-shlib-undefined" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \

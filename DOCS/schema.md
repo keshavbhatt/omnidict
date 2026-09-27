@@ -221,3 +221,10 @@ edits are ranked by distance, length difference, shared trigrams and code point 
 (`DOCS/PLAN.md` section 5.1) is a schema change: it bumps `schema_version` and updates this
 file, in the same commit that makes the change. The client refuses to open a bundle whose
 `meta.schema_version` is higher than the version it was built to understand.
+
+The M3 downloader (`core::Catalog`/`core::parseCatalog`, `core::installBundle`,
+`services::DictionaryManager`) reads `manifest.json`/`catalog.json` exactly as specified above
+and in `DOCS/PLAN.md` 5.1/5.2, and changes no field, no DDL and no `schema_version`. A
+`catalog.json` entry whose `schema_version` is newer than `Bundle::kSupportedSchemaVersion` is
+skipped when parsed, the same "refuses to open" rule as an installed bundle, applied before the
+dictionary is even offered for download.

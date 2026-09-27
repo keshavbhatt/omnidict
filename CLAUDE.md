@@ -35,6 +35,9 @@ Run the app against them with a scratch profile (never the owner's own data):
 `tst_real_bundles` checks every built bundle against `tests/known_headwords.json` and skips
 the ones not built.
 
+The dictionary catalogue is fetched from `http://localhost:8000/catalog.json` by default;
+override with the `OMNIDICT_CATALOG_URL` environment variable (dev/test only, never a public URL).
+
 ## Standing rules
 
 - No em dashes or en dashes anywhere. No commit or PR attribution lines. Commit style:

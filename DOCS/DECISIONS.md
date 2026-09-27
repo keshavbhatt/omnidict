@@ -288,3 +288,30 @@ adds no new supplier. The filled favourite star is the outline glyph with a fill
 **Consequences.** New glyphs come in with the kit's `icons/pull.sh`. The ISC notice (and MIT for
 the Feather-derived glyphs) ships in `app/src/resources/icons/ui/LICENSE`, is declared in
 `REUSE.toml`, and is listed in About's open-source notices.
+
+---
+
+## ADR-015: Qt Network for downloads, zstd for `.odict` decompression (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** M3 (PLAN.md 5.3, 7.2) needs to fetch `catalog.json` and `.odict` files over HTTP
+with resume support, and to decompress `.odict` bundles (zstd, matching
+`pipeline/omnipipe/package.py`) into an installed `dict.sqlite`. `DOCS/DECISIONS.md` ADR-008
+already named zstd as an app dependency "from M3"; this ADR is that arrival, plus the network
+module it was always going to need alongside it.
+
+**Decision.** `services/dictionary_manager.cpp` uses `Qt6::Network` (`QNetworkAccessManager`,
+`QNetworkReply`, a `Range` header for resume) for every network call the app makes; nothing else
+in the tree opens a socket. `core/installer.cpp` links the system/runtime zstd (via the project's
+own `app/cmake/FindZstd.cmake`, since neither CMake nor the SDK ships one) and decompresses with
+the streaming `ZSTD_decompressStream` C API, matching `zstandard`'s output on the pipeline side.
+Dev builds get zstd's header from the `kde-qt6-core24-sdk` snap and its library from the
+`core24` runtime farm the same way SQLite already does (`scripts/dev-build.sh`,
+`app/cmake/SnapSdkWorkaround.cmake`), so the RPATH never reaches core24's glibc.
+
+**Consequences.** `app/CMakeLists.txt` gains `find_package(Qt6 ... Network)` and
+`find_package(Zstd REQUIRED)`; `THIRD_PARTY.md`'s zstd row is no longer "from M3" but in use, and
+gains a Qt Network row. `core/` stays free of Qt Network (ADR/CODING_STANDARDS layering:
+`services/` may use Qt Network, `core/` may not), so `core/installer.cpp` is still testable
+without a network stack, only a file on disk.

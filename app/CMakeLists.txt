@@ -41,13 +41,16 @@ find_package(Qt6 ${OMNIDICT_QT_MIN_VERSION} REQUIRED COMPONENTS
     Gui
     Widgets
     Svg
+    Network
 )
 qt_standard_project_setup()
 
 # Dictionary bundles are read with the SQLite C API (ADR-003); headword
-# normalization uses ICU so it matches the pipeline (ADR-005).
+# normalization uses ICU so it matches the pipeline (ADR-005); `.odict`
+# bundles are zstd-compressed and decompressed on install (ADR-015).
 find_package(SQLite3 REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc)
+find_package(Zstd REQUIRED)
 
 include(SnapSdkWorkaround)
 

@@ -58,12 +58,12 @@ expects every ktechpit desktop app to have.
 
 | # | Feature | Milestone | Decision | Status |
 |---|---|---|---|---|
-| D1 | Manage dictionaries dialog: My dictionaries / Available tabs, source/target filters | M3 | KEEP | planned |
-| D2 | Row: name, publisher, size, action button (download / progress ring / delete / update) | M3 | KEEP | planned |
-| D3 | Multiple concurrent downloads allowed (max 2) | M3 | KEEP | planned |
-| D4 | `services::Catalog`: parses `catalog.json`, diffs against installed | M3 | KEEP | planned |
-| D5 | `services::Downloader`: resumable download (`Range` header), sha256 verify, zstd decompress, install and register, remove stale version | M3 | KEEP | planned |
-| D6 | Downloads and decompression on a `QThreadPool` (ADR-004) | M3 | KEEP | planned |
+| D1 | Manage dictionaries dialog: My dictionaries / Available tabs, source/target filters | M3 | KEEP | planned (UI) |
+| D2 | Row: name, publisher, size, action button (download / progress ring / delete / update) | M3 | KEEP | planned (UI) |
+| D3 | Multiple concurrent downloads allowed (max 2) | M3 | KEEP | done (backend): `services::DictionaryManager::kMaxConcurrentDownloads`, the rest queue and start as a slot frees; UI still to wire up |
+| D4 | `core::Catalog`/`core::parseCatalog`: parses `catalog.json` strictly, skips entries with a newer `schema_version`; `services::DictionaryManager` fetches it (24h cache, `OMNIDICT_CATALOG_URL`) and exposes it for the UI to diff against installed | M3 | KEEP | done (backend); UI diffing/tabs still planned |
+| D5 | `core::installBundle`/`core::removeInstalled`: sha256 + size verify (streamed), zstd decompress, `Bundle::open` re-check, install and remove stale versions; `services::DictionaryManager` drives the resumable download (`Range` header, falls back to a fresh download if ignored) and calls it | M3 | KEEP | done (backend); UI progress/actions still planned |
+| D6 | Downloads on the GUI thread's `QNetworkAccessManager` (non-blocking, no thread needed for async I/O); the verify+decompress step (`core::installBundle`) runs on `QThreadPool::globalInstance()` (ADR-004), result posted back via `QMetaObject::invokeMethod` | M3 | KEEP | done (backend) |
 | D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | partly (M2): About lists every open dictionary's attribution, licence link and version; the app's own open-source notices are still to add |
 
 ## E. App shell
