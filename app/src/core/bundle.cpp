@@ -17,7 +17,17 @@ namespace {
 constexpr int kNoLimit = -1;
 
 const QString kPreviewColumns = u"e.id, e.headword, e.preview, e.frequency"_s;
-const QString kPreviewOrder = u" ORDER BY (e.headword_norm = ?1) DESC, e.sort_key, e.id"_s;
+// ?1 is the query as typed, ?2 its lookup form. An entry spelled exactly as
+// typed ranks first ("día" before "dia"), then any other exact match, then the
+// dictionary's own order.
+const QString kPreviewOrder =
+    u" ORDER BY (e.headword = ?1) DESC, (e.headword_norm = ?2) DESC, e.sort_key, e.id"_s;
+
+/// The query as typed, in the form headwords are stored (NFC, trimmed).
+QString asTyped(const QString& query)
+{
+    return query.trimmed().normalized(QString::NormalizationForm_C);
+}
 
 /// Sorts after every string that starts with `prefix`: SQLite compares text
 /// bytewise, and no UTF-8 sequence is greater than the one for U+10FFFF.
@@ -195,10 +205,10 @@ QList<EntryPreview> Bundle::lookupExact(const QString& query) const
     }
     const QString sql = u"SELECT "_s + kPreviewColumns +
                         u" FROM entries e WHERE e.id IN ("
-                        "SELECT id FROM entries WHERE headword_norm = ?1"
-                        " UNION SELECT entry_id FROM forms WHERE form_norm = ?1)"_s +
-                        kPreviewOrder + u" LIMIT ?2"_s;
-    return previews(sql, {key}, kNoLimit);
+                        "SELECT id FROM entries WHERE headword_norm = ?2"
+                        " UNION SELECT entry_id FROM forms WHERE form_norm = ?2)"_s +
+                        kPreviewOrder + u" LIMIT ?3"_s;
+    return previews(sql, {asTyped(query), key}, kNoLimit);
 }
 
 QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
@@ -209,10 +219,10 @@ QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
     }
     const QString sql = u"SELECT "_s + kPreviewColumns +
                         u" FROM entries e WHERE e.id IN ("
-                        "SELECT id FROM entries WHERE headword_norm >= ?1 AND headword_norm < ?2"
-                        " UNION SELECT entry_id FROM forms WHERE form_norm >= ?1 AND form_norm < ?2)"_s +
-                        kPreviewOrder + u" LIMIT ?3"_s;
-    return previews(sql, {key, prefixUpperBound(key)}, limit);
+                        "SELECT id FROM entries WHERE headword_norm >= ?2 AND headword_norm < ?3"
+                        " UNION SELECT entry_id FROM forms WHERE form_norm >= ?2 AND form_norm < ?3)"_s +
+                        kPreviewOrder + u" LIMIT ?4"_s;
+    return previews(sql, {asTyped(query), key, prefixUpperBound(key)}, limit);
 }
 
 QList<EntryPreview> Bundle::searchFullText(const QString& query, int limit) const

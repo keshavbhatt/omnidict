@@ -72,7 +72,7 @@ def test_build_sample_fixture(fixtures_dir: Path, tmp_path: Path) -> None:
             "unicode_version",
         }
         assert required_keys <= meta.keys()
-        assert meta["entry_count"] == "12"
+        assert meta["entry_count"] == "14"
         assert meta["schema_version"] == "1"
 
         tables = {

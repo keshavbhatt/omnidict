@@ -73,7 +73,7 @@ private Q_SLOTS:
         QCOMPARE(bundle.meta().dictId, u"sample-en"_s);
         QCOMPARE(bundle.meta().sourceLang, u"en"_s);
         QCOMPARE(bundle.meta().schemaVersion, 1);
-        QCOMPARE(bundle.meta().entryCount, 12);
+        QCOMPARE(bundle.meta().entryCount, 14);
         QVERIFY(!bundle.meta().attribution.isEmpty());
         QVERIFY(!bundle.meta().license.isEmpty());
     }
@@ -98,6 +98,17 @@ private Q_SLOTS:
         QCOMPARE(headwords(rows), QStringList{headword});
         QVERIFY(!rows.first().preview.isEmpty());
         QVERIFY(rows.first().id > 0);
+    }
+
+    void anEntrySpelledAsTypedComesFirst()
+    {
+        const Bundle bundle = openFixture();
+        QCOMPARE(headwords(bundle.lookupExact(u"résumé"_s)), (QStringList{u"résumé"_s, u"resume"_s}));
+        QCOMPARE(headwords(bundle.lookupExact(u"resume"_s)), (QStringList{u"resume"_s, u"résumé"_s}));
+        QCOMPARE(headwords(bundle.lookupExact(u"RESUME"_s)).size(), 2);
+        // Decomposed input is the same spelling.
+        QCOMPARE(headwords(bundle.lookupExact(u"re\u0301sume\u0301"_s)).first(), u"résumé"_s);
+        QCOMPARE(headwords(bundle.searchPrefix(u"résu"_s, 10)).first(), u"resume"_s);
     }
 
     void findsAnEntryByItsInflectedForm()

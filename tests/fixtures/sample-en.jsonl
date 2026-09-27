@@ -10,3 +10,5 @@
 {"headword": "bookmark", "lang": "en", "frequency": 2, "senses": [{"pos": "noun", "definition": "A strip of material placed between the pages of a book to mark a place.", "examples": [{"text": "She used a photo as a bookmark.", "translation": null}]}]}
 {"headword": "Monday", "lang": "en", "frequency": 4, "senses": [{"pos": "noun", "definition": "The day of the week after Sunday and before Tuesday.", "examples": [{"text": "The meeting is scheduled for Monday.", "translation": null}]}]}
 {"headword": "serendipity", "lang": "en", "frequency": 1, "senses": [{"pos": "noun", "definition": "The occurrence of finding something pleasant or useful by chance, as if by a <b>fortunate</b> accident.", "examples": [{"text": "Meeting her again years later was pure serendipity.", "translation": null}]}]}
+{"headword": "resume", "lang": "en", "senses": [{"pos": "verb", "definition": "To begin again after a pause."}]}
+{"headword": "résumé", "lang": "en", "senses": [{"pos": "noun", "definition": "A short written account of a person's education and work history."}]}
