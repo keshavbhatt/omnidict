@@ -1,0 +1,30 @@
+{
+  "headword": "A & B <C> \"D\" 'E'",
+  "lang": "en",
+  "senses": [
+    {
+      "pos": "noun",
+      "pattern": "A & B <C> \"D\" 'E'",
+      "label": "A & B <C> \"D\" 'E'",
+      "definition": "A plain definition with no restricted markup needed here."
+    }
+  ],
+  "pronunciations": [
+    {
+      "ipa": "A & B <C> \"D\" 'E'",
+      "region": "A & B <C> \"D\" 'E'"
+    }
+  ],
+  "forms": [
+    {
+      "form": "A & B <C> \"D\" 'E'",
+      "tag": "A & B <C> \"D\" 'E'"
+    }
+  ],
+  "relations": [
+    {
+      "type": "synonym",
+      "target": "A & B <C> \"D\" 'E'"
+    }
+  ]
+}

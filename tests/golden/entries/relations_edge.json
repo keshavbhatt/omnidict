@@ -1,0 +1,43 @@
+{
+  "headword": "mark",
+  "lang": "en",
+  "senses": [
+    {
+      "definition": "First meaning of the word."
+    },
+    {
+      "definition": "Second meaning of the word."
+    }
+  ],
+  "relations": [
+    {
+      "type": "derived",
+      "target": "d1"
+    },
+    {
+      "type": "see",
+      "target": "s1",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "synonym",
+      "target": "syn1",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "synonym",
+      "target": "syn2",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "antonym",
+      "target": "ant1",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "synonym",
+      "target": "syn3",
+      "sense_ordinal": 99
+    }
+  ]
+}

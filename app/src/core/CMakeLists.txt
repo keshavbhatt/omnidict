@@ -7,11 +7,17 @@ qt_add_library(omnidict_core STATIC
     changelog.cpp
     changelog.h
     entry.h
+    entry_renderer.cpp
+    entry_renderer.h
+    library.cpp
+    library.h
     logging.cpp
     logging.h
     normalize.cpp
     normalize.h
     result.h
+    search_engine.cpp
+    search_engine.h
     sqlite_db.cpp
     sqlite_db.h
 )

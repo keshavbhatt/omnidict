@@ -1,0 +1,41 @@
+{
+  "headword": "quiet",
+  "lang": "en",
+  "pronunciations": [
+    {
+      "region": "US"
+    },
+    {
+      "ipa": "",
+      "region": "UK"
+    },
+    {
+      "ipa": "/kwaet/",
+      "region": ""
+    }
+  ],
+  "senses": [
+    {
+      "pos": "adj",
+      "pattern": "",
+      "label": "",
+      "definition": "Making little or no noise.",
+      "examples": [
+        {
+          "text": "A quiet room.",
+          "translation": ""
+        }
+      ]
+    }
+  ],
+  "forms": [
+    {
+      "form": "quieter",
+      "tag": ""
+    },
+    {
+      "form": "quietest",
+      "tag": "superlative"
+    }
+  ]
+}

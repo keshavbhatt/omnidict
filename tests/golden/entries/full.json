@@ -1,0 +1,83 @@
+{
+  "headword": "flurry",
+  "lang": "en",
+  "frequency": 3,
+  "pronunciations": [
+    {
+      "ipa": "ˈflʌri",
+      "region": "US"
+    },
+    {
+      "ipa": "ˈflɜːri"
+    }
+  ],
+  "senses": [
+    {
+      "pos": "noun",
+      "pattern": "N-COUNT",
+      "definition": "A <b>flurry</b> of activity, or <i>a brief spell</i> of snow.",
+      "examples": [
+        {
+          "text": "There was a flurry of snow overnight."
+        },
+        {
+          "text": "A flurry of <i>excitement</i> spread through the crowd.",
+          "translation": "A sudden wave of excitement spread through the crowd."
+        }
+      ]
+    },
+    {
+      "pos": "verb",
+      "pattern": "V",
+      "label": "informal",
+      "definition": "To move about nervously or in a hurried manner.",
+      "examples": [
+        {
+          "text": "She flurried around the kitchen before the guests arrived."
+        }
+      ]
+    },
+    {
+      "pos": "other",
+      "definition": "See <a href=\"lex:flurry\">flurry</a> for the noun sense."
+    }
+  ],
+  "forms": [
+    {
+      "form": "flurries",
+      "tag": "plural"
+    },
+    {
+      "form": "flur-i",
+      "tag": "romanization"
+    },
+    {
+      "form": "flurried",
+      "tag": "past"
+    },
+    {
+      "form": "flurrying",
+      "tag": "present participle"
+    }
+  ],
+  "relations": [
+    {
+      "type": "synonym",
+      "target": "gust",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "antonym",
+      "target": "lull",
+      "sense_ordinal": 1
+    },
+    {
+      "type": "see",
+      "target": "blizzard"
+    },
+    {
+      "type": "derived",
+      "target": "flurry up"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "headword": "नमस्ते",
+  "lang": "hi",
+  "forms": [
+    {
+      "form": "namaste",
+      "tag": "romanization"
+    }
+  ],
+  "senses": [
+    {
+      "pos": "interj",
+      "definition": "A respectful greeting used on meeting or parting.",
+      "examples": [
+        {
+          "text": "नमस्ते, आप कैसे हैं?<br><i>namaste, aap kaise hain?</i>",
+          "translation": "Hello, how are you?<b>(polite)</b>"
+        }
+      ]
+    }
+  ]
+}

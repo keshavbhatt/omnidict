@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QStringList>
 
+#include <algorithm>
 #include <utility>
 
 using namespace Qt::StringLiterals;
@@ -223,6 +224,38 @@ QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
                         " UNION SELECT entry_id FROM forms WHERE form_norm >= ?2 AND form_norm < ?3)"_s +
                         kPreviewOrder + u" LIMIT ?4"_s;
     return previews(sql, {asTyped(query), key, prefixUpperBound(key)}, limit);
+}
+
+QList<EntryPreview> Bundle::searchPattern(const QString& pattern, int limit) const
+{
+    const QString key = normalizeHeadword(pattern);
+    if (key.isEmpty() || limit <= 0) {
+        return {};
+    }
+    // `?` and `*` become LIKE's `_` and `%`; the characters LIKE would read as
+    // syntax are escaped. The literal text before the first wildcard bounds the
+    // range, so the index narrows the scan.
+    QString like;
+    for (const QChar c : key) {
+        if (c == u'*') {
+            like += u'%';
+        } else if (c == u'?') {
+            like += u'_';
+        } else {
+            if (c == u'%' || c == u'_' || c == u'\\') {
+                like += u'\\';
+            }
+            like += c;
+        }
+    }
+    const qsizetype firstWildcard = std::min(key.indexOf(u'*') < 0 ? key.size() : key.indexOf(u'*'),
+                                             key.indexOf(u'?') < 0 ? key.size() : key.indexOf(u'?'));
+    const QString literal = key.left(firstWildcard);
+    const QString sql = u"SELECT "_s + kPreviewColumns +
+                        u" FROM entries e WHERE e.headword_norm LIKE ?1 ESCAPE '\\'"
+                        " AND e.headword_norm >= ?2 AND e.headword_norm < ?3"
+                        " ORDER BY e.sort_key, e.id LIMIT ?4"_s;
+    return previews(sql, {like, literal, prefixUpperBound(literal)}, limit);
 }
 
 QList<EntryPreview> Bundle::searchFullText(const QString& query, int limit) const

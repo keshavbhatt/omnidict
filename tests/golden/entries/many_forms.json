@@ -1,0 +1,79 @@
+{
+  "headword": "test",
+  "lang": "en",
+  "senses": [
+    {
+      "definition": "A trial or examination of something."
+    }
+  ],
+  "forms": [
+    {
+      "form": "f01",
+      "tag": "variant"
+    },
+    {
+      "form": "rom-a",
+      "tag": "romanization"
+    },
+    {
+      "form": "f02",
+      "tag": "variant"
+    },
+    {
+      "form": "f03",
+      "tag": "variant"
+    },
+    {
+      "form": "f04",
+      "tag": "variant"
+    },
+    {
+      "form": "f05",
+      "tag": "variant"
+    },
+    {
+      "form": "rom-b",
+      "tag": "romanization"
+    },
+    {
+      "form": "f06",
+      "tag": "variant"
+    },
+    {
+      "form": "f07",
+      "tag": "variant"
+    },
+    {
+      "form": "f08",
+      "tag": "variant"
+    },
+    {
+      "form": "f09",
+      "tag": "variant"
+    },
+    {
+      "form": "f10",
+      "tag": "variant"
+    },
+    {
+      "form": "f11",
+      "tag": "variant"
+    },
+    {
+      "form": "f12",
+      "tag": "variant"
+    },
+    {
+      "form": "f13",
+      "tag": "variant"
+    },
+    {
+      "form": "f14",
+      "tag": "variant"
+    },
+    {
+      "form": "f15",
+      "tag": "variant"
+    }
+  ]
+}

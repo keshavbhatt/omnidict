@@ -36,6 +36,10 @@ public:
     /// headword match first, then in the dictionary's own sort order.
     [[nodiscard]] QList<EntryPreview> searchPrefix(const QString& query, int limit) const;
 
+    /// Entries whose headword matches a pattern where `?` stands for one
+    /// character and `*` for any run of characters, in the dictionary's order.
+    [[nodiscard]] QList<EntryPreview> searchPattern(const QString& pattern, int limit) const;
+
     /// Entries whose definitions or examples contain every word of the
     /// query, best match first.
     [[nodiscard]] QList<EntryPreview> searchFullText(const QString& query, int limit) const;
