@@ -66,6 +66,7 @@ target_compile_definitions(tst_entry_renderer PRIVATE
 omnidict_add_test(tst_smoke tst_smoke.cpp omnidict_ui GUI)
 target_compile_definitions(tst_smoke PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+omnidict_add_test(tst_sheets tst_sheets.cpp omnidict_ui GUI)
 omnidict_add_test(tst_real_bundles tst_real_bundles.cpp omnidict_core)
 set_tests_properties(tst_real_bundles PROPERTIES LABELS "bundles" TIMEOUT 120)
 target_compile_definitions(tst_real_bundles PRIVATE
