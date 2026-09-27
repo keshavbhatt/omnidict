@@ -9,6 +9,7 @@ class QComboBox;
 class QLineEdit;
 class QListView;
 class QTimer;
+class QToolButton;
 
 namespace omnidict::models {
 class ResultsModel;
@@ -27,8 +28,9 @@ class MainWindow : public QMainWindow
     Q_DISABLE_COPY_MOVE(MainWindow)
 
 public:
-    /// `roots`: the directories dictionaries are found in (core::Library::discover).
-    explicit MainWindow(QStringList roots, QWidget* parent = nullptr);
+    /// `roots`: the directories dictionaries are found in (core::Library::discover);
+    /// `userDataPath`: the history and favourites database.
+    MainWindow(QStringList roots, const QString& userDataPath, QWidget* parent = nullptr);
     ~MainWindow() override; // stops the lookup thread
 
     /// Types a query as if the user had.
@@ -42,6 +44,8 @@ Q_SIGNALS:
 
 private:
     void setupUi();
+    [[nodiscard]] QWidget* buildSearchPane();
+    [[nodiscard]] QWidget* buildEntryPane();
     void connectLookup();
 
     void onLibraryOpened(const QList<services::DictionaryInfo>& dictionaries, const QStringList& problems);
@@ -49,7 +53,11 @@ private:
     void onSearchFinished(quint64 requestId, const core::SearchResults& results);
     void onCurrentResultChanged(const QModelIndex& current);
     void onEntryLoaded(quint64 requestId, const QString& dictId, const core::Entry& entry,
-                       const QString& html);
+                       const QString& html, bool favorite);
+    void onSavedEntries(const QList<core::SavedEntry>& recent, const QList<core::SavedEntry>& favorites);
+    void onFavoriteToggled(bool favorite);
+    void recordShownEntry();
+    void showFavoriteState(bool favorite);
     void onEntryNotFound(quint64 requestId, const QString& text);
     void followHeadword(const QString& headword);
     [[nodiscard]] QString currentDictId() const;
@@ -66,12 +74,16 @@ private:
     QListView* m_results = nullptr;
     models::ResultsModel* m_model = nullptr;
     EntryView* m_entry = nullptr;
+    QToolButton* m_star = nullptr;
     QTimer* m_debounce = nullptr;
 
     quint64 m_nextRequest = 1;
-    quint64 m_searchRequest = 0; ///< the search whose answer is wanted
-    quint64 m_entryRequest = 0;  ///< the entry whose answer is wanted
-    QString m_entryDictId;       ///< dictionary of the entry on screen
+    quint64 m_searchRequest = 0;  ///< the search whose answer is wanted
+    quint64 m_entryRequest = 0;   ///< the entry whose answer is wanted
+    QString m_entryDictId;        ///< dictionary of the entry on screen
+    QString m_entryHeadword;      ///< and its headword
+    bool m_autoSelecting = false; ///< selecting the best match as a preview, not a user choice
+    bool m_recordNext = false;    ///< the entry being loaded goes into the history
 };
 
 } // namespace omnidict::ui

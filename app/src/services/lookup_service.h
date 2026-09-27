@@ -2,6 +2,7 @@
 
 #include "core/entry.h"
 #include "core/search_engine.h"
+#include "core/user_data.h"
 
 #include <QList>
 #include <QMetaType>
@@ -10,6 +11,7 @@
 #include <QStringList>
 
 #include <memory>
+#include <optional>
 
 namespace omnidict::core {
 class Library;
@@ -42,6 +44,8 @@ public:
 public Q_SLOTS:
     /// Rebuilds the library from these directories (see core::Library::discover).
     void openLibrary(const QStringList& roots);
+    /// Opens the history and favourites database; without it nothing is remembered.
+    void openUserData(const QString& path);
     void search(quint64 requestId, const omnidict::core::SearchQuery& query);
     /// The entry and its HTML (DOCS/entry-html.md).
     void loadEntry(quint64 requestId, const QString& dictId, qint64 entryId);
@@ -49,17 +53,28 @@ public Q_SLOTS:
     /// in the preferred dictionary, else in any dictionary.
     void resolveHeadword(quint64 requestId, const QString& headword, const QString& preferredDictId);
 
+    /// Puts an entry the user opened at the top of the history.
+    void recordView(const QString& dictId, const QString& headword);
+    void setFavorite(const QString& dictId, const QString& headword, bool favorite);
+    /// Answers with savedEntries().
+    void requestSaved();
+
 Q_SIGNALS:
     void libraryOpened(const QList<omnidict::services::DictionaryInfo>& dictionaries,
                        const QStringList& problems);
     void searchFinished(quint64 requestId, const omnidict::core::SearchResults& results);
     void entryLoaded(quint64 requestId, const QString& dictId, const omnidict::core::Entry& entry,
-                     const QString& html);
+                     const QString& html, bool favorite);
+    void savedEntries(const QList<omnidict::core::SavedEntry>& recent,
+                      const QList<omnidict::core::SavedEntry>& favorites);
     /// A `resolveHeadword` or `loadEntry` that found nothing.
     void entryNotFound(quint64 requestId, const QString& text);
 
 private:
+    [[nodiscard]] core::SavedEntry saved(const QString& dictId, const QString& headword) const;
+
     std::unique_ptr<core::Library> m_library;
+    std::optional<core::UserData> m_userData;
 };
 
 /// Registers the types the service's queued signals carry. Call once before

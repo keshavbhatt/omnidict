@@ -99,8 +99,30 @@ SqliteDb::SqliteDb(sqlite3* db)
 
 Result<SqliteDb> SqliteDb::openReadOnly(const QString& path)
 {
+    return open(path, SQLITE_OPEN_READONLY);
+}
+
+Result<SqliteDb> SqliteDb::openReadWrite(const QString& path)
+{
+    return open(path, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+}
+
+Result<bool> SqliteDb::exec(const QString& sql) const
+{
+    char* message = nullptr;
+    const int rc = sqlite3_exec(m_db.get(), sql.toUtf8().constData(), nullptr, nullptr, &message);
+    if (rc != SQLITE_OK) {
+        const QString reason = QString::fromUtf8(message != nullptr ? message : sqlite3_errstr(rc));
+        sqlite3_free(message);
+        return Error{reason};
+    }
+    return true;
+}
+
+Result<SqliteDb> SqliteDb::open(const QString& path, int flags)
+{
     sqlite3* raw = nullptr;
-    const int rc = sqlite3_open_v2(path.toUtf8().constData(), &raw, SQLITE_OPEN_READONLY, nullptr);
+    const int rc = sqlite3_open_v2(path.toUtf8().constData(), &raw, flags, nullptr);
     // SQLite hands back a handle even on failure; it still has to be closed.
     SqliteDb db(raw);
     if (rc != SQLITE_OK) {

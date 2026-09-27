@@ -24,6 +24,28 @@ void ResultsModel::setResults(const core::SearchResults& results)
     endResetModel();
 }
 
+void ResultsModel::setSaved(const QList<core::SavedEntry>& recent, const QList<core::SavedEntry>& favorites)
+{
+    beginResetModel();
+    m_rows.clear();
+    const auto appendSection = [this](const QString& title, const QList<core::SavedEntry>& entries) {
+        if (entries.isEmpty()) {
+            return;
+        }
+        m_rows.append({.kind = RowKind::Section, .text = title, .dictId = {}, .entryId = 0, .preview = {}});
+        for (const core::SavedEntry& entry : entries) {
+            m_rows.append({.kind = RowKind::Entry,
+                           .text = entry.headword,
+                           .dictId = entry.dictId,
+                           .entryId = 0,
+                           .preview = entry.preview});
+        }
+    };
+    appendSection(tr("Favorites"), favorites);
+    appendSection(tr("Recent"), recent);
+    endResetModel();
+}
+
 void ResultsModel::clear()
 {
     beginResetModel();

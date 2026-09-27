@@ -53,9 +53,14 @@ omnidict_add_test(tst_search_engine tst_search_engine.cpp omnidict_core)
 target_link_libraries(tst_search_engine PRIVATE SQLite::SQLite3)
 target_compile_definitions(tst_search_engine PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+omnidict_add_test(tst_user_data tst_user_data.cpp omnidict_core)
 omnidict_add_test(tst_entry_renderer tst_entry_renderer.cpp omnidict_core)
 target_compile_definitions(tst_entry_renderer PRIVATE
     OMNIDICT_GOLDEN_ENTRIES="${OMNIDICT_REPO_ROOT}/tests/golden/entries")
+# ui
+omnidict_add_test(tst_smoke tst_smoke.cpp omnidict_ui GUI)
+target_compile_definitions(tst_smoke PRIVATE
+    OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
 omnidict_add_test(tst_real_bundles tst_real_bundles.cpp omnidict_core)
 set_tests_properties(tst_real_bundles PROPERTIES LABELS "bundles" TIMEOUT 120)
 target_compile_definitions(tst_real_bundles PRIVATE

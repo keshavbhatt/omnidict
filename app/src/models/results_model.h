@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/search_engine.h"
+#include "core/user_data.h"
 
 #include <QAbstractListModel>
 #include <QList>
@@ -36,6 +37,9 @@ public:
     ~ResultsModel() override = default;
 
     void setResults(const core::SearchResults& results);
+    /// What an empty search shows: favourites, then recent entries. Their rows
+    /// carry no entry id; they are opened by dictionary and headword.
+    void setSaved(const QList<core::SavedEntry>& recent, const QList<core::SavedEntry>& favorites);
     void clear();
 
     /// The row of the first entry, or -1.

@@ -55,17 +55,24 @@ private:
     bool m_failed = false;
 };
 
-/// A read-only SQLite connection (ADR-003). Move-only; closed on destruction.
-/// Like the connection it wraps, an instance belongs to one thread.
+/// A SQLite connection (ADR-003): read-only for dictionary bundles, writable
+/// for the user's own data. Move-only; closed on destruction. Like the
+/// connection it wraps, an instance belongs to one thread.
 class SqliteDb
 {
 public:
     [[nodiscard]] static Result<SqliteDb> openReadOnly(const QString& path);
+    /// Creates the file when it does not exist.
+    [[nodiscard]] static Result<SqliteDb> openReadWrite(const QString& path);
+
+    /// Runs one or more statements that return no rows.
+    [[nodiscard]] Result<bool> exec(const QString& sql) const;
 
     [[nodiscard]] Result<SqliteStatement> prepare(const QString& sql) const;
 
 private:
     explicit SqliteDb(sqlite3* db);
+    [[nodiscard]] static Result<SqliteDb> open(const QString& path, int flags);
 
     std::unique_ptr<sqlite3, detail::SqliteCloser> m_db;
 };
