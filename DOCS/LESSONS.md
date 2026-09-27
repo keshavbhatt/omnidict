@@ -22,4 +22,8 @@ tabs or yt-dlp are left out; they do not apply to a dictionary client.
 
 ## Learned in this project
 
-(Empty. Add entries here as they come up.)
+| Rule | Why |
+|---|---|
+| Give widgets looks through dynamic properties and rules in the app style sheet (`ui/style.cpp`), never `setStyleSheet` on a container. | A container's own sheet changes how the app sheet reaches its children: a row's buttons lost their size, and colours baked in at creation missed theme changes (2026-09-27). |
+| Rich text draws borders only on table cells: boxed inline text (entry labels) is drawn as an image, with the text kept for Copy. | The approved mock boxes labels; a tinted background was not the same (2026-09-27). |
+| Read the rest of a QNetworkReply when it finishes, and check every write. | On a fast local server `finished()` came with bytes still buffered; the file was short and the installer blamed its size. A per-user quota on `/tmp` also cut writes short without an error until the next write (2026-09-28). |
