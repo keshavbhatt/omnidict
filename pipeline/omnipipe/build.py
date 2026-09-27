@@ -14,7 +14,7 @@ import json
 import logging
 import sqlite3
 import sys
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TextIO
@@ -27,6 +27,28 @@ logger = logging.getLogger(__name__)
 
 _PREVIEW_MAX_CHARS = 160
 _PREVIEW_SEARCH_WINDOW = 157
+# Rows are written in batches so a dictionary of any size builds in bounded memory.
+_BATCH_ENTRIES = 5000
+# Keys build_bundle writes itself; extra_meta may not override them.
+_RESERVED_META_KEYS = frozenset(
+    {
+        "dict_id",
+        "name",
+        "source_lang",
+        "target_lang",
+        "version",
+        "schema_version",
+        "publisher",
+        "license",
+        "license_url",
+        "attribution",
+        "entry_count",
+        "built_at",
+        "kind",
+        "icu_version",
+        "unicode_version",
+    }
+)
 
 # Kept as one constant so docs and tests can reference the exact DDL (PLAN.md 4.1).
 SCHEMA_SQL = """
@@ -103,6 +125,15 @@ class BuildError(Exception):
     """Raised when a JSONL entry or the assembled bundle fails a quality gate."""
 
 
+def _split_schema() -> tuple[str, str]:
+    """SCHEMA_SQL as (tables, indexes): indexes are built after the bulk load,
+    which is faster and leaves them unfragmented."""
+    statements = [part.strip() for part in SCHEMA_SQL.split(";") if part.strip()]
+    tables = [stmt for stmt in statements if not stmt.startswith("CREATE INDEX")]
+    indexes = [stmt for stmt in statements if stmt.startswith("CREATE INDEX")]
+    return ";\n".join(tables) + ";", ";\n".join(indexes) + ";"
+
+
 def _check_fts5_available() -> None:
     """Probe FTS5 support on a throwaway connection so the real bundle file
     is never touched before `PRAGMA page_size` has had a chance to apply."""
@@ -169,8 +200,22 @@ def build_bundle(
     out_dir: Path,
     *,
     built_at: datetime | None = None,
+    extra_meta: Mapping[str, str] | None = None,
+    vacuum: bool = True,
 ) -> Path:
-    """Build `out_dir/dict.sqlite` from `entries`, replacing it atomically."""
+    """Build `out_dir/dict.sqlite` from `entries`, replacing it atomically.
+
+    `extra_meta` adds `meta` rows beyond the required ones, such as the
+    converter and dump date a bundle was made from (`source_converter`,
+    `source_dump_date`); it may not override a required key.
+
+    `vacuum=False` skips the final VACUUM, which needs a temporary copy of the
+    whole database; a fresh bundle loses little without it.
+    """
+    extra = dict(extra_meta or {})
+    clashing = sorted(_RESERVED_META_KEYS.intersection(extra))
+    if clashing:
+        raise BuildError(f"extra_meta may not set reserved keys: {', '.join(clashing)}")
     out_dir.mkdir(parents=True, exist_ok=True)
     final_path = out_dir / "dict.sqlite"
     tmp_path = out_dir / "dict.sqlite.tmp"
@@ -182,11 +227,14 @@ def build_bundle(
     try:
         conn.execute("PRAGMA page_size = 4096")
         conn.execute("PRAGMA journal_mode = OFF")
-        conn.executescript(SCHEMA_SQL)
+        tables_sql, indexes_sql = _split_schema()
+        conn.executescript(tables_sql)
 
         entry_count = _write_entries(conn, entries, spec)
         if entry_count == 0:
             raise BuildError("no entries to build: input produced zero entries")
+        conn.executescript(indexes_sql)
+        conn.execute("INSERT INTO fts (fts) VALUES ('optimize')")
 
         built_at_iso = _utc_now_iso(built_at)
         meta_rows = [
@@ -205,6 +253,7 @@ def build_bundle(
             ("kind", spec.kind),
             ("icu_version", icu_version()),
             ("unicode_version", unicode_version()),
+            *sorted(extra.items()),
         ]
         conn.executemany("INSERT INTO meta (key, value) VALUES (?, ?)", meta_rows)
         conn.commit()
@@ -212,7 +261,8 @@ def build_bundle(
         row = conn.execute("PRAGMA integrity_check").fetchone()
         if row is None or row[0] != "ok":
             raise BuildError(f"integrity_check failed: {row}")
-        conn.execute("VACUUM")
+        if vacuum:
+            conn.execute("VACUUM")
     except BaseException:
         conn.close()
         tmp_path.unlink(missing_ok=True)
@@ -224,15 +274,62 @@ def build_bundle(
     return final_path
 
 
+class _Rows:
+    """One batch of rows per table, flushed together."""
+
+    def __init__(self) -> None:
+        self.clear()
+
+    def clear(self) -> None:
+        self.entries: list[tuple[object, ...]] = []
+        self.prons: list[tuple[object, ...]] = []
+        self.senses: list[tuple[object, ...]] = []
+        self.examples: list[tuple[object, ...]] = []
+        self.forms: list[tuple[object, ...]] = []
+        self.relations: list[tuple[object, ...]] = []
+        self.fts: list[tuple[object, ...]] = []
+        self.fts_map: list[tuple[object, ...]] = []
+
+    def flush(self, conn: sqlite3.Connection) -> None:
+        conn.executemany(
+            "INSERT INTO entries (id, headword, headword_norm, lang, frequency, preview, sort_key) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            self.entries,
+        )
+        conn.executemany(
+            "INSERT INTO pronunciations (id, entry_id, ipa, region, audio_ref) "
+            "VALUES (?, ?, ?, ?, ?)",
+            self.prons,
+        )
+        conn.executemany(
+            "INSERT INTO senses "
+            "(id, entry_id, ordinal, pos, pattern, label, definition, definition_plain) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            self.senses,
+        )
+        conn.executemany(
+            "INSERT INTO examples (id, sense_id, ordinal, text, translation) "
+            "VALUES (?, ?, ?, ?, ?)",
+            self.examples,
+        )
+        conn.executemany(
+            "INSERT INTO forms (form, form_norm, entry_id, tag) VALUES (?, ?, ?, ?)",
+            self.forms,
+        )
+        conn.executemany(
+            "INSERT INTO relations (entry_id, sense_id, type, target) VALUES (?, ?, ?, ?)",
+            self.relations,
+        )
+        conn.executemany(
+            "INSERT INTO fts (rowid, headword, definition_plain, example_text) VALUES (?, ?, ?, ?)",
+            self.fts,
+        )
+        conn.executemany("INSERT INTO fts_map (rowid, entry_id) VALUES (?, ?)", self.fts_map)
+        self.clear()
+
+
 def _write_entries(conn: sqlite3.Connection, entries: Iterable[Entry], spec: DictSpec) -> int:
-    entry_rows: list[tuple[object, ...]] = []
-    pron_rows: list[tuple[object, ...]] = []
-    sense_rows: list[tuple[object, ...]] = []
-    example_rows: list[tuple[object, ...]] = []
-    form_rows: list[tuple[object, ...]] = []
-    relation_rows: list[tuple[object, ...]] = []
-    fts_rows: list[tuple[object, ...]] = []
-    fts_map_rows: list[tuple[object, ...]] = []
+    rows = _Rows()
 
     next_pron_id = 1
     next_sense_id = 1
@@ -253,12 +350,12 @@ def _write_entries(conn: sqlite3.Connection, entries: Iterable[Entry], spec: Dic
         if not preview:
             raise BuildError(f"{entry.headword!r}: preview is empty")
 
-        entry_rows.append(
+        rows.entries.append(
             (entry_id, entry.headword, headword_norm, entry.lang, entry.frequency, preview, key)
         )
 
         for pron in entry.pronunciations:
-            pron_rows.append((next_pron_id, entry_id, pron.ipa, pron.region, pron.audio_ref))
+            rows.prons.append((next_pron_id, entry_id, pron.ipa, pron.region, pron.audio_ref))
             next_pron_id += 1
 
         ordinal_to_sense_id: dict[int, int] = {}
@@ -271,7 +368,7 @@ def _write_entries(conn: sqlite3.Connection, entries: Iterable[Entry], spec: Dic
                 entry.headword, f"senses[{ordinal}].definition", sense.definition
             )
             definition_plain = to_plain(definition_html)
-            sense_rows.append(
+            rows.senses.append(
                 (
                     sense_id,
                     entry_id,
@@ -298,18 +395,18 @@ def _write_entries(conn: sqlite3.Connection, entries: Iterable[Entry], spec: Dic
                     if example.translation is not None
                     else None
                 )
-                example_rows.append(
+                rows.examples.append(
                     (next_example_id, sense_id, ex_ordinal, text_html, translation_html)
                 )
                 next_example_id += 1
                 example_plains.append(to_plain(text_html))
 
-            fts_rows.append((sense_id, entry.headword, definition_plain, "\n".join(example_plains)))
-            fts_map_rows.append((sense_id, entry_id))
+            rows.fts.append((sense_id, entry.headword, definition_plain, "\n".join(example_plains)))
+            rows.fts_map.append((sense_id, entry_id))
 
         for form in entry.forms:
             form_norm = normalize_headword(form.form)
-            form_rows.append((form.form, form_norm, entry_id, form.tag))
+            rows.forms.append((form.form, form_norm, entry_id, form.tag))
 
         for relation in entry.relations:
             relation_sense_id = (
@@ -317,44 +414,22 @@ def _write_entries(conn: sqlite3.Connection, entries: Iterable[Entry], spec: Dic
                 if relation.sense_ordinal is not None
                 else None
             )
-            relation_rows.append((entry_id, relation_sense_id, relation.type, relation.target))
+            rows.relations.append((entry_id, relation_sense_id, relation.type, relation.target))
 
-    conn.executemany(
-        "INSERT INTO entries (id, headword, headword_norm, lang, frequency, preview, sort_key) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        entry_rows,
-    )
-    conn.executemany(
-        "INSERT INTO pronunciations (id, entry_id, ipa, region, audio_ref) VALUES (?, ?, ?, ?, ?)",
-        pron_rows,
-    )
-    conn.executemany(
-        "INSERT INTO senses "
-        "(id, entry_id, ordinal, pos, pattern, label, definition, definition_plain) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        sense_rows,
-    )
-    conn.executemany(
-        "INSERT INTO examples (id, sense_id, ordinal, text, translation) VALUES (?, ?, ?, ?, ?)",
-        example_rows,
-    )
-    conn.executemany(
-        "INSERT INTO forms (form, form_norm, entry_id, tag) VALUES (?, ?, ?, ?)",
-        form_rows,
-    )
-    conn.executemany(
-        "INSERT INTO relations (entry_id, sense_id, type, target) VALUES (?, ?, ?, ?)",
-        relation_rows,
-    )
-    conn.executemany(
-        "INSERT INTO fts (rowid, headword, definition_plain, example_text) VALUES (?, ?, ?, ?)",
-        fts_rows,
-    )
-    conn.executemany(
-        "INSERT INTO fts_map (rowid, entry_id) VALUES (?, ?)",
-        fts_map_rows,
-    )
+        if entry_count % _BATCH_ENTRIES == 0:
+            rows.flush(conn)
+
+    rows.flush(conn)
     return entry_count
+
+
+def _entry_count(bundle: Path) -> str:
+    conn = sqlite3.connect(bundle)
+    try:
+        row = conn.execute("SELECT value FROM meta WHERE key = 'entry_count'").fetchone()
+    finally:
+        conn.close()
+    return str(row[0]) if row else "?"
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -379,13 +454,12 @@ def main(argv: list[str] | None = None) -> int:
             if args.built_at
             else None
         )
-        entries = list(read_jsonl(args.in_path))
-        out_path = build_bundle(entries, spec, args.out_dir, built_at=built_at)
+        out_path = build_bundle(read_jsonl(args.in_path), spec, args.out_dir, built_at=built_at)
     except (BuildError, SchemaError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(f"built {out_path} with {len(entries)} entries")
+    print(f"built {out_path} with {_entry_count(out_path)} entries")
     return 0
 
 
