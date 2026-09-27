@@ -94,6 +94,7 @@ QFrame[bar="true"] { background: {{bar}}; border: none; border-bottom: 1px solid
 QFrame[card="true"] { background: {{panel}}; border: 1px solid {{border}}; border-radius: 12px; }
 QFrame[separator="true"] { background: {{border}}; max-height: 1px; min-height: 1px; border: none; }
 QFrame[sheet="true"] { background: {{panel}}; }
+QWidget[dictionaryRow="true"] { border-bottom: 1px solid {{border}}; }
 QFrame[sheetFoot="true"] { background: {{panel}}; border: none; border-top: 1px solid {{border}}; }
 
 QLineEdit, QPlainTextEdit, QTextEdit[input="true"] {

@@ -114,7 +114,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     if (settings.windowGeometry().isEmpty()) {
         window.resize(kWindowWidth, kWindowHeight);
     }
-    omnidict::app::installDebugHooks(window);
+    omnidict::app::installDebugHooks(window, dictionaries);
     window.show();
     window.showWhatsNewIfUpdated();
     QObject::connect(&instance, &omnidict::app::SingleInstance::commandReceived, &window,

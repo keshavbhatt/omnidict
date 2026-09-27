@@ -3,6 +3,7 @@
 #include "services/lookup_service.h"
 
 #include <QMainWindow>
+#include <QPointer>
 #include <QThread>
 
 class QAction;
@@ -31,6 +32,7 @@ class ResultsModel;
 
 namespace omnidict::ui {
 
+class DictionariesDialog;
 class EmptyState;
 class FirstRunPanel;
 class EntryView;
@@ -59,6 +61,8 @@ public:
     /// Opens the About sheet (modal).
     void showAbout();
     /// The other sheets, as the main menu opens them (modal).
+    /// `available` opens the Dictionaries sheet on its Available tab.
+    void showDictionaries(bool available = false);
     void showSettings();
     void showShortcuts();
     void showWhatsNew();
@@ -151,6 +155,7 @@ private:
     QList<std::pair<QAction*, QString>> m_menuIcons; ///< main menu actions and their glyphs
     QStackedWidget* m_bodyStack = nullptr;           ///< the list and entry, or the first-run panel
     FirstRunPanel* m_firstRun = nullptr;
+    QPointer<DictionariesDialog> m_dictionariesDialog; ///< while open: follows installs and removals
     QToolButton* m_dictionariesButton = nullptr;
     QSplitter* m_splitter = nullptr;
     QListView* m_results = nullptr;

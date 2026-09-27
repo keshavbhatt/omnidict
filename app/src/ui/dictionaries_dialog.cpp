@@ -60,9 +60,9 @@ QString humanSize(qint64 bytes)
 void applyRowBorder(QWidget* row, bool isLast)
 {
     row->setAttribute(Qt::WA_StyledBackground, true);
-    if (!isLast) {
-        row->setStyleSheet(u"border-bottom: 1px solid %1;"_s.arg(Tokens::current().border.name()));
-    }
+    // The hairline itself is in the app style sheet (ui/style.cpp): a per-row sheet
+    // would change how the app sheet applies to the row's buttons.
+    row->setProperty("dictionaryRow", !isLast);
 }
 
 /// The native language name for a BCP-47 code, capitalised; the code itself,
@@ -316,6 +316,9 @@ QWidget* DictionariesDialog::buildInstalledTab()
     m_installedList->setSelectionMode(QAbstractItemView::SingleSelection);
     m_installedList->setDragDropMode(QAbstractItemView::InternalMove);
     m_installedList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    // Rows span the list's width and follow it when the sheet resizes.
+    m_installedList->setResizeMode(QListView::Adjust);
+    m_installedList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_installedList->setSpacing(0);
     // The row widgets carry their own look (including the hairline between
     // rows); the list itself contributes no selection or hover colour of its
@@ -323,8 +326,9 @@ QWidget* DictionariesDialog::buildInstalledTab()
     m_installedList->setStyleSheet(
         u"QListWidget { border: none; background: transparent; }"
         u"QListWidget::item { border: none; padding: 0; }"
-        u"QListWidget::item:selected, QListWidget::item:hover { background: transparent; }"
-        u"QListWidget:focus { outline: none; }"_s);
+        u"QListWidget::item:hover { background: transparent; }"
+        u"QListWidget::item:selected { background: %1; border-radius: 8px; }"
+        u"QListWidget:focus { outline: none; }"_s.arg(Tokens::current().hover.name()));
     m_installedList->installEventFilter(this);
     connect(m_installedList, &QListWidget::currentItemChanged, this,
             [this](QListWidgetItem* current, QListWidgetItem* /*previous*/) {
@@ -389,10 +393,16 @@ QHBoxLayout* DictionariesDialog::buildAvailableFilterRow(QWidget* content)
     m_filterField->setPlaceholderText(tr("Filter by name"));
     connect(m_filterField, &QLineEdit::textChanged, this, [this] { rebuildAvailableRows(); });
     filterRow->addWidget(m_filterField, 1);
+    auto* fromLabel = new QLabel(tr("From"), content);
+    fromLabel->setProperty("muted", true);
+    filterRow->addWidget(fromLabel);
     m_fromCombo = new QComboBox(content);
     m_fromCombo->setObjectName(u"fromLanguage"_s);
     connect(m_fromCombo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
     filterRow->addWidget(m_fromCombo);
+    auto* toLabel = new QLabel(tr("To"), content);
+    toLabel->setProperty("muted", true);
+    filterRow->addWidget(toLabel);
     m_toCombo = new QComboBox(content);
     m_toCombo->setObjectName(u"toLanguage"_s);
     connect(m_toCombo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
@@ -731,7 +741,8 @@ void DictionariesDialog::rebuildInstalledRows()
         item->setData(Qt::UserRole, info.dictId);
         item->setFlags((item->flags() | Qt::ItemIsSelectable | Qt::ItemIsEnabled) & ~Qt::ItemIsEditable);
         QWidget* widget = buildInstalledRow(info, i == ordered.size() - 1);
-        item->setSizeHint(widget->sizeHint());
+        // Height from the row; the width is the list's (QListView sizes items by their hint).
+        item->setSizeHint(QSize(0, widget->sizeHint().height()));
         m_installedList->addItem(item);
         m_installedList->setItemWidget(item, widget);
     }

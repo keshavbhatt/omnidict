@@ -6,6 +6,7 @@
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
+#include "ui/dictionaries_dialog.h"
 #include "ui/empty_state.h"
 #include "ui/entry_view.h"
 #include "ui/first_run_panel.h"
@@ -320,6 +321,8 @@ void MainWindow::buildMainMenu()
         m_menuIcons.append({action, glyph});
         return action;
     };
+    add(tr("Dictionaries..."), u"books"_s, {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D)},
+        [this] { showDictionaries(); });
     add(tr("Settings..."), u"settings"_s, {QKeySequence(Qt::CTRL | Qt::Key_Comma)},
         &MainWindow::showSettings);
     m_mainMenu->addSeparator();
@@ -371,6 +374,10 @@ void MainWindow::rebuildFilterMenu()
         addChoice(shortName(info.name) + u'\t' + tr("%1 entries").arg(locale.toString(info.entryCount)),
                   info.dictId);
     }
+    m_filterMenu->addSeparator();
+    const QAction* manage =
+        m_filterMenu->addAction(tr("Manage dictionaries...") + u'\t' + tr("Ctrl+Shift+D"));
+    connect(manage, &QAction::triggered, this, [this] { showDictionaries(); });
     const services::DictionaryInfo* chosen = dictionary(selected);
     m_filterButton->setText(chosen != nullptr ? shortName(chosen->name) : tr("All dictionaries"));
 }
@@ -460,6 +467,8 @@ void MainWindow::connectSettings()
     connect(&m_manager, &services::DictionaryManager::installed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::removed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::downloadChanged, this, &MainWindow::onDownloadChanged);
+    connect(m_dictionariesButton, &QToolButton::clicked, this, [this] { showDictionaries(); });
+    connect(m_firstRun, &FirstRunPanel::browseRequested, this, [this] { showDictionaries(true); });
     connect(&m_settings, &core::Settings::entryTextSizeChanged, m_entry, &EntryView::setTextSize);
     connect(&m_settings, &core::Settings::searchOptionsChanged, this, &MainWindow::requestSearch);
 }
@@ -487,6 +496,9 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
                                      ? tr("Search 1 dictionary")
                                      : tr("Search %1 dictionaries").arg(dictionaries.size()));
     rebuildFilterMenu();
+    if (m_dictionariesDialog != nullptr) {
+        m_dictionariesDialog->setInstalled(dictionaries);
+    }
     // With nothing installed the window offers dictionaries instead of a search.
     const bool none = dictionaries.isEmpty();
     m_bodyStack->setCurrentWidget(none ? static_cast<QWidget*>(m_firstRun) : m_splitter);
@@ -848,6 +860,17 @@ void MainWindow::showAbout()
     } else if (next == Next::BugReport) {
         showBugReport();
     }
+}
+
+void MainWindow::showDictionaries(bool available)
+{
+    // Downloads outlive the sheet: they belong to the manager, not to it.
+    DictionariesDialog dialog(m_manager, m_settings, m_dictionaries, m_roots.constLast(), this);
+    if (available) {
+        dialog.showAvailable();
+    }
+    m_dictionariesDialog = &dialog;
+    dialog.exec();
 }
 
 void MainWindow::showSettings()

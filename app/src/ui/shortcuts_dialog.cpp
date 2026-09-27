@@ -222,6 +222,7 @@ QList<ShortcutRow> defaultShortcuts()
         {.group = u"Entry"_s, .label = ShortcutsDialog::tr("Larger text"), .keys = u"Ctrl++"_s},
         {.group = u"Entry"_s, .label = ShortcutsDialog::tr("Smaller text"), .keys = u"Ctrl+-"_s},
         {.group = u"Entry"_s, .label = ShortcutsDialog::tr("Reset text size"), .keys = u"Ctrl+0"_s},
+        {.group = u"App"_s, .label = ShortcutsDialog::tr("Dictionaries"), .keys = u"Ctrl+Shift+D"_s},
         {.group = u"App"_s, .label = ShortcutsDialog::tr("Settings"), .keys = u"Ctrl+,"_s},
         {.group = u"App"_s, .label = ShortcutsDialog::tr("Main menu"), .keys = u"F10"_s},
         {.group = u"App"_s, .label = ShortcutsDialog::tr("Keyboard shortcuts"), .keys = u"F1 or Ctrl+/"_s},
