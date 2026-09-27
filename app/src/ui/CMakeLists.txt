@@ -1,6 +1,8 @@
 # ui: widgets. Built in code (no .ui files); nothing links to this except app.
 
 qt_add_library(omnidict_ui STATIC
+    about_dialog.cpp
+    about_dialog.h
     entry_view.cpp
     entry_view.h
     logging.cpp

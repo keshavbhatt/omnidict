@@ -25,6 +25,9 @@ struct DictionaryInfo
     QString dictId;
     QString name;
     QString attribution;
+    QString license;
+    QString licenseUrl;
+    QString version;
     qint64 entryCount = 0;
 };
 

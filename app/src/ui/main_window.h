@@ -35,6 +35,8 @@ public:
 
     /// Types a query as if the user had.
     void setQuery(const QString& text);
+    /// Opens the About dialog (modal).
+    void showAbout();
 
 Q_SIGNALS:
     /// The dictionaries are open (or found to be missing).

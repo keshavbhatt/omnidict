@@ -1,4 +1,5 @@
 #include "models/results_model.h"
+#include "ui/about_dialog.h"
 #include "ui/main_window.h"
 
 #include <QAbstractItemModel>
@@ -99,6 +100,25 @@ private Q_SLOTS:
         QVERIFY(shown.wait());
         QCOMPARE(shown.last().at(1).toString(), u"book"_s);
         QVERIFY(star->isChecked());
+    }
+
+    void aboutCreditsEveryDictionary()
+    {
+        const QList<omnidict::services::DictionaryInfo> dictionaries = {
+            {.dictId = u"wikt-xx-en"_s,
+             .name = u"Xx-English"_s,
+             .attribution = u"Data from Wiktionary & friends"_s,
+             .license = u"CC-BY-SA-4.0"_s,
+             .licenseUrl = u"https://creativecommons.org/licenses/by-sa/4.0/"_s,
+             .version = u"2026.09.1"_s,
+             .entryCount = 1234},
+        };
+        const QString html = omnidict::ui::AboutDialog::aboutHtml(dictionaries);
+        QVERIFY(html.contains(u"Xx-English"_s));
+        QVERIFY(html.contains(u"Data from Wiktionary &amp; friends"_s));
+        QVERIFY(
+            html.contains(u"<a href=\"https://creativecommons.org/licenses/by-sa/4.0/\">CC-BY-SA-4.0</a>"_s));
+        QVERIFY(omnidict::ui::AboutDialog::aboutHtml({}).contains(u"No dictionaries"_s));
     }
 
     void noDictionariesSaysWhereItLooked()

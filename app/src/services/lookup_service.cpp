@@ -22,6 +22,9 @@ void LookupService::openLibrary(const QStringList& roots)
         dictionaries.append({.dictId = meta.dictId,
                              .name = meta.name,
                              .attribution = meta.attribution,
+                             .license = meta.license,
+                             .licenseUrl = meta.licenseUrl,
+                             .version = meta.version,
                              .entryCount = meta.entryCount});
     }
     qCInfo(lcLookup) << "opened" << dictionaries.size() << "dictionaries from" << roots;

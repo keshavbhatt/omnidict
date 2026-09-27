@@ -2,7 +2,7 @@
 
 #include "ui/main_window.h"
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <QPixmap>
 #include <QTimer>
 
@@ -32,6 +32,22 @@ void installDebugHooks(ui::MainWindow& window)
     }
 
     const QString grabPath = qEnvironmentVariable("OMNIDICT_DEBUG_GRAB");
+    if (qEnvironmentVariable("OMNIDICT_DEBUG_OPEN") == u"about"_s) {
+        // Grab the dialog from inside its own modal loop, then quit.
+        QObject::connect(
+            &window, &ui::MainWindow::libraryReady, &window,
+            [&window, grabPath] {
+                QTimer::singleShot(kSettleMs, &window, [grabPath] {
+                    QWidget* dialog = QApplication::activeModalWidget();
+                    const bool saved =
+                        dialog != nullptr && (grabPath.isEmpty() || dialog->grab().save(grabPath));
+                    QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
+                });
+                window.showAbout();
+            },
+            Qt::SingleShotConnection);
+        return;
+    }
     if (grabPath.isEmpty()) {
         return;
     }

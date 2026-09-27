@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "models/results_model.h"
+#include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/logging.h"
 #include "ui/results_delegate.h"
@@ -10,6 +11,7 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QListView>
+#include <QMenu>
 #include <QShortcut>
 #include <QSplitter>
 #include <QTimer>
@@ -105,9 +107,23 @@ QWidget* MainWindow::buildSearchPane()
     m_results->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     m_results->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+    auto* menu = new QMenu(this);
+    menu->addAction(tr("About Omnidict"), this, &MainWindow::showAbout);
+    auto* menuButton = new QToolButton;
+    menuButton->setObjectName(u"menuButton"_s);
+    menuButton->setIcon(QIcon::fromTheme(u"open-menu-symbolic"_s, QIcon::fromTheme(u"application-menu"_s)));
+    if (menuButton->icon().isNull()) {
+        menuButton->setText(u"\u2630"_s); // no icon theme: a plain menu glyph
+    }
+    menuButton->setToolTip(tr("Menu"));
+    menuButton->setAutoRaise(true);
+    menuButton->setPopupMode(QToolButton::InstantPopup);
+    menuButton->setMenu(menu);
+
     auto* searchRow = new QHBoxLayout;
     searchRow->addWidget(m_search, 1);
     searchRow->addWidget(m_filter);
+    searchRow->addWidget(menuButton);
     auto* pane = new QWidget;
     auto* layout = new QVBoxLayout(pane);
     layout->setContentsMargins(8, 8, 0, 8);
@@ -315,6 +331,12 @@ void MainWindow::followHeadword(const QString& headword)
     m_entryRequest = m_nextRequest++;
     QMetaObject::invokeMethod(m_lookup, &services::LookupService::resolveHeadword, Qt::QueuedConnection,
                               m_entryRequest, headword, m_entryDictId);
+}
+
+void MainWindow::showAbout()
+{
+    AboutDialog dialog(m_dictionaries, this);
+    dialog.exec();
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)

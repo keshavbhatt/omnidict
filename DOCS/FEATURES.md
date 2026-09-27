@@ -64,7 +64,7 @@ expects every ktechpit desktop app to have.
 | D4 | `services::Catalog`: parses `catalog.json`, diffs against installed | M3 | KEEP | planned |
 | D5 | `services::Downloader`: resumable download (`Range` header), sha256 verify, zstd decompress, install and register, remove stale version | M3 | KEEP | planned |
 | D6 | Downloads and decompression on a `QThreadPool` (ADR-004) | M3 | KEEP | planned |
-| D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | planned |
+| D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | partly (M2): About lists every open dictionary's attribution, licence link and version; the app's own open-source notices are still to add |
 
 ## E. App shell
 
