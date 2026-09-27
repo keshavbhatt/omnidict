@@ -13,10 +13,14 @@ Everything about Omnidict lives here. If it is not in `DOCS/`, it did not happen
 | `LESSONS.md` | Rules inherited from the kit's PLAYBOOK that apply to a Qt Widgets desktop app. |
 | `schema.md` | Canonical dictionary bundle schema reference, generated from `PLAN.md` section 4. |
 | `sources.md` | Per-source notes: format, licence, dump URL, status. |
+| `DESIGN.md` | The UI design: tokens, layout, the list of screens, rules. Points at `mocks/`. |
+| `mocks/` | HTML mocks of every screen, one file per screen, approved before coding. |
+| `spell-suggestion.md` | Research for PLAN 9 question 4: spellfix1 against our own suggester. |
 
 ## Workflow
 
-1. Before coding a feature: its row in `FEATURES.md` must say `KEEP`.
+1. Before coding a feature: its row in `FEATURES.md` must say `KEEP`, and if it shows anything,
+   the screen's mock in `mocks/` must be approved.
 2. While coding: follow `CODING_STANDARDS.md`; new architectural choices get an ADR in `DECISIONS.md`.
 3. After coding: update the row's Status in `FEATURES.md`, add a `PROGRESS.md` entry, run the tests.
 4. Commit style: `area: plain sentence` or `area, area: plain sentence`, for example:

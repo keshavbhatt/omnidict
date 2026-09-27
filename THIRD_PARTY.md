@@ -16,6 +16,12 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | mypy | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
 | pytest | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
 
+## Design mocks only
+
+`DOCS/mocks/mock.js` embeds Lucide glyph paths (ISC licence, copied from the rewrite kit's
+vendored set) so the HTML mocks can draw icons. They do not ship in the app.
+
 ## Planned, not yet added
 
-Lucide icons (ISC) will be added in M2, with their licence notice recorded here at that point.
+Lucide icons (ISC) for the app itself, with their licence notice recorded here when the app
+starts using them.

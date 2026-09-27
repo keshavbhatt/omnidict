@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: First run, no dictionaries</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>Omnidict</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
+  <div class="header">
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" placeholder="Add a dictionary to start" disabled style="opacity:.5"></div>
+    <span class="chip" style="opacity:.5" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body" style="grid-template-columns:1fr;display:flex;align-items:center;justify-content:center;">
+    <div style="text-align:center;max-width:680px;">
+      <h1>Add your first dictionary</h1>
+      <p class="muted" style="margin-top:8px;">Dictionaries download once and then work offline.</p>
+      <div class="row" style="justify-content:center;gap:16px;margin-top:28px;align-items:stretch;">
+        <div class="card" style="width:190px;text-align:left;">
+          <div style="font-weight:600;">English</div>
+          <div class="muted small" style="margin-top:4px;">Wiktionary, 858,000 entries</div>
+          <div class="muted small">262 MB download</div>
+          <button class="btn primary small" style="margin-top:12px;width:100%;justify-content:center;"><svg class="ic s"><use href="#i-download"/></svg>Download</button>
+        </div>
+        <div class="card" style="width:190px;text-align:left;">
+          <div style="font-weight:600;">Spanish - English</div>
+          <div class="muted small" style="margin-top:4px;">Wiktionary, 110,000 entries</div>
+          <div class="muted small">40 MB download</div>
+          <button class="btn primary small" style="margin-top:12px;width:100%;justify-content:center;"><svg class="ic s"><use href="#i-download"/></svg>Download</button>
+        </div>
+        <div class="card" style="width:190px;text-align:left;">
+          <div style="font-weight:600;">Hindi - English</div>
+          <div class="muted small" style="margin-top:4px;">Wiktionary, 23,000 entries</div>
+          <div class="muted small">12 MB download</div>
+          <button class="btn primary small" style="margin-top:12px;width:100%;justify-content:center;"><svg class="ic s"><use href="#i-download"/></svg>Download</button>
+        </div>
+      </div>
+      <button class="btn flat" style="margin-top:22px;">Browse all dictionaries</button>
+    </div>
+  </div>
+  <span class="pin" style="left:530px;top:170px">1</span>
+  <span class="pin" style="left:905px;top:430px">2</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+    <li><b>Bundled English (open question).</b>Whether an English dictionary ships inside the installer is still open (PLAN.md section 9, question 5). If it does, this screen only appears once the user has removed every dictionary, not on first run.</li>
+    <li><b>Catalogue source.</b>The card list comes from a local server for now (see Build and test); nothing here is fetched from a public catalogue yet.</li>
+  </ol></section>
+</body></html>

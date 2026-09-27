@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Main window, empty search</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>Omnidict</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
+  <div class="header">
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input focus" placeholder="Search 3 dictionaries"></div>
+    <span class="chip" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="results">
+      <div class="section">Favourites</div>
+      <div class="item"><div class="txt"><div class="hw">perro</div><div class="pv">dog (the species Canis familiaris)</div></div><span class="side">Spanish - English</span><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="item"><div class="txt"><div class="hw">quixotic</div><div class="pv">exceedingly idealistic, unrealistic and impractical</div></div><span class="side">English</span><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="item"><div class="txt"><div class="hw">नमस्ते <span class="via">namaste</span></div><div class="pv">a respectful greeting or farewell</div></div><span class="side">Hindi - English</span><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="section">Recent <span class="more">Clear</span></div>
+      <div class="item"><div class="txt"><div class="hw">perro</div><div class="pv">dog (the species Canis familiaris)</div></div><span class="side">Spanish - English</span></div>
+      <div class="item"><div class="txt"><div class="hw">खाना <span class="via">khānā</span></div><div class="pv">food; also, to eat</div></div><span class="side">Hindi - English</span></div>
+      <div class="item"><div class="txt"><div class="hw">serendipity</div><div class="pv">the occurrence of events by chance in a happy way</div></div><span class="side">English</span></div>
+      <div class="item"><div class="txt"><div class="hw">gato</div><div class="pv">cat (the animal Felis catus)</div></div><span class="side">Spanish - English</span></div>
+      <div class="item"><div class="txt"><div class="hw">पानी <span class="via">pānī</span></div><div class="pv">water</div></div><span class="side">Hindi - English</span></div>
+      <div class="item"><div class="txt"><div class="hw">ephemeral</div><div class="pv">lasting for a very short time</div></div><span class="side">English</span></div>
+      <div class="item"><div class="txt"><div class="hw">mariposa</div><div class="pv">butterfly</div></div><span class="side">Spanish - English</span></div>
+      <div class="item"><div class="txt"><div class="hw">धन्यवाद <span class="via">dhanyavād</span></div><div class="pv">thank you</div></div><span class="side">Hindi - English</span></div>
+    </div>
+    <div class="entry-wrap">
+      <div class="empty">
+        <div class="inner">
+          <div class="glyph"><svg class="ic"><use href="#i-book"/></svg></div>
+          <div>Type a word to look it up</div>
+          <div class="muted small">Use ? for one letter and * for any run, as in c?t or bio*</div>
+          <div class="muted small">Ctrl+L picks one dictionary</div>
+          <div class="muted small">F1 lists every shortcut</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="pin" style="left:104px;top:99px">1</span>
+  <span class="pin" style="left:70px;top:306px">2</span>
+  <span class="pin" style="left:760px;top:300px">3</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+    <li><b>Favourites order.</b>Most recently starred first, not alphabetical.</li>
+    <li><b>Recent.</b>Only entries opened with Enter or a click are recorded, never entries merely highlighted while typing. Holds up to 500; Clear asks nothing but shows an Undo toast for a few seconds.</li>
+    <li><b>Empty state.</b>The last viewed entry is not kept between launches; the pane always starts here until a search is made.</li>
+  </ol></section>
+</body></html>

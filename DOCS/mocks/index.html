@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Index</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  .idx { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+  .idx h1 { font-size: 24px; margin-bottom: 6px; }
+  .idx h2 { margin-top: 28px; }
+  .idx .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+  .idx .grid a { display: block; padding: 14px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+  .idx .grid a:hover { background: var(--hover); }
+  .idx .grid a b { display: block; margin-bottom: 2px; }
+  .idx .grid a span { color: var(--muted); font-size: 12px; display: block; }
+  .idx .grid a em { font-style: normal; font-size: 11px; color: var(--warning); display: block; margin-top: 6px; }
+  .idx .grid a em.ok { color: var(--success); }
+  .sw { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 26px; }
+  .sw i { display: block; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); position: relative; }
+  .sw i::after { content: attr(data-n); position: absolute; left: -6px; right: -6px; top: 48px; font-size: 10px; color: var(--muted); font-style: normal; text-align: center; }
+</style></head>
+<body>
+<div class="idx">
+  <h1>Omnidict mocks</h1>
+  <p class="muted">Every screen before it is coded (DOCS/DESIGN.md). The toolbar at the bottom right switches dark and light, the OS title bar and the review notes; yellow pins match the numbered notes under each window. Approval is recorded here and in <code>DOCS/PROGRESS.md</code>.</p>
+  <h2>Tokens</h2>
+  <div class="sw">
+    <i style="background:var(--accent)" data-n="accent"></i><i style="background:var(--accent-strong)" data-n="strong"></i><i style="background:var(--accent-soft)" data-n="soft"></i>
+    <i style="background:var(--warm)" data-n="warm"></i><i style="background:var(--warm-soft)" data-n="warmSoft"></i>
+    <i style="background:var(--bg)" data-n="bg"></i><i style="background:var(--bar)" data-n="bar"></i><i style="background:var(--panel)" data-n="panel"></i><i style="background:var(--elevated)" data-n="elevated"></i><i style="background:var(--hover)" data-n="hover"></i>
+    <i style="background:var(--text)" data-n="text"></i><i style="background:var(--muted)" data-n="muted"></i><i style="background:var(--headword)" data-n="headword"></i><i style="background:var(--pattern)" data-n="pattern"></i>
+    <i style="background:var(--success)" data-n="success"></i><i style="background:var(--warning)" data-n="warning"></i><i style="background:var(--danger)" data-n="danger"></i>
+  </div>
+  <h2>Search and read (M2)</h2>
+  <div class="grid">
+    <a href="main.html"><b>Main window, results</b><span>Groups per dictionary, entry bar with Back, Copy and the star, attribution line</span><em>Awaiting review</em></a>
+    <a href="main-empty.html"><b>Main window, empty search</b><span>Favourites, Recent and the welcome tips</span><em>Awaiting review</em></a>
+    <a href="main-no-results.html"><b>Main window, no match</b><span>Did you mean (look only: the method is still open)</span><em>Awaiting review</em></a>
+    <a href="main-link.html"><b>Entry, followed link</b><span>A link inside an entry, then Back</span><em>Awaiting review</em></a>
+    <a href="filter.html"><b>Dictionary filter</b><span>Search in one dictionary (Ctrl+L)</span><em>Awaiting review</em></a>
+    <a href="menu.html"><b>Main menu</b><span>Every window action (F10)</span><em>Awaiting review</em></a>
+  </div>
+  <h2>App shell (M2)</h2>
+  <div class="grid">
+    <a href="settings.html"><b>Settings</b><span>Theme, text size, search, history, storage</span><em>Awaiting review</em></a>
+    <a href="shortcuts.html"><b>Keyboard shortcuts</b><span>F1 or Ctrl+/, filterable</span><em>Awaiting review</em></a>
+    <a href="whats-new.html"><b>What's new</b><span>Once per version, with a version picker</span><em>Awaiting review</em></a>
+    <a href="bug-report.html"><b>Report a bug</b><span>Pre-filled report, diagnostics on the clipboard</span><em>Awaiting review</em></a>
+    <a href="about.html"><b>About</b><span>Dictionary credits, open-source notices, diagnostics</span><em>Awaiting review</em></a>
+  </div>
+  <h2>Dictionaries (M3)</h2>
+  <div class="grid">
+    <a href="main-no-dictionaries.html"><b>First run</b><span>Nothing installed yet</span><em>Awaiting review</em></a>
+    <a href="dictionaries.html"><b>Dictionaries, installed</b><span>Order, switch off, update, remove</span><em>Awaiting review</em></a>
+    <a href="dictionaries-available.html"><b>Dictionaries, available</b><span>Catalogue, language filters, downloads</span><em>Awaiting review</em></a>
+  </div>
+</div>
+</body></html>

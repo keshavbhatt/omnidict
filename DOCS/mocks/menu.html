@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Main menu</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">perro - Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>Omnidict</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
+  <div class="header">
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" value="perro"><span class="clear" title="Clear (Escape)"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+    <span class="chip" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+    <button class="btn flat icon" style="background:var(--hover)" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="results">
+      <div class="section">Spanish - English <span class="count">(Wiktionary)</span></div>
+      <div class="item selected"><div class="txt"><div class="hw">perro</div><div class="pv">dog (the species Canis familiaris)</div></div><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="item"><div class="txt"><div class="hw">perra</div><div class="pv">bitch (female dog); (colloquial) tantrum</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perro caliente</div><div class="pv">hot dog</div></div></div>
+      <div class="section">English <span class="count">(Wiktionary)</span></div>
+      <div class="item"><div class="txt"><div class="hw">Perro</div><div class="pv">A surname from Spanish.</div></div></div>
+      <div class="section">Also found in definitions <span class="more">Show 12</span></div>
+      <div class="item"><div class="txt"><div class="hw">can</div><div class="pv">Spanish - English: (archaic, poetic) dog, perro</div></div></div>
+    </div>
+    <div class="entry-wrap">
+      <div class="entry-bar">
+        <button class="btn flat icon" title="Back (Alt+Left)"><svg class="ic"><use href="#i-back"/></svg></button>
+        <button class="btn flat icon disabled" title="Forward (Alt+Right)"><svg class="ic"><use href="#i-forward"/></svg></button>
+        <span class="crumb">Spanish - English (Wiktionary)</span>
+        <span class="grow"></span>
+        <button class="btn flat icon" title="Copy entry (Ctrl+Shift+C)"><svg class="ic"><use href="#i-copy"/></svg></button>
+        <button class="btn flat icon on" title="Remove from favourites (Ctrl+D)"><svg class="ic"><use href="#i-star-on"/></svg></button>
+      </div>
+      <div class="entry">
+        <div class="hw">perro <span class="freq">&#x25C6;&#x25C6;&#x25C6;&#x25C6;&#x25C7;</span></div>
+        <div class="ipa"><b>IPA</b>/ˈpero/ &middot; [ˈpe.ro]</div>
+        <div class="forms">Plural <i>perros</i> &middot; feminine <i>perra</i></div>
+        <div class="sense"><div class="head"><span class="n">1</span><span class="pos">noun</span><span class="pattern">[masculine]</span></div>
+          <div class="def"><a href="#">dog</a> (the species <a href="#">Canis familiaris</a>, domesticated for thousands of years)</div>
+          <ul class="ex"><li><b>perro</b> callejero<span class="tr">stray dog</span></li></ul>
+        </div>
+        <div class="attrib">From Wiktionary, CC BY-SA 4.0. Spanish - English, version 2026.09.27.</div>
+      </div>
+    </div>
+  </div>
+  <div class="popup" style="right:8px;top:64px">
+    <div class="mi"><svg class="ic"><use href="#i-books"/></svg>Dictionaries...<span class="sc">Ctrl+Shift+D</span></div>
+    <div class="mi"><svg class="ic"><use href="#i-settings"/></svg>Settings...<span class="sc">Ctrl+,</span></div>
+    <div class="sep"></div>
+    <div class="mi"><svg class="ic"><use href="#i-keyboard"/></svg>Keyboard shortcuts<span class="sc">F1</span></div>
+    <div class="mi"><svg class="ic"><use href="#i-sparkles"/></svg>What's new</div>
+    <div class="mi"><svg class="ic"><use href="#i-bug"/></svg>Report a bug...</div>
+    <div class="mi"><svg class="ic"><use href="#i-info"/></svg>About Omnidict</div>
+    <div class="sep"></div>
+    <div class="mi"><svg class="ic"><use href="#i-power"/></svg>Quit<span class="sc">Ctrl+Q</span></div>
+  </div>
+  <span class="pin" style="right:4px;top:40px">1</span>
+  <span class="pin" style="right:8px;top:345px">2</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+    <li><b>Opening it.</b>F10 opens this menu and focuses its first item, from anywhere in the window.</li>
+    <li><b>macOS.</b>These same items live in the system app menu bar instead of this popup; the main menu button is hidden there.</li>
+  </ol></section>
+</body></html>
