@@ -49,3 +49,8 @@ omnidict_add_test(tst_bundle tst_bundle.cpp omnidict_core)
 target_link_libraries(tst_bundle PRIVATE SQLite::SQLite3)
 target_compile_definitions(tst_bundle PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+omnidict_add_test(tst_real_bundles tst_real_bundles.cpp omnidict_core)
+set_tests_properties(tst_real_bundles PROPERTIES LABELS "bundles" TIMEOUT 120)
+target_compile_definitions(tst_real_bundles PRIVATE
+    OMNIDICT_KNOWN_HEADWORDS="${OMNIDICT_REPO_ROOT}/tests/known_headwords.json"
+    OMNIDICT_BUNDLE_DIR="${OMNIDICT_REPO_ROOT}/pipeline/out")

@@ -1,0 +1,20 @@
+{
+  "description": "Round-trip gate (PLAN.md 6.4): words every real bundle must answer. Read by app/tests/tst_real_bundles.cpp against pipeline/out/<dict_id>/dict.sqlite.",
+  "dictionaries": {
+    "wikt-hi-en": {
+      "headwords": ["पानी", "खाना", "कदाचित्", "लड़का", "घर", "किताब", "पुस्तक", "दिन", "रात", "आदमी", "औरत", "बच्चा", "पेड़", "सूरज", "चाँद", "दोस्त", "प्यार", "हाथ", "आँख", "नमस्ते"],
+      "forms": {"लड़के": "लड़का", "kadacit": "कदाचित्", "pani": "पानी"},
+      "full_text": "water"
+    },
+    "wikt-es-en": {
+      "headwords": ["agua", "casa", "perro", "gato", "comer", "hablar", "niño", "libro", "día", "noche", "hombre", "mujer", "árbol", "sol", "luna", "amigo", "amor", "mano", "ojo", "hola"],
+      "forms": {"comí": "comer", "hablaríamos": "hablar", "perros": "perro"},
+      "full_text": "dog"
+    },
+    "wikt-en": {
+      "headwords": ["water", "house", "dog", "cat", "eat", "speak", "child", "book", "day", "night", "man", "woman", "tree", "sun", "moon", "friend", "love", "hand", "eye", "hello"],
+      "forms": {"ran": "run", "children": "child", "mice": "mouse"},
+      "full_text": "domesticated"
+    }
+  }
+}
