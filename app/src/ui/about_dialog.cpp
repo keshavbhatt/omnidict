@@ -182,7 +182,7 @@ QWidget* AboutDialog::buildDictionariesTab(QWidget* tabParent)
                                     : u"<a href=\"%1\">%2</a>"_s.arg(dictionary.licenseUrl.toHtmlEscaped(),
                                                                      dictionary.license.toHtmlEscaped());
         auto* attribution =
-            new QLabel(tr("From %1. Licence: %2").arg(dictionary.attribution.toHtmlEscaped(), license), card);
+            new QLabel(tr("%1. Licence: %2").arg(dictionary.attribution.toHtmlEscaped(), license), card);
         attribution->setProperty("muted", true);
         attribution->setProperty("small", true);
         attribution->setTextFormat(Qt::RichText);

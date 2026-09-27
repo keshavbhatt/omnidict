@@ -76,8 +76,9 @@ ShortcutsDialog::ShortcutsDialog(const QList<ShortcutRow>& rows, QWidget* parent
     m_filter->setAccessibleName(tr("Filter shortcuts"));
     connect(m_filter, &QLineEdit::textChanged, this, &ShortcutsDialog::filter);
     body->addWidget(m_filter);
-    body->addLayout(buildColumns(rows), 1);
-    root->addLayout(body, 1);
+    body->addLayout(buildColumns(rows));
+    root->addLayout(body);
+    root->addStretch(1);
     root->addWidget(buildFooter());
 }
 
@@ -96,6 +97,8 @@ QLayout* ShortcutsDialog::buildColumns(const QList<ShortcutRow>& rows)
     columns->setSpacing(24);
     auto* left = new QVBoxLayout;
     auto* right = new QVBoxLayout;
+    left->setSpacing(0);
+    right->setSpacing(0);
     columns->addLayout(left, 1);
     columns->addLayout(right, 1);
     for (qsizetype i = 0; i < order.size(); ++i) {
@@ -107,6 +110,9 @@ QLayout* ShortcutsDialog::buildColumns(const QList<ShortcutRow>& rows)
         }
         addGroup((i % 2 == 0) ? left : right, order.at(i), groupRows);
     }
+    // Rows keep their natural height; spare room goes below them.
+    left->setAlignment(Qt::AlignTop);
+    right->setAlignment(Qt::AlignTop);
     left->addStretch(1);
     right->addStretch(1);
     return columns;
@@ -149,8 +155,9 @@ void ShortcutsDialog::addGroup(QVBoxLayout* column, const QString& title, const 
 QWidget* ShortcutsDialog::makeRow(const ShortcutRow& row)
 {
     auto* widget = new QWidget(this);
+    widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     auto* layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(0, 6, 0, 6);
+    layout->setContentsMargins(0, 5, 0, 5);
     layout->setSpacing(12);
     auto* label = new QLabel(row.label, widget);
     layout->addWidget(label, 1);

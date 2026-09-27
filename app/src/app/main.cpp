@@ -103,6 +103,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     }
     omnidict::app::installDebugHooks(window);
     window.show();
+    window.showWhatsNewIfUpdated();
     const QString query = parser.positionalArguments().join(u' ');
     if (!query.isEmpty()) {
         QObject::connect(

@@ -3,6 +3,7 @@
 #include "ui/main_window.h"
 
 #include <QApplication>
+#include <QHash>
 #include <QLineEdit>
 #include <QPixmap>
 #include <QTimer>
@@ -33,18 +34,25 @@ void installDebugHooks(ui::MainWindow& window)
     }
 
     const QString grabPath = qEnvironmentVariable("OMNIDICT_DEBUG_GRAB");
-    if (qEnvironmentVariable("OMNIDICT_DEBUG_OPEN") == u"about"_s) {
-        // Grab the dialog from inside its own modal loop, then quit.
+    // OMNIDICT_DEBUG_OPEN names a sheet: grab it from inside its own modal loop, then quit.
+    const QString sheet = qEnvironmentVariable("OMNIDICT_DEBUG_OPEN");
+    const QHash<QString, void (ui::MainWindow::*)()> sheets = {
+        {u"about"_s, &ui::MainWindow::showAbout},         {u"settings"_s, &ui::MainWindow::showSettings},
+        {u"shortcuts"_s, &ui::MainWindow::showShortcuts}, {u"whatsnew"_s, &ui::MainWindow::showWhatsNew},
+        {u"bugreport"_s, &ui::MainWindow::showBugReport},
+    };
+    if (sheets.contains(sheet)) {
+        const auto open = sheets.value(sheet);
         QObject::connect(
             &window, &ui::MainWindow::libraryReady, &window,
-            [&window, grabPath] {
+            [&window, grabPath, open] {
                 QTimer::singleShot(kSettleMs, &window, [grabPath] {
                     QWidget* dialog = QApplication::activeModalWidget();
                     const bool saved =
                         dialog != nullptr && (grabPath.isEmpty() || dialog->grab().save(grabPath));
                     QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
                 });
-                window.showAbout();
+                (window.*open)();
             },
             Qt::SingleShotConnection);
         return;

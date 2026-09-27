@@ -3,13 +3,19 @@
 #include "core/settings.h"
 #include "models/results_model.h"
 #include "ui/about_dialog.h"
+#include "ui/bug_report_dialog.h"
+#include "ui/diagnostics.h"
 #include "ui/empty_state.h"
 #include "ui/entry_view.h"
 #include "ui/icons.h"
 #include "ui/logging.h"
 #include "ui/results_delegate.h"
 #include "ui/search_field.h"
+#include "ui/settings_dialog.h"
+#include "ui/shortcuts_dialog.h"
 #include "ui/style.h"
+#include "ui/toast.h"
+#include "ui/whats_new_dialog.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -294,14 +300,29 @@ void MainWindow::setupActions()
 void MainWindow::buildMainMenu()
 {
     m_mainMenu = new QMenu(this);
-    auto* about = m_mainMenu->addAction(tr("About Omnidict"), this, &MainWindow::showAbout);
-    about->setObjectName(u"aboutAction"_s);
+    // Items that also have a key keep working with the menu closed: they are the window's actions too.
+    const auto add = [this](const QString& text, const QString& glyph, const QList<QKeySequence>& keys,
+                            auto slot) {
+        QAction* action = m_mainMenu->addAction(text);
+        action->setShortcuts(keys);
+        action->setShortcutContext(Qt::WindowShortcut);
+        connect(action, &QAction::triggered, this, slot);
+        addAction(action);
+        m_menuIcons.append({action, glyph});
+        return action;
+    };
+    add(tr("Settings..."), u"settings"_s, {QKeySequence(Qt::CTRL | Qt::Key_Comma)},
+        &MainWindow::showSettings);
     m_mainMenu->addSeparator();
-    auto* quit = m_mainMenu->addAction(tr("Quit"), qApp, &QApplication::quit);
-    quit->setObjectName(u"quitAction"_s);
-    quit->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
-    quit->setShortcutContext(Qt::WindowShortcut);
-    addAction(quit);
+    add(tr("Keyboard shortcuts"), u"keyboard"_s,
+        {QKeySequence(Qt::Key_F1), QKeySequence(Qt::CTRL | Qt::Key_Slash)}, &MainWindow::showShortcuts);
+    add(tr("What's new"), u"sparkles"_s, {}, &MainWindow::showWhatsNew);
+    add(tr("Report a bug..."), u"bug"_s, {}, &MainWindow::showBugReport);
+    add(tr("About Omnidict"), u"info"_s, {}, &MainWindow::showAbout)->setObjectName(u"aboutAction"_s);
+    m_mainMenu->addSeparator();
+    add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, [] {
+        QApplication::quit();
+    })->setObjectName(u"quitAction"_s);
     m_menuButton->setMenu(m_mainMenu);
 }
 
@@ -338,6 +359,9 @@ void MainWindow::refreshIcons()
     m_filterButton->setIcon(icons::themed(u"books"_s, t.muted));
     m_filterChevron->setPixmap(icons::pixmap(u"down"_s, t.muted, kChevronSize, devicePixelRatioF()));
     m_menuButton->setIcon(icons::themed(u"menu"_s, t.text));
+    for (const auto& [action, glyph] : std::as_const(m_menuIcons)) {
+        action->setIcon(icons::themed(glyph, t.muted));
+    }
     m_back->setIcon(icons::themed(u"back"_s, t.text));
     m_forward->setIcon(icons::themed(u"forward"_s, t.text));
     m_copy->setIcon(icons::themed(u"copy"_s, t.text));
@@ -538,7 +562,7 @@ void MainWindow::onResultAction(const QModelIndex& index)
 {
     switch (index.data(models::ResultsModel::ActionRole).value<models::ResultsModel::Action>()) {
     case models::ResultsModel::Action::ClearHistory:
-        QMetaObject::invokeMethod(m_lookup, &services::LookupService::clearHistory, Qt::QueuedConnection);
+        clearHistory();
         break;
     case models::ResultsModel::Action::ShowAllDefinitions:
         m_model->showAllDefinitions();
@@ -729,8 +753,72 @@ void MainWindow::showNoMatch(const QString& text, bool hasSuggestions)
 
 void MainWindow::showAbout()
 {
+    // Sheets never stack (DOCS/DESIGN.md): About closes before the one it opens.
+    enum class Next
+    {
+        None,
+        WhatsNew,
+        BugReport,
+    };
+    Next next = Next::None;
     AboutDialog dialog(m_dictionaries, this);
+    connect(&dialog, &AboutDialog::whatsNewRequested, &dialog, [&] {
+        next = Next::WhatsNew;
+        dialog.accept();
+    });
+    connect(&dialog, &AboutDialog::bugReportRequested, &dialog, [&] {
+        next = Next::BugReport;
+        dialog.accept();
+    });
     dialog.exec();
+    if (next == Next::WhatsNew) {
+        showWhatsNew();
+    } else if (next == Next::BugReport) {
+        showBugReport();
+    }
+}
+
+void MainWindow::showSettings()
+{
+    SettingsDialog dialog(m_settings, m_roots.constLast(), this);
+    connect(&dialog, &SettingsDialog::clearHistoryRequested, this, &MainWindow::clearHistory);
+    dialog.exec();
+}
+
+void MainWindow::showShortcuts()
+{
+    ShortcutsDialog dialog(defaultShortcuts(), this);
+    dialog.exec();
+}
+
+void MainWindow::showWhatsNew()
+{
+    WhatsNewDialog dialog(QCoreApplication::applicationVersion(), this);
+    dialog.exec();
+}
+
+void MainWindow::showWhatsNewIfUpdated()
+{
+    const QString version = QCoreApplication::applicationVersion();
+    const bool show = WhatsNewDialog::shouldShowWhatsNew(m_settings, version);
+    m_settings.setWhatsNewSeenVersion(version);
+    if (show) {
+        QTimer::singleShot(0, this, &MainWindow::showWhatsNew);
+    }
+}
+
+void MainWindow::showBugReport()
+{
+    BugReportDialog dialog(diagnosticsText(m_dictionaries), this);
+    dialog.exec();
+}
+
+void MainWindow::clearHistory()
+{
+    QMetaObject::invokeMethod(m_lookup, &services::LookupService::clearHistory, Qt::QueuedConnection);
+    Toast::show(this, tr("History cleared"), tr("Undo"), [this] {
+        QMetaObject::invokeMethod(m_lookup, &services::LookupService::undoClearHistory, Qt::QueuedConnection);
+    });
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)

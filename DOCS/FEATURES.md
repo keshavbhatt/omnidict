@@ -74,10 +74,10 @@ expects every ktechpit desktop app to have.
 | E2 | Rotating log sink with diagnostics | M2 | KEEP | done (`core::LogSink` from the kit: `<profile>/logs/omnidict.log`, 2 MB rotation, last 1000 lines in memory; `tst_log_sink`) |
 | E3 | Single instance | M2 | KEEP | planned |
 | E4 | Theme: system / light / dark | M2 | KEEP | done: `ui::ThemeApplier` follows the setting and the desktop live; tokens in `ui::Tokens` match DOCS/mocks/mock.css |
-| E5 | About dialog with diagnostics | M2 | KEEP | planned |
-| E6 | Report a bug | M2 | KEEP | planned |
-| E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | planned |
-| E8 | What's new sheet from the bundled changelog | M2 | KEEP | planned |
+| E5 | About dialog with diagnostics | M2 | KEEP | done (mocks/about.html: dictionary credits, open-source notices, diagnostics tab; `tst_sheets`) |
+| E6 | Report a bug | M2 | KEEP | done (mocks/bug-report.html: GitHub issue or email, diagnostics on the clipboard, nothing sent by the app) |
+| E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | done (mocks/shortcuts.html, filterable) |
+| E8 | What's new sheet from the bundled changelog | M2 | KEEP | done (mocks/whats-new.html; once after an update, and from the menu and About) |
 | E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | planned |
 
 ## F. Packaging

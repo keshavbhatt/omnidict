@@ -5,12 +5,16 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [0.1.0] - unreleased
 
-First scaffold of Omnidict: a single, consistent dictionary bundle format and the beginnings of
-lookup.
+The first version: look words up offline in dictionaries from Wiktionary.
 
 ### Added
-- A dictionary bundle format: one self-contained file per dictionary, holding headwords,
-  pronunciations, senses, examples and cross-references in one consistent structure.
-- Lookup by exact headword, from a command-line tool for now.
-- Matching by prefix and by inflected or variant form (for example, a plural or past-tense
-  form finds its base word).
+- Spanish - English, English and Hindi - English dictionaries from Wiktionary, all offline.
+- Results appear as you type, grouped by dictionary, with the best match first.
+- Accents are optional: resume finds résumé.
+- Wildcards: ? stands for one letter and * for any run of letters.
+- "Did you mean" suggestions when a word is misspelled, in every script.
+- Words that appear only inside definitions are listed under "Also found in definitions".
+- Favourites and recent lookups; Ctrl+D stars the entry on screen.
+- Links inside an entry open that word, and Back returns.
+- Light and dark themes that follow the desktop, and a text size you can change.
+- Keyboard shortcuts for everything, listed with F1.

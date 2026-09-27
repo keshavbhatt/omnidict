@@ -51,6 +51,13 @@ public:
     void setQuery(const QString& text);
     /// Opens the About sheet (modal).
     void showAbout();
+    /// The other sheets, as the main menu opens them (modal).
+    void showSettings();
+    void showShortcuts();
+    void showWhatsNew();
+    void showBugReport();
+    /// After an update, shows What's new once; always remembers the running version.
+    void showWhatsNewIfUpdated();
 
 Q_SIGNALS:
     /// The dictionaries are open (or found to be missing).
@@ -109,6 +116,7 @@ private:
     void showWelcome();
     void showNoMatch(const QString& text, bool hasSuggestions);
     void clearEntry();
+    void clearHistory();
     /// Below kNarrowWidth the list and the entry share one column (DOCS/DESIGN.md).
     void applyLayoutMode();
     void showEntryColumn(bool entry);
@@ -130,6 +138,7 @@ private:
     QMenu* m_filterMenu = nullptr;
     QToolButton* m_menuButton = nullptr;
     QMenu* m_mainMenu = nullptr;
+    QList<std::pair<QAction*, QString>> m_menuIcons; ///< main menu actions and their glyphs
     QSplitter* m_splitter = nullptr;
     QListView* m_results = nullptr;
     models::ResultsModel* m_model = nullptr;
