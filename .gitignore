@@ -1,0 +1,55 @@
+# Build
+build/
+build-*/
+cmake-build-*/
+CMakeUserPresets.json
+compile_commands.json
+
+# Pipeline
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+pipeline/out/
+pipeline/sources/
+
+# IDE
+.vscode/
+.idea/
+*.user
+*.user.*
+.cache/
+.qtcreator/
+
+# Generated
+*.o
+*.a
+*.so
+*.qm
+moc_*
+ui_*
+qrc_*
+*.autosave
+
+# Packaging output
+*.snap
+*.deb
+*.AppImage
+*.flatpak
+*.exe
+*.msi
+*.dmg
+squashfs-root/
+parts/
+prime/
+stage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local agent settings
+.claude/settings.local.json
