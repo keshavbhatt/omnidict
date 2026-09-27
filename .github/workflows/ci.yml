@@ -1,0 +1,97 @@
+# Tests and lint for both halves of the monorepo. The pipeline job builds the
+# sample bundle that the app job's C++ tests read, so the round trip between
+# the two is checked on every push.
+# The snap workflow from the kit arrives with packaging (M5).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  # Same majors as the development machines; Ubuntu's own packages are older
+  # and check differently.
+  CLANG_FORMAT_VERSION: "22.1.1"
+  CLANG_TIDY_VERSION: "22.1.8"
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ICU headers for PyICU
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libicu-dev pkg-config
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          working-directory: pipeline
+
+      - name: Sync
+        run: uv sync --locked
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Build the sample bundle
+        run: make fixture
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample-en-bundle
+          path: pipeline/out/sample-en/dict.sqlite
+          if-no-files-found: error
+
+  app:
+    needs: pipeline
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: KDE Qt SDK and runtime snaps
+        run: |
+          sudo snap install kde-qt6-core24-sdk
+          sudo snap install kf6-core24
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build shellcheck
+
+      - uses: astral-sh/setup-uv@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sample-en-bundle
+          path: pipeline/out/sample-en
+
+      - name: Build with warnings as errors
+        env:
+          OMNIDICT_CMAKE_ARGS: "-DOMNIDICT_BUILD_TESTS=ON -DOMNIDICT_WERROR=ON"
+        run: scripts/dev-build.sh
+
+      - name: Test
+        run: scripts/dev-run.sh --ctest
+
+      - name: clang-format
+        run: |
+          find app/src app/tests -name '*.cpp' -o -name '*.h' \
+            | xargs uvx --from "clang-format==${CLANG_FORMAT_VERSION}" clang-format --dry-run --Werror
+
+      - name: clang-tidy
+        run: |
+          find app/src app/tests -name '*.cpp' \
+            | xargs uvx --from "clang-tidy==${CLANG_TIDY_VERSION}" clang-tidy -p build --quiet --warnings-as-errors='*'
+
+      - name: shellcheck
+        run: shellcheck -x scripts/*.sh
+
+  reuse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: fsfe/reuse-action@v5
