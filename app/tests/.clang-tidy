@@ -1,0 +1,14 @@
+---
+# Qt Test idiom the project-wide checks misread:
+# - test functions are private slots, so they cannot be static;
+# - data functions must be named <test>_data;
+# - QVERIFY/QFETCH are macros that return early or declare non-const locals;
+# - a test function is a flat list of checks, long but not complex.
+InheritParentConfig: true
+Checks: >
+  -readability-convert-member-functions-to-static,
+  -readability-identifier-naming,
+  -readability-function-size,
+  -readability-function-cognitive-complexity,
+  -bugprone-unchecked-optional-access,
+  -misc-const-correctness
