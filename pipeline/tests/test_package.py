@@ -76,7 +76,7 @@ def test_package_bundle_layout_and_manifest(fixtures_dir: Path, tmp_path: Path) 
     assert manifest["name"] == "Sample English"
     assert manifest["kind"] == "monolingual"
     assert manifest["version"] == "2026.09.1"
-    assert manifest["schema_version"] == 1
+    assert manifest["schema_version"] == 2
     assert manifest["entry_count"] == 14
     assert manifest["size_installed"] == sqlite_path.stat().st_size
     assert manifest["size_compressed"] == odict_path.stat().st_size
@@ -207,7 +207,7 @@ def test_read_meta_wrong_schema_version_raises(fixtures_dir: Path, tmp_path: Pat
     sqlite_path = _build(fixtures_dir, tmp_path / "build")
     conn = sqlite3.connect(sqlite_path)
     try:
-        conn.execute("UPDATE meta SET value = '2' WHERE key = 'schema_version'")
+        conn.execute("UPDATE meta SET value = '3' WHERE key = 'schema_version'")
         conn.commit()
     finally:
         conn.close()

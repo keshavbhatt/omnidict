@@ -1,0 +1,18 @@
+{
+  "comment": "Spelling suggestions (ADR-013) on the fixture bundle built from tests/fixtures/sample-en.jsonl. Queries are normalized first. Read by pipeline/tests/test_suggest.py and app/tests/tst_suggester.cpp; both must return exactly these words, in this order.",
+  "cases": [
+    {"query": "prehaps", "words": ["perhaps"]},
+    {"query": "dictionery", "words": ["dictionary"]},
+    {"query": "serendipty", "words": ["serendipity"]},
+    {"query": "bokshelf", "words": ["bookshelf"]},
+    {"query": "Mondya", "words": ["monday"]},
+    {"query": "resme", "words": ["resume"]},
+    {"query": "moose", "words": ["mouse"]},
+    {"query": "boo", "words": ["book"]},
+    {"query": "caffe", "words": ["cafe"]},
+    {"query": "bookmrak", "words": ["bookmark"]},
+    {"query": "xyzzy", "words": []},
+    {"query": "ab", "words": []},
+    {"query": "perhaps", "words": []}
+  ]
+}

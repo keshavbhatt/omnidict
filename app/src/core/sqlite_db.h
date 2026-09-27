@@ -41,6 +41,9 @@ public:
     [[nodiscard]] bool next();
     [[nodiscard]] bool failed() const { return m_failed; }
 
+    /// Rewinds the statement and clears its parameters, to run it again.
+    void reset();
+
     /// Column indexes are 0-based. NULL reads as an empty string or 0.
     [[nodiscard]] QString text(int column) const;
     [[nodiscard]] QByteArray blob(int column) const;

@@ -23,6 +23,8 @@ from typing import Final
 
 import zstandard
 
+from omnipipe.schema import SCHEMA_VERSION
+
 logger = logging.getLogger(__name__)
 
 ODICT_SUFFIX: Final = ".odict"
@@ -70,7 +72,8 @@ def read_meta(sqlite_path: Path) -> dict[str, str]:
 
     Opens the file strictly read-only. Raises `PackageError` if the file is
     missing, is not a valid SQLite database, the meta table lacks any of
-    the 12 required PLAN.md keys, or `schema_version` is not `"1"`.
+    the 12 required PLAN.md keys, or `schema_version` is not the one this
+    pipeline builds (`SCHEMA_VERSION`).
     """
     uri = _ro_uri(sqlite_path)
     try:
@@ -88,9 +91,10 @@ def read_meta(sqlite_path: Path) -> dict[str, str]:
         raise PackageError(
             f"{sqlite_path}: meta table missing required key(s): {', '.join(missing)}"
         )
-    if meta["schema_version"] != "1":
+    if meta["schema_version"] != str(SCHEMA_VERSION):
         raise PackageError(
-            f"{sqlite_path}: unsupported schema_version {meta['schema_version']!r} (expected '1')"
+            f"{sqlite_path}: unsupported schema_version {meta['schema_version']!r}"
+            f" (expected '{SCHEMA_VERSION}')"
         )
     return meta
 

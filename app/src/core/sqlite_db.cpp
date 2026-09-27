@@ -63,6 +63,14 @@ bool SqliteStatement::next()
     return false;
 }
 
+void SqliteStatement::reset()
+{
+    sqlite3_reset(m_statement.get());
+    sqlite3_clear_bindings(m_statement.get());
+    m_boundText.clear();
+    m_failed = false;
+}
+
 QString SqliteStatement::text(int column) const
 {
     const unsigned char* bytes = sqlite3_column_text(m_statement.get(), column);

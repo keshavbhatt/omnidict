@@ -53,6 +53,10 @@ omnidict_add_test(tst_search_engine tst_search_engine.cpp omnidict_core)
 target_link_libraries(tst_search_engine PRIVATE SQLite::SQLite3)
 target_compile_definitions(tst_search_engine PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+omnidict_add_test(tst_suggester tst_suggester.cpp omnidict_core)
+target_compile_definitions(tst_suggester PRIVATE
+    OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}"
+    OMNIDICT_SUGGEST_CASES="${OMNIDICT_REPO_ROOT}/tests/suggest_cases.json")
 omnidict_add_test(tst_user_data tst_user_data.cpp omnidict_core)
 omnidict_add_test(tst_entry_renderer tst_entry_renderer.cpp omnidict_core)
 target_compile_definitions(tst_entry_renderer PRIVATE

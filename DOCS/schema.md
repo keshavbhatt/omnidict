@@ -4,7 +4,7 @@ Generated from `DOCS/PLAN.md` section 4. This is the reference used by both `pip
 and `app/src/core`; if the two disagree, this file and `PLAN.md` are the tie-breaker, and
 whichever side is wrong gets fixed.
 
-`meta.schema_version` is currently **1**. Any change to the SQL schema below or to the
+`meta.schema_version` is currently **2**. Any change to the SQL schema below or to the
 manifest fields (`DOCS/PLAN.md` section 5.1) bumps `schema_version` and updates this file in
 the same commit. The client refuses to open a bundle with a higher major `schema_version` than
 it understands.
@@ -85,6 +85,10 @@ CREATE VIRTUAL TABLE fts USING fts5(
   tokenize='unicode61 remove_diacritics 2'
 );
 CREATE TABLE fts_map (rowid INTEGER PRIMARY KEY, entry_id INTEGER NOT NULL);
+
+-- Spelling suggestions (ADR-013, schema_version 2): each distinct headword_norm once,
+-- as char(2) || headword_norm || char(3), rowids in headword_norm order.
+CREATE VIRTUAL TABLE suggest USING fts5(word, tokenize='trigram', detail='none');
 ```
 
 ## Required `meta` keys
@@ -196,9 +200,24 @@ One `fts` row per **sense**, not per entry:
 `fts_map.rowid` is the `fts` table's own rowid; `fts_map.entry_id` is the owning entry's id, so
 a full-text hit is resolved back to an entry by joining `fts_map` on `fts`'s rowid.
 
+## Suggestions
+
+The `suggest` table feeds "Did you mean" when a search matches nothing (ADR-013). The
+algorithm is specified in `pipeline/omnipipe/suggest.py` (the reference) and implemented again
+in `app/src/core/suggester.cpp`; `tests/suggest_cases.json` holds the cases both must pass.
+In short: the query's trigrams, with the same markers around it, are looked up rarest first in
+an `fts5vocab` table the reader creates in `temp`; words sharing the most trigrams become
+candidates; candidates within 1 (up to 4 letters), 2 (up to 8) or 3 optimal-string-alignment
+edits are ranked by distance, length difference, shared trigrams and code point order.
+
 ## Schema versioning
 
-`schema_version` is **1**. Any change to the SQL DDL above or to the manifest fields
+| Version | Change |
+|---|---|
+| 1 | First schema (PLAN 4.1). |
+| 2 | Indexes on the child tables' parent ids (ADR-012) and the `suggest` table (ADR-013). |
+
+`schema_version` is **2**. Any change to the SQL DDL above or to the manifest fields
 (`DOCS/PLAN.md` section 5.1) is a schema change: it bumps `schema_version` and updates this
 file, in the same commit that makes the change. The client refuses to open a bundle whose
 `meta.schema_version` is higher than the version it was built to understand.

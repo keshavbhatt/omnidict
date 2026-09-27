@@ -1,20 +1,116 @@
 {
-  "description": "Round-trip gate (PLAN.md 6.4): words every real bundle must answer. Read by app/tests/tst_real_bundles.cpp against pipeline/out/<dict_id>/dict.sqlite.",
+  "description": "Round-trip gate (PLAN.md 6.4): words every real bundle must answer. Read by app/tests/tst_real_bundles.cpp against pipeline/out/<dict_id>/dict.sqlite. `suggestions` maps a misspelling to the normalized headword that must be among its five suggestions, answered within the time budget in tst_real_bundles.",
   "dictionaries": {
     "wikt-hi-en": {
-      "headwords": ["पानी", "खाना", "कदाचित्", "लड़का", "घर", "किताब", "पुस्तक", "दिन", "रात", "आदमी", "औरत", "बच्चा", "पेड़", "सूरज", "चाँद", "दोस्त", "प्यार", "हाथ", "आँख", "नमस्ते"],
-      "forms": {"लड़के": "लड़का", "kadacit": "कदाचित्", "pani": "पानी"},
-      "full_text": "water"
+      "headwords": [
+        "पानी",
+        "खाना",
+        "कदाचित्",
+        "लड़का",
+        "घर",
+        "किताब",
+        "पुस्तक",
+        "दिन",
+        "रात",
+        "आदमी",
+        "औरत",
+        "बच्चा",
+        "पेड़",
+        "सूरज",
+        "चाँद",
+        "दोस्त",
+        "प्यार",
+        "हाथ",
+        "आँख",
+        "नमस्ते"
+      ],
+      "forms": {
+        "लड़के": "लड़का",
+        "kadacit": "कदाचित्",
+        "pani": "पानी"
+      },
+      "full_text": "water",
+      "suggestions": {
+        "नमसते": "नमस्ते",
+        "कीताब": "किताब",
+        "पानि": "पानी",
+        "दोसत": "दोस्त",
+        "आदमि": "आदमी"
+      }
     },
     "wikt-es-en": {
-      "headwords": ["agua", "casa", "perro", "gato", "comer", "hablar", "niño", "libro", "día", "noche", "hombre", "mujer", "árbol", "sol", "luna", "amigo", "amor", "mano", "ojo", "hola"],
-      "forms": {"comí": "comer", "hablaríamos": "hablar", "perros": "perro"},
-      "full_text": "dog"
+      "headwords": [
+        "agua",
+        "casa",
+        "perro",
+        "gato",
+        "comer",
+        "hablar",
+        "niño",
+        "libro",
+        "día",
+        "noche",
+        "hombre",
+        "mujer",
+        "árbol",
+        "sol",
+        "luna",
+        "amigo",
+        "amor",
+        "mano",
+        "ojo",
+        "hola"
+      ],
+      "forms": {
+        "comí": "comer",
+        "hablaríamos": "hablar",
+        "perros": "perro"
+      },
+      "full_text": "dog",
+      "suggestions": {
+        "trabajr": "trabajar",
+        "cocinna": "cocina",
+        "murcielgo": "murcielago",
+        "ciudadd": "ciudad",
+        "escuala": "escuela"
+      }
     },
     "wikt-en": {
-      "headwords": ["water", "house", "dog", "cat", "eat", "speak", "child", "book", "day", "night", "man", "woman", "tree", "sun", "moon", "friend", "love", "hand", "eye", "hello"],
-      "forms": {"ran": "run", "children": "child", "mice": "mouse"},
-      "full_text": "domesticated"
+      "headwords": [
+        "water",
+        "house",
+        "dog",
+        "cat",
+        "eat",
+        "speak",
+        "child",
+        "book",
+        "day",
+        "night",
+        "man",
+        "woman",
+        "tree",
+        "sun",
+        "moon",
+        "friend",
+        "love",
+        "hand",
+        "eye",
+        "hello"
+      ],
+      "forms": {
+        "ran": "run",
+        "children": "child",
+        "mice": "mouse"
+      },
+      "full_text": "domesticated",
+      "suggestions": {
+        "dictionery": "dictionary",
+        "acomodate": "accommodate",
+        "pronounciation": "pronunciation",
+        "neccessary": "necessary",
+        "ambigous": "ambiguous"
+      }
     }
   }
 }

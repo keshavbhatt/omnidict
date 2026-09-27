@@ -2,6 +2,7 @@
 
 #include "core/entry.h"
 #include "core/result.h"
+#include "core/suggester.h"
 #include "core/sqlite_db.h"
 
 #include <QList>
@@ -20,7 +21,7 @@ class Bundle
 {
 public:
     /// The highest `meta.schema_version` this build reads.
-    static constexpr int kSupportedSchemaVersion = 1;
+    static constexpr int kSupportedSchemaVersion = 2;
 
     /// Opens the bundle and checks that it is one this build can read:
     /// required metadata present, schema version not newer than supported.
@@ -44,6 +45,10 @@ public:
     /// Entries whose definitions or examples contain every word of the
     /// query, best match first.
     [[nodiscard]] QList<EntryPreview> searchFullText(const QString& query, int limit) const;
+
+    /// Headwords close to a query that found nothing (ADR-013), best first.
+    /// Empty for version 1 bundles, which have no `suggest` table.
+    [[nodiscard]] QList<Suggestion> suggest(const QString& query, int limit) const;
 
     /// The complete entry, or nothing when the id is unknown.
     [[nodiscard]] std::optional<Entry> entry(qint64 id) const;

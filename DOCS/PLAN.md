@@ -271,9 +271,13 @@ CREATE VIRTUAL TABLE fts USING fts5(
   tokenize='unicode61 remove_diacritics 2'
 );
 CREATE TABLE fts_map (rowid INTEGER PRIMARY KEY, entry_id INTEGER NOT NULL);
+
+-- Spelling suggestions (ADR-013, schema_version 2): each distinct headword_norm once,
+-- as char(2) || headword_norm || char(3), rowids in headword_norm order.
+CREATE VIRTUAL TABLE suggest USING fts5(word, tokenize='trigram', detail='none');
 ```
 
-Schema versioning: `meta.schema_version` = `1`. Client refuses bundles with a higher major version.
+Schema versioning: `meta.schema_version` = `2` (version 2 added the child-table indexes of ADR-012 and the `suggest` table of ADR-013). Client refuses bundles with a higher major version.
 
 ### 4.2 Canonical JSONL (converter output -> build input)
 
@@ -341,7 +345,7 @@ The same normalization function must exist in Python (`pipeline/omnipipe/normali
   "target_lang": "en",
   "kind": "bilingual",
   "version": "2026.09.1",
-  "schema_version": 1,
+  "schema_version": 2,
   "publisher": "Wiktionary contributors",
   "license": "CC-BY-SA-4.0",
   "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -442,7 +446,7 @@ make all                            # everything, parallel via GNU make -j
 - Empty query shows history
 - Exact match wins, then prefix, then FTS full-text (definitions/examples) as a "Also found in definitions" section
 - Wildcards: `?` and `*` translate to SQL `LIKE` on `headword_norm` (`_` / `%`)
-- Spell suggestion: if zero results, run FTS5 `spellfix1` **(OPEN: bundle spellfix1 or implement Damerau-Levenshtein over a headword sample)**
+- Spell suggestion: if zero results, candidates from the bundle's `suggest` FTS5 trigram table ranked by Damerau-Levenshtein distance (ADR-013)
 - "All ▼" dictionary filter dropdown restricts fan-out to one bundle
 
 **Entry view:**
@@ -537,7 +541,7 @@ Start with **M0, then M1, then M2** in that order; M1 before M2 so the client is
 1. ~~Widgets vs QML for the UI~~ RESOLVED: Qt Widgets (D14).
 2. CDN/object store provider for bundle hosting (and monthly bandwidth budget). Owner, 2026-09-27: keep everything local for now; nothing is published or exposed publicly until the feature is fully implemented, tested, its UI reviewed and the owner agrees it is ready
 3. ~~App name and `dict_id` prefix conventions~~ RESOLVED: app name Omnidict, identity `com.ktechpit.omnidict` (D17); `dict_id` naming stays `<source>-<src_lang>-<tgt_lang>` (section 5.1) and is unaffected by the app name.
-4. Spell-suggestion implementation (spellfix1 vs custom). Research and a recommendation (our own trigram suggester) in `DOCS/spell-suggestion.md` and ADR-013 (proposed); not implemented until the owner agrees
+4. ~~Spell-suggestion implementation (spellfix1 vs custom)~~ RESOLVED (owner, 2026-09-27): our own trigram and edit-distance suggester in the bundle, `schema_version` 2 (ADR-013, research in `DOCS/spell-suggestion.md`)
 5. Whether to ship an initial English monolingual bundle inside the installer or require a first download
 6. Telemetry: none by default, confirm
 

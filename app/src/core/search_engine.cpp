@@ -97,6 +97,9 @@ SearchResults SearchEngine::search(const SearchQuery& query) const
                 {.dictId = bundle.meta().dictId, .dictName = bundle.meta().name, .rows = others});
         }
     }
+    if (!pattern && results.isEmpty()) {
+        results.suggestions = suggest(query, text);
+    }
     if (!pattern) {
         const QString typed = text.normalized(QString::NormalizationForm_C);
         const QString key = normalizeHeadword(text);
@@ -105,6 +108,50 @@ SearchResults SearchEngine::search(const SearchQuery& query) const
         });
     }
     return results;
+}
+
+QList<SuggestedWord> SearchEngine::suggest(const SearchQuery& query, const QString& text) const
+{
+    if (query.suggestions <= 0) {
+        return {};
+    }
+    struct Candidate
+    {
+        int distance = 0;
+        QString word{};
+        const Bundle* bundle = nullptr;
+    };
+    QList<Candidate> found;
+    for (const Bundle& bundle : m_library.bundles()) {
+        if (!query.dictId.isEmpty() && bundle.meta().dictId != query.dictId) {
+            continue;
+        }
+        for (const Suggestion& suggestion : bundle.suggest(text, query.suggestions)) {
+            found.append({.distance = suggestion.distance, .word = suggestion.word, .bundle = &bundle});
+        }
+    }
+    // Closest first; among equals the library order stands.
+    std::ranges::stable_sort(found, {}, &Candidate::distance);
+
+    QList<SuggestedWord> words;
+    QSet<QString> seen;
+    for (const Candidate& candidate : std::as_const(found)) {
+        if (words.size() >= query.suggestions) {
+            break;
+        }
+        if (seen.contains(candidate.word)) {
+            continue;
+        }
+        const QList<EntryPreview> entries = candidate.bundle->lookupExact(candidate.word);
+        if (entries.isEmpty()) {
+            continue;
+        }
+        seen.insert(candidate.word);
+        words.append({.dictId = candidate.bundle->meta().dictId,
+                      .dictName = candidate.bundle->meta().name,
+                      .entry = entries.first()});
+    }
+    return words;
 }
 
 } // namespace omnidict::core

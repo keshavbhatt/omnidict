@@ -21,7 +21,7 @@ from typing import TextIO
 
 from omnipipe.html_subset import sanitize, to_plain
 from omnipipe.normalize import icu_version, normalize_headword, sort_key, unicode_version
-from omnipipe.schema import DictSpec, Entry, SchemaError
+from omnipipe.schema import SCHEMA_VERSION, DictSpec, Entry, SchemaError
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +122,8 @@ CREATE VIRTUAL TABLE fts USING fts5(
   tokenize='unicode61 remove_diacritics 2'
 );
 CREATE TABLE fts_map (rowid INTEGER PRIMARY KEY, entry_id INTEGER NOT NULL);
+
+CREATE VIRTUAL TABLE suggest USING fts5(word, tokenize='trigram', detail='none');
 """
 
 
@@ -239,6 +241,15 @@ def build_bundle(
             raise BuildError("no entries to build: input produced zero entries")
         conn.executescript(indexes_sql)
         conn.execute("INSERT INTO fts (fts) VALUES ('optimize')")
+        # Spelling suggestions (ADR-013): every distinct headword_norm once, between
+        # the markers U+0002 and U+0003 so the first and last letters form trigrams
+        # of their own, in a fixed order so rowids and tie-breaks are reproducible.
+        conn.execute(
+            "INSERT INTO suggest (word) "
+            "SELECT char(2) || headword_norm || char(3) FROM "
+            "(SELECT DISTINCT headword_norm FROM entries ORDER BY headword_norm)"
+        )
+        conn.execute("INSERT INTO suggest (suggest) VALUES ('optimize')")
 
         built_at_iso = _utc_now_iso(built_at)
         meta_rows = [
@@ -247,7 +258,7 @@ def build_bundle(
             ("source_lang", spec.source_lang),
             ("target_lang", spec.target_lang),
             ("version", spec.version),
-            ("schema_version", "1"),
+            ("schema_version", str(SCHEMA_VERSION)),
             ("publisher", spec.publisher),
             ("license", spec.license),
             ("license_url", spec.license_url),

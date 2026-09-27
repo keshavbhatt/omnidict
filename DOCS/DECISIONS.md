@@ -229,8 +229,8 @@ snap's `icon:` points at the 512 px PNG or the scalable SVG.
 
 ## ADR-012: Child-table indexes added within schema version 1 (2026-09-27)
 
-**Status.** Accepted by the agent during M1; **for the owner to confirm**, since the standing
-rule is that schema changes bump `schema_version`.
+**Status.** Superseded in part (2026-09-27): the owner asked for the strict reading, so the
+indexes ship with `schema_version` 2 together with ADR-013's suggestion table.
 
 **Context.** PLAN 4.1 indexed `examples`, `pronunciations`, `forms` and `relations` only for
 lookup, not by their parent. Opening one entry of the 884k-entry `wikt-en` bundle then scanned
@@ -252,13 +252,13 @@ one-line bump to 2 before the first catalog is published.
 
 ## ADR-013: Spell suggestion with our own trigram and edit-distance suggester (2026-09-27)
 
-**Status.** Proposed; **waits on the owner** (PLAN 9 question 4). Nothing is implemented.
+**Status.** Accepted by the owner, 2026-09-27 (PLAN 9 question 4), with `schema_version` 2.
 
 **Context.** Zero-result searches should offer "Did you mean". PLAN suggested SQLite's
 spellfix1 extension or a custom Damerau-Levenshtein method. Both were measured on the three
 M1 bundles; the numbers and the full comparison are in `DOCS/spell-suggestion.md`.
 
-**Proposal.** A `suggest` FTS5 table (built-in `trigram` tokenizer) over each bundle's distinct
+**Decision.** A `suggest` FTS5 table (built-in `trigram` tokenizer) over each bundle's distinct
 `headword_norm`, built by the pipeline; the client takes candidates from it and ranks them by
 Damerau-Levenshtein distance in C++, on the lookup thread, only on zero results. The bundle
 gains a table, so `schema_version` goes to 2 together with ADR-012's indexes. Reason:
@@ -266,6 +266,6 @@ spellfix1 returned unrelated words for every Devanagari query, needs a vendored 
 that no system SQLite ships, and makes bundles unreadable by tools without it; the custom
 method matched it on English and Spanish, works for any script, and adds no dependency.
 
-**Consequences if accepted.** A latency test holds suggestions under 100 ms on English (the
+**Consequences.** A latency test holds suggestions under 100 ms on English (the
 prototype's worst case was 337 ms in Python, so the query needs the tuning described in the
 research note). Shared cases in `tests/suggest_cases.json` keep Python and C++ in step.

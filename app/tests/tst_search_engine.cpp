@@ -192,6 +192,24 @@ private Q_SLOTS:
         QVERIFY(results.definitions.isEmpty());
     }
 
+    void zeroResultsSuggestHeadwordsOnce()
+    {
+        const SearchResults results = engine().search({.text = u"Mondya"_s});
+        QVERIFY(results.isEmpty());
+        // Several copies of the fixture are installed; the word is offered once,
+        // spelled as the dictionary spells it, from the first dictionary.
+        QCOMPARE(results.suggestions.size(), 1);
+        QCOMPARE(results.suggestions.first().entry.headword, u"Monday"_s);
+        QVERIFY(!results.suggestions.first().dictName.isEmpty());
+    }
+
+    void noSuggestionsWhenSomethingMatchesOrForPatterns()
+    {
+        QVERIFY(engine().search({.text = u"perhaps"_s}).suggestions.isEmpty());
+        QVERIFY(engine().search({.text = u"prehap*"_s}).suggestions.isEmpty());
+        QVERIFY(engine().search({.text = u"prehaps"_s, .suggestions = 0}).suggestions.isEmpty());
+    }
+
     void blankQueriesFindNothing()
     {
         QVERIFY(engine().search({.text = u"   "_s}).isEmpty());

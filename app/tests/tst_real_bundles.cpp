@@ -1,6 +1,7 @@
 #include "core/bundle.h"
 
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -107,6 +108,40 @@ private Q_SLOTS:
         const QString prefix = headwords.first().toString().left(2);
         QVERIFY(!bundle->searchPrefix(prefix, 10).isEmpty());
         QVERIFY(!bundle->searchFullText(words.value(u"full_text"_s).toString(), 10).isEmpty());
+    }
+
+    void suggestsSpellingsInTime_data() { answersKnownWords_data(); }
+    void suggestsSpellingsInTime()
+    {
+        QFETCH(QString, dictId);
+        const std::optional<Bundle> bundle = openOrSkip(dictId);
+        if (!bundle) {
+            QSKIP("bundle not built");
+        }
+        if (bundle->meta().schemaVersion < 2) {
+            QSKIP("bundle predates suggestions (schema version 1)");
+        }
+        // ADR-013: suggestions run on the lookup thread after a search that found
+        // nothing, so they share its budget.
+        constexpr qint64 kBudgetMs = 100;
+        const QJsonObject cases = dictionaries().value(dictId).toObject().value(u"suggestions"_s).toObject();
+        QVERIFY(!cases.isEmpty());
+        qint64 slowest = 0;
+        for (auto it = cases.begin(); it != cases.end(); ++it) {
+            QElapsedTimer timer;
+            timer.start();
+            const QList<Suggestion> suggestions = bundle->suggest(it.key(), 5);
+            slowest = std::max(slowest, timer.elapsed());
+            QStringList words;
+            for (const Suggestion& suggestion : suggestions) {
+                words << suggestion.word;
+            }
+            QVERIFY2(words.contains(it.value().toString()),
+                     qPrintable(it.key() + u" should suggest "_s + it.value().toString() + u", got: "_s +
+                                words.join(u", "_s)));
+        }
+        qInfo("%s: slowest suggestion %lld ms", qPrintable(dictId), slowest);
+        QVERIFY2(slowest < kBudgetMs, qPrintable(u"slowest suggestion took %1 ms"_s.arg(slowest)));
     }
 };
 

@@ -72,7 +72,7 @@ private Q_SLOTS:
         const Bundle bundle = openFixture();
         QCOMPARE(bundle.meta().dictId, u"sample-en"_s);
         QCOMPARE(bundle.meta().sourceLang, u"en"_s);
-        QCOMPARE(bundle.meta().schemaVersion, 1);
+        QCOMPARE(bundle.meta().schemaVersion, 2);
         QCOMPARE(bundle.meta().entryCount, 14);
         QVERIFY(!bundle.meta().attribution.isEmpty());
         QVERIFY(!bundle.meta().license.isEmpty());
@@ -235,7 +235,7 @@ private Q_SLOTS:
     {
         const QTemporaryDir dir;
         const QString path =
-            alteredCopy(dir, u"newer.sqlite"_s, "UPDATE meta SET value = '2' WHERE key = 'schema_version'");
+            alteredCopy(dir, u"newer.sqlite"_s, "UPDATE meta SET value = '3' WHERE key = 'schema_version'");
         QVERIFY(!path.isEmpty());
         const auto bundle = Bundle::open(path);
         QVERIFY(!bundle);

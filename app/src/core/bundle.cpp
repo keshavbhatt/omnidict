@@ -198,6 +198,15 @@ QList<EntryPreview> Bundle::previews(const QString& sql, const QList<QString>& t
     return rows;
 }
 
+QList<Suggestion> Bundle::suggest(const QString& query, int limit) const
+{
+    constexpr int kFirstWithSuggestions = 2;
+    if (m_meta.schemaVersion < kFirstWithSuggestions) {
+        return {};
+    }
+    return suggestSpellings(m_db, normalizeHeadword(query), limit);
+}
+
 QList<EntryPreview> Bundle::lookupExact(const QString& query) const
 {
     const QString key = normalizeHeadword(query);

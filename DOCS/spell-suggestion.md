@@ -1,6 +1,6 @@
 # Spell suggestion: spellfix1 or our own (PLAN 9, question 4)
 
-Status: **research for the owner's decision; nothing is implemented.** Measured on
+Status: **accepted by the owner on 2026-09-27** (ADR-013): our own suggester, `schema_version` 2. Measured on
 2026-09-27 against the three real bundles built in M1.
 
 ## The feature

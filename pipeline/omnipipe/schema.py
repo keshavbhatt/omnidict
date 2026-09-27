@@ -12,7 +12,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 POS_TAGS: frozenset[str] = frozenset(
     {
