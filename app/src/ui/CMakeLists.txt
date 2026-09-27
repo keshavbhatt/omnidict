@@ -3,6 +3,8 @@
 qt_add_library(omnidict_ui STATIC
     about_dialog.cpp
     about_dialog.h
+    empty_state.cpp
+    empty_state.h
     entry_view.cpp
     entry_view.h
     icons.cpp
@@ -13,6 +15,8 @@ qt_add_library(omnidict_ui STATIC
     main_window.h
     results_delegate.cpp
     results_delegate.h
+    search_field.cpp
+    search_field.h
     style.cpp
     style.h
     theme_applier.cpp

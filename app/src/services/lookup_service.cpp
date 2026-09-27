@@ -4,6 +4,8 @@
 #include "core/library.h"
 #include "services/logging.h"
 
+#include <ranges>
+
 namespace omnidict::services {
 
 LookupService::LookupService(QObject* parent)
@@ -43,7 +45,26 @@ void LookupService::openUserData(const QString& path)
 
 void LookupService::search(quint64 requestId, const core::SearchQuery& query)
 {
-    Q_EMIT searchFinished(requestId, core::SearchEngine(*m_library).search(query));
+    const core::SearchResults results = core::SearchEngine(*m_library).search(query);
+    QStringList favorites;
+    if (m_userData) {
+        const auto collect = [&](const QString& dictId, const QString& headword) {
+            if (m_userData->isFavorite(dictId, headword)) {
+                favorites << core::favoriteKey(dictId, headword);
+            }
+        };
+        for (const QList<core::ResultGroup>* groups : {&results.headwords, &results.definitions}) {
+            for (const core::ResultGroup& group : *groups) {
+                for (const core::EntryPreview& row : group.rows) {
+                    collect(group.dictId, row.headword);
+                }
+            }
+        }
+        for (const core::SuggestedWord& word : results.suggestions) {
+            collect(word.dictId, word.entry.headword);
+        }
+    }
+    Q_EMIT searchFinished(requestId, results, favorites);
 }
 
 void LookupService::loadEntry(quint64 requestId, const QString& dictId, qint64 entryId)
@@ -114,6 +135,27 @@ void LookupService::requestSaved()
         return;
     }
     Q_EMIT savedEntries(m_userData->history(kRecentShown), m_userData->favorites());
+}
+
+void LookupService::clearHistory()
+{
+    if (m_userData) {
+        m_clearedHistory = m_userData->history(core::UserData::kHistoryLimit);
+        m_userData->clearHistory();
+    }
+    requestSaved();
+}
+
+void LookupService::undoClearHistory()
+{
+    if (m_userData) {
+        // Oldest first, so the most recent ends up on top again.
+        for (const core::SavedEntry& entry : std::views::reverse(m_clearedHistory)) {
+            m_userData->recordView(entry);
+        }
+    }
+    m_clearedHistory.clear();
+    requestSaved();
 }
 
 void registerLookupTypes()

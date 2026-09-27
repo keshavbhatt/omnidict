@@ -3,6 +3,7 @@
 #include "ui/main_window.h"
 
 #include <QApplication>
+#include <QLineEdit>
 #include <QPixmap>
 #include <QTimer>
 
@@ -51,15 +52,23 @@ void installDebugHooks(ui::MainWindow& window)
     if (grabPath.isEmpty()) {
         return;
     }
-    QObject::connect(
-        &window, &ui::MainWindow::entryShown, &window,
-        [&window, grabPath] {
-            QTimer::singleShot(kSettleMs, &window, [&window, grabPath] {
-                const bool saved = window.grab().save(grabPath);
-                QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
-            });
-        },
-        Qt::SingleShotConnection);
+    // Grab once the window has settled after the last result or entry: a search
+    // that matches nothing shows results but never an entry.
+    auto* settle = new QTimer(&window);
+    settle->setSingleShot(true);
+    settle->setInterval(kSettleMs);
+    QObject::connect(settle, &QTimer::timeout, &window, [&window, grabPath] {
+        const bool saved = window.grab().save(grabPath);
+        QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
+    });
+    const bool wantsQuery = !query.isEmpty();
+    QObject::connect(&window, &ui::MainWindow::entryShown, settle, qOverload<>(&QTimer::start));
+    QObject::connect(&window, &ui::MainWindow::resultsShown, settle, [&window, settle, wantsQuery] {
+        // The saved list shown on start is not the answer to the debug query.
+        if (!wantsQuery || !window.findChild<QLineEdit*>(u"search"_s)->text().isEmpty()) {
+            settle->start();
+        }
+    });
     QTimer::singleShot(kGiveUpMs, &window, [] { QCoreApplication::exit(kGrabFailedExit); });
 }
 

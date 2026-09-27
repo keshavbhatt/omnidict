@@ -20,6 +20,12 @@ struct SavedEntry
     [[nodiscard]] bool operator==(const SavedEntry&) const = default;
 };
 
+/// One string naming an entry by dictionary and headword, for sets of favourites.
+[[nodiscard]] inline QString favoriteKey(const QString& dictId, const QString& headword)
+{
+    return dictId + QChar(u'\x1f') + headword;
+}
+
 /// The user's history and favourites, in their own database, never inside a
 /// dictionary bundle (PLAN D6). Move-only; belongs to one thread.
 class UserData

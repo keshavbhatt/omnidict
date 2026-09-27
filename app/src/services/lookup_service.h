@@ -61,11 +61,17 @@ public Q_SLOTS:
     void setFavorite(const QString& dictId, const QString& headword, bool favorite);
     /// Answers with savedEntries().
     void requestSaved();
+    /// Empties the history, keeping it for undoClearHistory(); answers with savedEntries().
+    void clearHistory();
+    /// Puts back what the last clearHistory() removed; answers with savedEntries().
+    void undoClearHistory();
 
 Q_SIGNALS:
     void libraryOpened(const QList<omnidict::services::DictionaryInfo>& dictionaries,
                        const QStringList& problems);
-    void searchFinished(quint64 requestId, const omnidict::core::SearchResults& results);
+    /// `favorites` holds core::favoriteKey(dictId, headword) for every listed entry that is a favourite.
+    void searchFinished(quint64 requestId, const omnidict::core::SearchResults& results,
+                        const QStringList& favorites);
     void entryLoaded(quint64 requestId, const QString& dictId, const omnidict::core::Entry& entry,
                      const QString& html, bool favorite);
     void savedEntries(const QList<omnidict::core::SavedEntry>& recent,
@@ -78,6 +84,7 @@ private:
 
     std::unique_ptr<core::Library> m_library;
     std::optional<core::UserData> m_userData;
+    QList<core::SavedEntry> m_clearedHistory; ///< most recent first, for undo
 };
 
 /// Registers the types the service's queued signals carry. Call once before

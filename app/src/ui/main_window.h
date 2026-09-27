@@ -5,11 +5,19 @@
 #include <QMainWindow>
 #include <QThread>
 
-class QComboBox;
-class QLineEdit;
+class QAction;
+class QActionGroup;
+class QLabel;
 class QListView;
+class QMenu;
+class QSplitter;
+class QStackedWidget;
 class QTimer;
 class QToolButton;
+
+namespace omnidict::core {
+class Settings;
+}
 
 namespace omnidict::models {
 class ResultsModel;
@@ -17,11 +25,15 @@ class ResultsModel;
 
 namespace omnidict::ui {
 
+class EmptyState;
 class EntryView;
+class SearchField;
 
-/// The dictionary window: a search field and dictionary filter over a result
-/// list, and the selected entry beside it. Every lookup runs on the lookup
-/// thread; this class only sends requests and shows answers.
+/// The dictionary window (mocks/main.html): a header with the search field,
+/// the dictionary filter and the main menu; the result list; the entry with
+/// its bar (Back, Forward, Copy, star) or an empty state in its place. Every
+/// lookup runs on the lookup thread; this class only sends requests and shows
+/// answers.
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -30,12 +42,13 @@ class MainWindow : public QMainWindow
 public:
     /// `roots`: the directories dictionaries are found in (core::Library::discover);
     /// `userDataPath`: the history and favourites database.
-    MainWindow(QStringList roots, const QString& userDataPath, QWidget* parent = nullptr);
+    MainWindow(core::Settings& settings, QStringList roots, const QString& userDataPath,
+               QWidget* parent = nullptr);
     ~MainWindow() override; // stops the lookup thread
 
     /// Types a query as if the user had.
     void setQuery(const QString& text);
-    /// Opens the About dialog (modal).
+    /// Opens the About sheet (modal).
     void showAbout();
 
 Q_SIGNALS:
@@ -43,49 +56,96 @@ Q_SIGNALS:
     void libraryReady();
     /// An entry is on screen.
     void entryShown(const QString& dictId, const QString& headword);
+    /// The result list shows the answer to a search, or the saved entries.
+    void resultsShown();
+
+protected:
+    void changeEvent(QEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+    /// An entry by dictionary and headword: what Back and Forward walk.
+    struct Visit
+    {
+        QString dictId;
+        QString headword;
+    };
+
     void setupUi();
-    [[nodiscard]] QWidget* buildSearchPane();
+    [[nodiscard]] QWidget* buildHeader();
+    [[nodiscard]] QWidget* buildResults();
     [[nodiscard]] QWidget* buildEntryPane();
+    void setupActions();
+    void buildMainMenu();
+    void rebuildFilterMenu();
+    void refreshIcons();
     void connectLookup();
+    void connectSettings();
 
     void onLibraryOpened(const QList<services::DictionaryInfo>& dictionaries, const QStringList& problems);
     void requestSearch();
-    void onSearchFinished(quint64 requestId, const core::SearchResults& results);
+    void onSearchFinished(quint64 requestId, const core::SearchResults& results,
+                          const QStringList& favorites);
     void onCurrentResultChanged(const QModelIndex& current);
+    void onResultAction(const QModelIndex& index);
     void onEntryLoaded(quint64 requestId, const QString& dictId, const core::Entry& entry,
                        const QString& html, bool favorite);
     void onSavedEntries(const QList<core::SavedEntry>& recent, const QList<core::SavedEntry>& favorites);
     void onFavoriteToggled(bool favorite);
+    void onEntryNotFound(quint64 requestId, const QString& text);
     void recordShownEntry();
     void showFavoriteState(bool favorite);
-    void onEntryNotFound(quint64 requestId, const QString& text);
     void followHeadword(const QString& headword);
+    void openVisit(const Visit& visit);
+    void goBack();
+    void goForward();
+    void updateNavigation();
+    void copyEntry();
+    void changeTextSize(int step);
+    void setFilter(const QString& dictId);
+    void showWelcome();
+    void showNoMatch(const QString& text, bool hasSuggestions);
+    void clearEntry();
+
     [[nodiscard]] QString currentDictId() const;
+    [[nodiscard]] const services::DictionaryInfo* dictionary(const QString& dictId) const;
 
-    bool eventFilter(QObject* watched, QEvent* event) override;
-
+    core::Settings& m_settings;
     QThread m_lookupThread;
     services::LookupService* m_lookup = nullptr; ///< lives on m_lookupThread, deleted when it finishes
     QStringList m_roots;
     QList<services::DictionaryInfo> m_dictionaries;
+    bool m_libraryOpen = false;
 
-    QLineEdit* m_search = nullptr;
-    QComboBox* m_filter = nullptr;
+    SearchField* m_search = nullptr;
+    QToolButton* m_filterButton = nullptr;
+    QLabel* m_filterChevron = nullptr;
+    QMenu* m_filterMenu = nullptr;
+    QToolButton* m_menuButton = nullptr;
+    QMenu* m_mainMenu = nullptr;
+    QSplitter* m_splitter = nullptr;
     QListView* m_results = nullptr;
     models::ResultsModel* m_model = nullptr;
-    EntryView* m_entry = nullptr;
+    QToolButton* m_back = nullptr;
+    QToolButton* m_forward = nullptr;
+    QLabel* m_crumb = nullptr;
+    QToolButton* m_copy = nullptr;
     QToolButton* m_star = nullptr;
+    QStackedWidget* m_stack = nullptr;
+    EntryView* m_entry = nullptr;
+    EmptyState* m_empty = nullptr;
     QTimer* m_debounce = nullptr;
 
     quint64 m_nextRequest = 1;
-    quint64 m_searchRequest = 0;  ///< the search whose answer is wanted
-    quint64 m_entryRequest = 0;   ///< the entry whose answer is wanted
-    QString m_entryDictId;        ///< dictionary of the entry on screen
-    QString m_entryHeadword;      ///< and its headword
-    bool m_autoSelecting = false; ///< selecting the best match as a preview, not a user choice
-    bool m_recordNext = false;    ///< the entry being loaded goes into the history
+    quint64 m_searchRequest = 0;     ///< the search whose answer is wanted
+    quint64 m_entryRequest = 0;      ///< the entry whose answer is wanted
+    Visit m_current;                 ///< the entry on screen; empty when none
+    QList<Visit> m_backStack;        ///< entries left by following links, most recent last
+    QList<Visit> m_forwardStack;     ///< entries left by going back, most recent last
+    bool m_autoSelecting = false;    ///< selecting the best match as a preview, not a user choice
+    bool m_recordNext = false;       ///< the entry being loaded goes into the history
+    bool m_forceDefinitions = false; ///< the next search looks inside definitions whatever the setting
 };
 
 } // namespace omnidict::ui

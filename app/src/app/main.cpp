@@ -95,8 +95,10 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     const omnidict::ui::ThemeApplier theme(settings);
     QApplication::setWindowIcon(omnidict::ui::icons::brand());
 
-    omnidict::ui::MainWindow window(roots, dataDir + u"/userdata.sqlite"_s);
-    window.resize(kWindowWidth, kWindowHeight);
+    omnidict::ui::MainWindow window(settings, roots, dataDir + u"/userdata.sqlite"_s);
+    if (settings.windowGeometry().isEmpty()) {
+        window.resize(kWindowWidth, kWindowHeight);
+    }
     omnidict::app::installDebugHooks(window);
     window.show();
     const QString query = parser.positionalArguments().join(u' ');

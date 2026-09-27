@@ -1,5 +1,7 @@
+#include "core/settings.h"
 #include "models/results_model.h"
 #include "ui/about_dialog.h"
+#include "ui/entry_view.h"
 #include "ui/main_window.h"
 
 #include <QAbstractItemModel>
@@ -56,7 +58,8 @@ private Q_SLOTS:
 
     void searchOpenStarAndRemember()
     {
-        MainWindow window({m_bundles.path()}, m_profile.filePath(u"userdata.sqlite"_s));
+        omnidict::core::Settings settings(m_profile.filePath(u"settings.ini"_s));
+        MainWindow window(settings, {m_bundles.path()}, m_profile.filePath(u"userdata.sqlite"_s));
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         QSignalSpy shown(&window, &MainWindow::entryShown);
         window.show();
@@ -86,20 +89,55 @@ private Q_SLOTS:
         // An empty search shows what was kept.
         search->clear();
         QTRY_COMPARE(rows(results->model()),
-                     (QStringList{u"# Favorites"_s, u"book"_s, u"# Recent"_s, u"book"_s}));
+                     (QStringList{u"# Favourites"_s, u"book"_s, u"# Recent"_s, u"book"_s}));
 
         // A preview while typing is not a visit: "serendipity" stays out of Recent.
         QTest::keyClicks(search, u"serendipity"_s);
         QVERIFY(shown.wait());
         search->clear();
         QTRY_COMPARE(rows(results->model()),
-                     (QStringList{u"# Favorites"_s, u"book"_s, u"# Recent"_s, u"book"_s}));
+                     (QStringList{u"# Favourites"_s, u"book"_s, u"# Recent"_s, u"book"_s}));
 
         // Opening a saved entry finds it again by headword.
         results->setCurrentIndex(results->model()->index(1, 0));
         QVERIFY(shown.wait());
         QCOMPARE(shown.last().at(1).toString(), u"book"_s);
         QVERIFY(star->isChecked());
+    }
+
+    void noMatchSuggestsAndLinksGoBack()
+    {
+        omnidict::core::Settings settings(m_profile.filePath(u"links.ini"_s));
+        MainWindow window(settings, {m_bundles.path()}, m_profile.filePath(u"links.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        QSignalSpy shown(&window, &MainWindow::entryShown);
+        QSignalSpy listed(&window, &MainWindow::resultsShown);
+        window.show();
+        QVERIFY(ready.wait());
+        auto* search = window.findChild<QLineEdit*>(u"search"_s);
+        auto* results = window.findChild<QListView*>(u"results"_s);
+        auto* back = window.findChild<QToolButton*>(u"backButton"_s);
+        QVERIFY(search && results && back);
+
+        // Nothing matches: suggestions, and no entry is opened on its own.
+        listed.clear();
+        QTest::keyClicks(search, u"prehaps"_s);
+        QTRY_VERIFY(rows(results->model()).contains(u"# Did you mean"_s));
+        QCOMPARE(rows(results->model()).value(2), u"perhaps"_s);
+        QVERIFY(!window.findChild<QToolButton*>(u"favoriteButton"_s)->isEnabled());
+
+        // A link inside an entry opens that word; Back returns.
+        search->clear();
+        QTest::keyClicks(search, u"dictionary"_s);
+        QTRY_VERIFY(!shown.isEmpty() && shown.last().at(1).toString() == u"dictionary"_s);
+        QVERIFY(!back->isEnabled());
+        QMetaObject::invokeMethod(window.findChild<omnidict::ui::EntryView*>(), "headwordActivated",
+                                  Q_ARG(QString, u"word"_s));
+        QTRY_COMPARE(shown.last().at(1).toString(), u"word"_s);
+        QVERIFY(back->isEnabled());
+        back->click();
+        QTRY_COMPARE(shown.last().at(1).toString(), u"dictionary"_s);
+        QVERIFY(!back->isEnabled());
     }
 
     void aboutCreditsEveryDictionary()
@@ -124,7 +162,8 @@ private Q_SLOTS:
     void noDictionariesSaysWhereItLooked()
     {
         const QTemporaryDir empty;
-        MainWindow window({empty.path()}, m_profile.filePath(u"other.sqlite"_s));
+        omnidict::core::Settings settings(m_profile.filePath(u"other.ini"_s));
+        MainWindow window(settings, {empty.path()}, m_profile.filePath(u"other.sqlite"_s));
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         window.show();
         QVERIFY(ready.wait());

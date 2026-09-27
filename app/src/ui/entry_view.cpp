@@ -1,7 +1,9 @@
 #include "ui/entry_view.h"
 
+#include "ui/style.h"
+
 #include <QEvent>
-#include <QPalette>
+#include <QScrollBar>
 #include <QUrl>
 
 using namespace Qt::StringLiterals;
@@ -9,36 +11,47 @@ using namespace Qt::StringLiterals;
 namespace omnidict::ui {
 
 namespace {
-
-/// Mixes two colours: `amount` 0 gives `a`, 1 gives `b`.
-QColor mix(const QColor& a, const QColor& b, float amount)
-{
-    return QColor::fromRgbF(a.redF() + ((b.redF() - a.redF()) * amount),
-                            a.greenF() + ((b.greenF() - a.greenF()) * amount),
-                            a.blueF() + ((b.blueF() - a.blueF()) * amount));
-}
-
+constexpr int kMarginX = 8; // with the document margin, mocks/mock.css .entry padding
+constexpr double kHeadwordScale = 2.0;
+constexpr double kSmallScale = 0.87;
 } // namespace
 
 EntryView::EntryView(QWidget* parent)
     : QTextBrowser(parent)
 {
+    setObjectName(u"entry"_s);
     setOpenLinks(false);
     setOpenExternalLinks(false);
     setFrameShape(QFrame::NoFrame);
-    document()->setDocumentMargin(18);
+    setViewportMargins(kMarginX, 0, kMarginX, 0);
+    document()->setDocumentMargin(24);
     connect(this, &QTextBrowser::anchorClicked, this, &EntryView::onAnchorClicked);
     applyStyleSheet();
 }
 
-void EntryView::showEntry(const QString& html)
+void EntryView::showEntry(const QString& html, const QString& credit)
 {
-    setHtml(html);
+    m_html = html;
+    m_credit = credit;
+    render();
+    verticalScrollBar()->setValue(0);
 }
 
-void EntryView::showMessage(const QString& text)
+void EntryView::setTextSize(int pixels)
 {
-    setHtml(u"<p class=\"message\">"_s + text.toHtmlEscaped() + u"</p>"_s);
+    if (pixels != m_textSize) {
+        m_textSize = pixels;
+        applyStyleSheet();
+    }
+}
+
+void EntryView::render()
+{
+    QString html = m_html;
+    if (!m_credit.isEmpty()) {
+        html += u"<hr><p class=\"credit\">"_s + m_credit.toHtmlEscaped() + u"</p>"_s;
+    }
+    setHtml(html);
 }
 
 void EntryView::changeEvent(QEvent* event)
@@ -49,41 +62,42 @@ void EntryView::changeEvent(QEvent* event)
     }
 }
 
-/// Colours follow the palette so the entry reads well in light and dark
-/// themes; the structure is the contract's, only the look is ours.
+/// The contract fixes the structure; the look is ours (mocks/main.html): the
+/// headword in the headword colour, patterns green, labels on a tint,
+/// examples muted, links in the link colour.
 void EntryView::applyStyleSheet()
 {
-    const QPalette pal = palette();
-    const QColor text = pal.color(QPalette::Text);
-    const QColor base = pal.color(QPalette::Base);
-    const QColor accent = pal.color(QPalette::Highlight);
-    const QColor muted = mix(text, base, 0.45F);
-    const QColor green = mix(QColor(0x26, 0xa2, 0x69), text, 0.15F);
-    const QColor labelBack = mix(base, text, 0.08F);
+    const Tokens& t = Tokens::current();
+    QFont font = document()->defaultFont();
+    font.setPixelSize(m_textSize);
+    document()->setDefaultFont(font);
+    const auto px = [this](double scale) { return QString::number(qRound(m_textSize * scale)); };
     const QString css = uR"(
-        .hw { font-size: x-large; font-weight: bold; color: %1; }
+        .hw { font-size: %6px; font-weight: 600; color: %1; }
         .roman { color: %2; font-style: italic; }
-        .freq { color: %1; }
-        .prons { color: %2; margin-top: 2px; }
-        .region { font-size: small; }
-        .sense { margin-top: 12px; }
-        .sense-head { margin-bottom: 2px; }
-        .num { font-weight: bold; }
-        .pos { font-weight: bold; font-variant: small-caps; }
+        .freq { color: %5; }
+        .prons { color: %2; margin-top: 4px; }
+        .region { font-size: %7px; }
+        .sense { margin-top: 18px; }
+        .sense-head { margin-bottom: 2px; font-size: %7px; }
+        .num { font-weight: 700; }
+        .pos { font-weight: 600; font-variant: small-caps; color: %2; }
         .pattern { color: %3; }
-        .label { background-color: %4; color: %2; font-size: small; }
-        .def { margin-top: 0px; }
-        .examples { color: %2; margin-top: 2px; }
+        .label { background-color: %4; color: %2; font-size: %7px; }
+        .def { margin-top: 2px; }
+        .examples { color: %8; margin-top: 4px; }
         .tr { font-style: italic; }
-        .rel, .forms { color: %2; margin-top: 4px; }
-        .rel-type { font-weight: bold; }
-        a { color: %1; text-decoration: none; }
-        .message { color: %2; }
-    )"_s.arg(accent.name(), muted.name(), green.name(), labelBack.name());
+        .rel, .forms { color: %2; margin-top: 10px; }
+        .rel-type { font-weight: 600; }
+        .credit { color: %2; font-size: %9px; }
+        a { color: %10; text-decoration: none; }
+    )"_s.arg(t.headword.name(), t.muted.name(), t.pattern.name(), t.hover.name(), t.warm.name(),
+             px(kHeadwordScale), px(kSmallScale), t.example.name(), px(kSmallScale * kSmallScale),
+             t.link.name());
     document()->setDefaultStyleSheet(css);
-    // The default stylesheet applies to HTML set after it: re-render what is shown.
-    if (!document()->isEmpty()) {
-        setHtml(toHtml());
+    // The default sheet applies to HTML set after it: render again.
+    if (!m_html.isEmpty()) {
+        render();
     }
 }
 
