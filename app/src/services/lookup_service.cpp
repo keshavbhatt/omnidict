@@ -27,7 +27,11 @@ void LookupService::openLibrary(const QStringList& roots)
                              .license = meta.license,
                              .licenseUrl = meta.licenseUrl,
                              .version = meta.version,
-                             .entryCount = meta.entryCount});
+                             .entryCount = meta.entryCount,
+                             .publisher = meta.publisher,
+                             .sourceLang = meta.sourceLang,
+                             .targetLang = meta.targetLang,
+                             .path = bundle.path()});
     }
     qCInfo(lcLookup) << "opened" << dictionaries.size() << "dictionaries from" << roots;
     Q_EMIT libraryOpened(dictionaries, m_library->problems());

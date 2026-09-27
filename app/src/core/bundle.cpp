@@ -151,9 +151,10 @@ QList<Sense> readSenses(const SqliteDb& db, qint64 entryId)
 
 } // namespace
 
-Bundle::Bundle(SqliteDb db, BundleMeta meta)
+Bundle::Bundle(SqliteDb db, BundleMeta meta, QString path)
     : m_db(std::move(db))
     , m_meta(std::move(meta))
+    , m_path(std::move(path))
 {}
 
 Result<Bundle> Bundle::open(const QString& path)
@@ -171,7 +172,7 @@ Result<Bundle> Bundle::open(const QString& path)
         return Error{u"%1 cannot be used: %2"_s.arg(path, meta.error())};
     }
     qCDebug(lcBundle) << "opened" << meta.value().dictId << meta.value().version << "from" << path;
-    return Bundle(db.take(), meta.take());
+    return Bundle(db.take(), meta.take(), path);
 }
 
 QList<EntryPreview> Bundle::previews(const QString& sql, const QList<QString>& texts, int limit) const

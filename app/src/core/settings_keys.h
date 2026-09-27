@@ -20,6 +20,10 @@ inline constexpr QLatin1StringView kSearchDefinitions{"search/searchDefinitions"
 inline constexpr QLatin1StringView kSuggestSpellings{"search/suggestSpellings"};
 inline constexpr QLatin1StringView kDictionaryFilter{"search/dictionaryFilter"};
 
+// dictionaries/
+inline constexpr QLatin1StringView kDictionaryOrder{"dictionaries/order"};
+inline constexpr QLatin1StringView kDisabledDictionaries{"dictionaries/disabled"};
+
 // history/
 inline constexpr QLatin1StringView kRememberHistory{"history/remember"};
 

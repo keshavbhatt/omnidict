@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QVariant>
 
 #include <memory>
@@ -62,6 +63,15 @@ public:
     [[nodiscard]] QString dictionaryFilter() const;
     void setDictionaryFilter(const QString& dictId);
 
+    // dictionaries/
+    /// Dictionary ids in the order the user arranged them (result groups follow
+    /// it); dictionaries not listed come after, by name.
+    [[nodiscard]] QStringList dictionaryOrder() const;
+    void setDictionaryOrder(const QStringList& dictIds);
+    /// Installed dictionaries the user switched off: not searched, not in the filter.
+    [[nodiscard]] QStringList disabledDictionaries() const;
+    void setDisabledDictionaries(const QStringList& dictIds);
+
     // history/
     [[nodiscard]] bool rememberHistory() const;
     void setRememberHistory(bool enabled);
@@ -73,6 +83,8 @@ Q_SIGNALS:
     void searchOptionsChanged();
     void dictionaryFilterChanged(const QString& dictId);
     void rememberHistoryChanged(bool enabled);
+    /// The order or the switched-off set changed.
+    void dictionaryPreferencesChanged();
 
 private:
     [[nodiscard]] bool boolValue(QLatin1StringView key, bool fallback) const;

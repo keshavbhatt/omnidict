@@ -29,6 +29,10 @@ struct DictionaryInfo
     QString licenseUrl;
     QString version;
     qint64 entryCount = 0;
+    QString publisher{};
+    QString sourceLang{};
+    QString targetLang{};
+    QString path{}; ///< the dict.sqlite file
 };
 
 /// All dictionary access, on the thread the service is moved to (ADR-004):

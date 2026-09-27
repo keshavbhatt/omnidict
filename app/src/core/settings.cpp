@@ -148,6 +148,30 @@ void Settings::setDictionaryFilter(const QString& dictId)
     }
 }
 
+QStringList Settings::dictionaryOrder() const
+{
+    return m_store->value(keys::kDictionaryOrder).toStringList();
+}
+
+void Settings::setDictionaryOrder(const QStringList& dictIds)
+{
+    if (store(keys::kDictionaryOrder, dictIds, QStringList())) {
+        Q_EMIT dictionaryPreferencesChanged();
+    }
+}
+
+QStringList Settings::disabledDictionaries() const
+{
+    return m_store->value(keys::kDisabledDictionaries).toStringList();
+}
+
+void Settings::setDisabledDictionaries(const QStringList& dictIds)
+{
+    if (store(keys::kDisabledDictionaries, dictIds, QStringList())) {
+        Q_EMIT dictionaryPreferencesChanged();
+    }
+}
+
 bool Settings::rememberHistory() const
 {
     return boolValue(keys::kRememberHistory, kDefaultRememberHistory);

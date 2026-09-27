@@ -28,6 +28,8 @@ public:
     [[nodiscard]] static Result<Bundle> open(const QString& path);
 
     [[nodiscard]] const BundleMeta& meta() const { return m_meta; }
+    /// The file it was opened from.
+    [[nodiscard]] const QString& path() const { return m_path; }
 
     /// Entries whose headword, or one of whose inflected or variant forms,
     /// equals the query. Headword matches come first.
@@ -54,13 +56,14 @@ public:
     [[nodiscard]] std::optional<Entry> entry(qint64 id) const;
 
 private:
-    Bundle(SqliteDb db, BundleMeta meta);
+    Bundle(SqliteDb db, BundleMeta meta, QString path);
 
     [[nodiscard]] QList<EntryPreview> previews(const QString& sql, const QList<QString>& texts,
                                                int limit) const;
 
     SqliteDb m_db;
     BundleMeta m_meta;
+    QString m_path;
 };
 
 } // namespace omnidict::core

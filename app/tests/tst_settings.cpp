@@ -71,6 +71,21 @@ private Q_SLOTS:
         QCOMPARE(history.size(), 1);
     }
 
+    void dictionaryPreferencesRoundTrip()
+    {
+        {
+            Settings settings(iniPath(u"dicts"_s));
+            QSignalSpy changed(&settings, &Settings::dictionaryPreferencesChanged);
+            settings.setDictionaryOrder({u"wikt-hi-en"_s, u"wikt-en"_s});
+            settings.setDisabledDictionaries({u"wikt-es-en"_s});
+            settings.setDisabledDictionaries({u"wikt-es-en"_s});
+            QCOMPARE(changed.size(), 2);
+        }
+        const Settings settings(iniPath(u"dicts"_s));
+        QCOMPARE(settings.dictionaryOrder(), (QStringList{u"wikt-hi-en"_s, u"wikt-en"_s}));
+        QCOMPARE(settings.disabledDictionaries(), QStringList{u"wikt-es-en"_s});
+    }
+
     void textSizeIsClamped()
     {
         Settings settings(iniPath(u"size"_s));
