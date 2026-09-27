@@ -2,16 +2,16 @@
 # imported targets export the SDK's generic /usr/include (Ubuntu glibc
 # headers), which shadow the host toolchain's libc headers and break
 # libstdc++. The Qt headers proper live under .../include/<arch>/qt6 and are
-# unaffected, but SQLite and ICU keep their headers directly in that
-# directory. So the directory is swapped for a small farm in the build tree
-# that links only the headers this project needs from it.
+# unaffected, but SQLite, ICU and zstd (ADR-015) keep their headers directly
+# in that directory. So the directory is swapped for a small farm in the
+# build tree that links only the headers this project needs from it.
 # Harmless in snapcraft builds (the dir then equals the real sysroot's).
 #
 # Must be included AFTER every find_package() call.
 
 if(CMAKE_PREFIX_PATH MATCHES "/snap/kde-qt6-core24-sdk/")
     set(_omnidict_farm "${CMAKE_BINARY_DIR}/sdk-include")
-    set(_omnidict_farmed sqlite3.h sqlite3ext.h unicode)
+    set(_omnidict_farmed sqlite3.h sqlite3ext.h unicode zstd.h zstd_errors.h)
     file(MAKE_DIRECTORY "${_omnidict_farm}")
 
     get_property(_omnidict_imported DIRECTORY PROPERTY IMPORTED_TARGETS)

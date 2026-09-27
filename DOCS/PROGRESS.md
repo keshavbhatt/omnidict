@@ -9,10 +9,40 @@ Newest first. One entry per working session.
 | M0 Scaffold | done locally; CI not yet run (no remote) |
 | M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
 | M2 Qt client (search, entry view, app shell) | core features done; kit app-shell pieces still to do |
-| M3 Manage dictionaries + downloader + About | todo |
+| M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
 | M4 More converters, real catalog | todo |
 | M5 Packaging | todo |
 | M6 Web app | todo |
+
+## 2026-09-27 - M3 download and install backend
+
+Backend half of "Manage dictionaries" (PLAN 5.3, 7.2, 7.4), matching `pipeline/omnipipe/package.py`
+and `catalog.py` exactly; the dialog UI is separate work.
+
+- `core::Catalog`/`core::CatalogEntry`/`core::parseCatalog`: strict `catalog.json` parsing (a
+  missing or wrong-typed required field names the offending entry; an entry with a newer
+  `schema_version` than `Bundle::kSupportedSchemaVersion` is skipped, not an error);
+  `core::compareVersions` for dotted numeric versions.
+- `core::installBundle`/`core::removeInstalled`/`core::installedSize`: verifies an `.odict`'s
+  size and streamed sha256 against its catalogue entry, zstd-decompresses it (streaming
+  `ZSTD_decompressStream`) into `<root>/<dictId>/<version>/dict.sqlite.part`, renames it into
+  place only after `Bundle::open` confirms its `dict_id` and `version` match, then removes every
+  other installed version of that dictionary. Any failure removes the partial output and leaves
+  a previously installed version untouched.
+- `services::DictionaryManager`: GUI-thread `QObject` owning a `QNetworkAccessManager`. Fetches
+  and caches `catalog.json` (24h TTL unless forced, `OMNIDICT_CATALOG_URL` overrides the default
+  `http://localhost:8000/catalog.json`). Queues downloads, at most 2 concurrent (PLAN 7.2), with
+  resume through a `Range` header (falls back to a fresh download when a server ignores it); the
+  verify+decompress step runs on `QThreadPool::globalInstance()` (ADR-004), result posted back
+  with `QMetaObject::invokeMethod`. `cancel()` keeps the partial file for a later resume;
+  `remove()` uninstalls.
+- ADR-015 (Qt Network + zstd); `THIRD_PARTY.md` zstd row updated from "from M3" to in-use, new
+  Qt Network row; `app/cmake/FindZstd.cmake` (CMake ships no module of its own); dev build links
+  zstd through the core24 runtime farm the same way SQLite already does.
+- Tests: `tst_catalog`, `tst_installer` (builds its own `.odict` with the zstd C API), and
+  `tst_dictionary_manager` (a `QTcpServer`-based HTTP server, 127.0.0.1 only: catalogue fetch,
+  the 2-at-a-time limit, cancel, a 404 failure message, and a full install through a resumed
+  Range request). `make test` and `make lint` both clean.
 
 ## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local
 

@@ -2,6 +2,8 @@
 # dictionary library on its worker thread. No widgets.
 
 qt_add_library(omnidict_services STATIC
+    dictionary_manager.cpp
+    dictionary_manager.h
     logging.cpp
     logging.h
     lookup_service.cpp
@@ -13,4 +15,5 @@ target_include_directories(omnidict_services PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(omnidict_services
     PUBLIC
         omnidict_core
+        Qt6::Network
 )

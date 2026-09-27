@@ -9,7 +9,7 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | Qt | 6.11.1 | LGPL-3.0 | `kde-qt6-core24-sdk` snap (build), `kf6-core24` snap (runtime) | `app` |
 | SQLite | bundled with the runtime | Public domain | system/runtime library; the pipeline uses Python's built-in `sqlite3` module | `app` and `pipeline` |
 | ICU | 74 (as shipped by the `kf6-core24` runtime) | Unicode-3.0 | `kf6-core24` runtime snap | `app` |
-| zstd | from M3 | BSD-3-Clause | system/runtime library | `app` (bundle decompression, from M3) |
+| zstd | bundled with the runtime (1.5.5 as shipped by the SDK/runtime snaps) | BSD-3-Clause | system/runtime library, found via `app/cmake/FindZstd.cmake` (ADR-015) | `app` (bundle decompression, `core::installBundle`) |
 | PyICU | pinned in `pipeline/pyproject.toml` | MIT | PyPI, via `uv` | `pipeline` |
 | zstandard | pinned in `pipeline/pyproject.toml`, from M1 | BSD-3-Clause | PyPI, via `uv` | `pipeline` (bundle packaging, from M1) |
 | ruff | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
@@ -17,6 +17,7 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | pytest | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
 | Qt Svg | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps (ADR-014) | `app` (tinted UI glyphs) |
 | Lucide icons | snapshot ba6751a, 2026-09-18 | ISC (Feather-derived ones also MIT) | copied from the rewrite kit's vendored set into `app/src/resources/icons/ui/`, notice in `LICENSE` there (ADR-014) | `app` |
+| Qt Network | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps (ADR-015) | `app` (`services::DictionaryManager`: catalogue and `.odict` downloads) |
 
 ## Design mocks only
 

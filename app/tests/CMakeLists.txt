@@ -62,6 +62,21 @@ omnidict_add_test(tst_user_data tst_user_data.cpp omnidict_core)
 omnidict_add_test(tst_entry_renderer tst_entry_renderer.cpp omnidict_core)
 target_compile_definitions(tst_entry_renderer PRIVATE
     OMNIDICT_GOLDEN_ENTRIES="${OMNIDICT_REPO_ROOT}/tests/golden/entries")
+omnidict_add_test(tst_catalog tst_catalog.cpp omnidict_core)
+omnidict_add_test(tst_installer tst_installer.cpp omnidict_core)
+# The test builds its own .odict files with the zstd C API and edits a copy
+# of the fixture's meta table directly, the way tst_bundle does.
+target_link_libraries(tst_installer PRIVATE SQLite::SQLite3 Zstd::Zstd)
+target_compile_definitions(tst_installer PRIVATE
+    OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+# services
+omnidict_add_test(tst_dictionary_manager tst_dictionary_manager.cpp omnidict_services)
+# The test builds its own .odict with the zstd C API and serves it from a
+# QTcpServer-based HTTP server (127.0.0.1 only, no internet).
+target_link_libraries(tst_dictionary_manager PRIVATE Zstd::Zstd)
+target_compile_definitions(tst_dictionary_manager PRIVATE
+    OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
+set_tests_properties(tst_dictionary_manager PROPERTIES TIMEOUT 60)
 # ui
 omnidict_add_test(tst_smoke tst_smoke.cpp omnidict_ui GUI)
 target_compile_definitions(tst_smoke PRIVATE

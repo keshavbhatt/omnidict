@@ -10,5 +10,6 @@ namespace omnidict::core {
 Q_DECLARE_LOGGING_CATEGORY(lcCore)
 Q_DECLARE_LOGGING_CATEGORY(lcBundle)
 Q_DECLARE_LOGGING_CATEGORY(lcSqlite)
+Q_DECLARE_LOGGING_CATEGORY(lcInstaller)
 
 } // namespace omnidict::core
