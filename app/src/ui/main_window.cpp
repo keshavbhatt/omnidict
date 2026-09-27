@@ -467,7 +467,10 @@ void MainWindow::connectSettings()
     connect(&m_manager, &services::DictionaryManager::installed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::removed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::downloadChanged, this, &MainWindow::onDownloadChanged);
-    connect(m_dictionariesButton, &QToolButton::clicked, this, [this] { showDictionaries(); });
+    connect(&m_manager, &services::DictionaryManager::downloadsChanged, this, &MainWindow::onDownloadChanged);
+    // While something downloads the button shows the download glyph, so it opens where the downloads are.
+    connect(m_dictionariesButton, &QToolButton::clicked, this,
+            [this] { showDictionaries(activeDownloads() > 0); });
     connect(m_firstRun, &FirstRunPanel::browseRequested, this, [this] { showDictionaries(true); });
     connect(&m_settings, &core::Settings::entryTextSizeChanged, m_entry, &EntryView::setTextSize);
     connect(&m_settings, &core::Settings::searchOptionsChanged, this, &MainWindow::requestSearch);
@@ -789,15 +792,21 @@ void MainWindow::reopenLibrary()
     QMetaObject::invokeMethod(m_lookup, &services::LookupService::openLibrary, Qt::QueuedConnection, m_roots);
 }
 
-void MainWindow::onDownloadChanged()
+int MainWindow::activeDownloads() const
 {
-    // While anything downloads, the Dictionaries button says so (mocks/dictionaries-available.html).
     int active = 0;
     for (const services::DownloadStatus& status : m_manager.downloads()) {
         if (status.state != services::DownloadStatus::Failed) {
             ++active;
         }
     }
+    return active;
+}
+
+void MainWindow::onDownloadChanged()
+{
+    // While anything downloads, the Dictionaries button says so (mocks/dictionaries-available.html).
+    const int active = activeDownloads();
     const Tokens& t = Tokens::current();
     m_dictionariesButton->setIcon(active > 0 ? icons::themed(u"download"_s, t.accent)
                                              : icons::themed(u"books"_s, t.text));

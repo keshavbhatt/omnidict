@@ -90,6 +90,8 @@ Q_SIGNALS:
     void catalogChanged();
     void catalogFailed(const QString& reason);
     void downloadChanged(const omnidict::services::DownloadStatus& status);
+    /// downloads() changed as a whole: one started, finished or was cancelled.
+    void downloadsChanged();
     void installed(const QString& dictId);
     void removed(const QString& dictId);
 

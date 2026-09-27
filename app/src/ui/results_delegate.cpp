@@ -4,9 +4,11 @@
 #include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QFontMetricsF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QtMath>
 
 using namespace Qt::StringLiterals;
 
@@ -140,7 +142,10 @@ void paintEntry(QPainter* painter, const QStyleOptionViewItem& option, const QMo
     if (!side.isEmpty()) {
         const QFont font = pixelFont(option.font, kSidePixelSize);
         const QFontMetrics metrics(font);
-        const int width = std::min(metrics.horizontalAdvance(side), content.width() / 2);
+        // Measured in fractional pixels and rounded up: an integer advance can be a
+        // hair short of the drawn text, and eliding at it cut the name (mocks show it whole).
+        const int needed = qCeil(QFontMetricsF(font).horizontalAdvance(side)) + 1;
+        const int width = std::min(needed, content.width() / 2);
         painter->setFont(font);
         painter->setPen(t.muted);
         painter->drawText(QRect(content.right() - width, content.top(), width, content.height()),

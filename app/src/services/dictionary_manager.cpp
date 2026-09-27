@@ -356,6 +356,7 @@ void DictionaryManager::onInstallFinished(const QString& dictId, const core::Res
 
     m_downloads.erase(dictId);
     m_queueOrder.removeAll(dictId);
+    Q_EMIT downloadsChanged();
     qCInfo(lcDownloads) << "installed" << dictId;
     Q_EMIT installed(dictId);
     startQueuedDownloads();
@@ -394,6 +395,7 @@ void DictionaryManager::cancel(const QString& dictId)
         download->file->close();
     }
     // The partial file on disk is kept: a later install() call resumes it.
+    Q_EMIT downloadsChanged();
     startQueuedDownloads();
 }
 

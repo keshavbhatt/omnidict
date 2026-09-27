@@ -127,6 +127,8 @@ private:
     void showWelcome();
     void reopenLibrary();
     void onDownloadChanged();
+    /// Downloads waiting, running or installing (failed ones do not count).
+    [[nodiscard]] int activeDownloads() const;
     void showNoMatch(const QString& text, bool hasSuggestions);
     void clearEntry();
     void clearHistory();

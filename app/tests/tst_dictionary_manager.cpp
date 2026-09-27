@@ -321,7 +321,9 @@ private Q_SLOTS:
             },
             5000));
 
+        QSignalSpy listChanged(&manager, &DictionaryManager::downloadsChanged);
         manager.cancel(u"dict-slow"_s);
+        QCOMPARE(listChanged.size(), 1); // the window's download count follows
         QVERIFY(stateOf(manager.downloads(), u"dict-slow"_s) != DownloadStatus::Downloading);
         QCOMPARE(manager.downloads().size(), 0);
 
@@ -378,6 +380,7 @@ private Q_SLOTS:
                       m_compressedFixture, m_installedSize);
 
         QSignalSpy installedSpy(&manager, &DictionaryManager::installed);
+        QSignalSpy listChanged(&manager, &DictionaryManager::downloadsChanged);
         manager.install(entry);
         QVERIFY(installedSpy.wait(10000));
         QCOMPARE(installedSpy.first().first().toString(), u"sample-en"_s);
@@ -393,6 +396,7 @@ private Q_SLOTS:
 
         QVERIFY(!QFile::exists(partPath));
         QCOMPARE(manager.downloads().size(), 0);
+        QVERIFY(!listChanged.isEmpty()); // a finished download leaves the list with a signal
     }
 };
 
