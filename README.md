@@ -7,7 +7,8 @@ into that format.
 
 ## Status
 
-Pre-release, milestone M0 (repo scaffold and the pipeline's core modules). See
+Pre-release. M0 (scaffold, pipeline core, C++ bundle reader) and M1 (Wiktionary converter,
+packaging, catalog) are done; the desktop UI is M2. See
 `DOCS/ROADMAP.md` for the full milestone plan and `DOCS/FEATURES.md` for the scope contract.
 
 ## Layout
@@ -32,9 +33,16 @@ DOCS/        the project plan, coding standards, decisions, progress log
 ```sh
 make fixture   # builds pipeline/out/sample-en/dict.sqlite from tests/fixtures/sample-en.jsonl
 make test      # pipeline tests, the fixture, the app build, and ctest
-make lint      # ruff, mypy, clang-format check, reuse lint
+make lint      # ruff, mypy, clang-format, clang-tidy, shellcheck, reuse
 scripts/dev-build.sh --tests
 scripts/dev-run.sh -- --lookup pipeline/out/sample-en/dict.sqlite perhaps
+```
+
+Real dictionaries from Wiktionary (run in `pipeline/`):
+
+```sh
+make build DICT=wikt-hi-en && make package DICT=wikt-hi-en
+make catalog && make serve        # catalog.json and bundles on http://localhost:8000
 ```
 
 ## Documentation

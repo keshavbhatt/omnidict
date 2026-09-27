@@ -18,6 +18,19 @@ OMNIDICT_CMAKE_ARGS="-DOMNIDICT_BUILD_TESTS=ON -DOMNIDICT_WERROR=ON" scripts/dev
 scripts/dev-run.sh -- --lookup pipeline/out/sample-en/dict.sqlite perhaps
 ```
 
+Real dictionaries (in `pipeline/`, see `DOCS/sources.md`; the disk is nearly full, so check
+`df -h` before building `wikt-en`, which needs about 2 GB):
+
+```sh
+make fetch SOURCE=kaikki          # refresh dumps into sources/kaikki/
+make build DICT=wikt-hi-en        # -> out/wikt-hi-en/dict.sqlite
+make package DICT=wikt-hi-en      # -> out/publish/dicts/<id>/<version>/{*.odict,manifest.json}
+make catalog && make serve        # out/publish/catalog.json on http://localhost:8000
+```
+
+`tst_real_bundles` checks every built bundle against `tests/known_headwords.json` and skips
+the ones not built.
+
 ## Standing rules
 
 - No em dashes or en dashes anywhere. No commit or PR attribution lines. Commit style:

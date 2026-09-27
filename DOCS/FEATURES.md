@@ -15,9 +15,9 @@ expects every ktechpit desktop app to have.
 | A3 | Headword normalization (`normalize.py`, ICU) with shared test vectors | M0 | KEEP | done |
 | A4 | `build.py`: JSONL to `dict.sqlite` | M0 | KEEP | done |
 | A5 | Pipeline CI quality gates: `html_subset` zero-strip, non-empty preview, round-trip Bundle lookup, schema-migration test | M0 | KEEP | done (CI workflow written, not yet run on GitHub; the schema-migration test arrives with the first `schema_version` bump) |
-| A6 | `package.py`: sqlite to `.odict` (zstd) plus `manifest.json` and sha256 | M1 | KEEP | planned |
-| A7 | `catalog.py`: regenerate `catalog.json` from all manifests | M1 | KEEP | planned |
-| A8 | Kaikki converter (Wiktionary via kaikki.org) | M1 | KEEP | planned |
+| A6 | `package.py`: sqlite to `.odict` (zstd) plus `manifest.json` and sha256 | M1 | KEEP | done |
+| A7 | `catalog.py`: regenerate `catalog.json` from all manifests | M1 | KEEP | done |
+| A8 | Kaikki converter (Wiktionary via kaikki.org) | M1 | KEEP | done |
 | A9 | FreeDict converter | M4 | KEEP | planned |
 | A10 | WordNet converter | M4 | KEEP | planned |
 | A11 | CC-CEDICT converter | M4 | KEEP | planned |
