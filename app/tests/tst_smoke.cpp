@@ -112,6 +112,7 @@ private Q_SLOTS:
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         QSignalSpy shown(&window, &MainWindow::entryShown);
         QSignalSpy listed(&window, &MainWindow::resultsShown);
+        window.resize(1000, 700); // two columns; one column has its own Back behaviour
         window.show();
         QVERIFY(ready.wait());
         auto* search = window.findChild<QLineEdit*>(u"search"_s);

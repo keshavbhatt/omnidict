@@ -6,6 +6,7 @@
 #include <QThread>
 
 class QAction;
+class QBoxLayout;
 class QActionGroup;
 class QLabel;
 class QListView;
@@ -62,6 +63,7 @@ Q_SIGNALS:
 protected:
     void changeEvent(QEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
@@ -107,6 +109,9 @@ private:
     void showWelcome();
     void showNoMatch(const QString& text, bool hasSuggestions);
     void clearEntry();
+    /// Below kNarrowWidth the list and the entry share one column (DOCS/DESIGN.md).
+    void applyLayoutMode();
+    void showEntryColumn(bool entry);
 
     [[nodiscard]] QString currentDictId() const;
     [[nodiscard]] const services::DictionaryInfo* dictionary(const QString& dictId) const;
@@ -118,6 +123,7 @@ private:
     QList<services::DictionaryInfo> m_dictionaries;
     bool m_libraryOpen = false;
 
+    QBoxLayout* m_headerLayout = nullptr;
     SearchField* m_search = nullptr;
     QToolButton* m_filterButton = nullptr;
     QLabel* m_filterChevron = nullptr;
@@ -132,6 +138,7 @@ private:
     QLabel* m_crumb = nullptr;
     QToolButton* m_copy = nullptr;
     QToolButton* m_star = nullptr;
+    QWidget* m_entryPane = nullptr;
     QStackedWidget* m_stack = nullptr;
     EntryView* m_entry = nullptr;
     EmptyState* m_empty = nullptr;
@@ -146,6 +153,8 @@ private:
     bool m_autoSelecting = false;    ///< selecting the best match as a preview, not a user choice
     bool m_recordNext = false;       ///< the entry being loaded goes into the history
     bool m_forceDefinitions = false; ///< the next search looks inside definitions whatever the setting
+    bool m_narrow = false;           ///< one column: the list or the entry
+    bool m_entryColumn = false;      ///< in one column, the entry is the one shown
 };
 
 } // namespace omnidict::ui

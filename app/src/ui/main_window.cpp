@@ -49,6 +49,7 @@ constexpr int kMaxVisits = 50; // mocks/main-link.html
 constexpr int kPerDictionary = 20;
 constexpr int kFullTextPerDictionary = 5;
 constexpr int kSuggestions = 5;
+constexpr int kNarrowWidth = 720;
 
 QToolButton* flatButton(const QString& objectName, const QString& toolTip)
 {
@@ -110,16 +111,15 @@ void MainWindow::setupUi()
     m_splitter = new QSplitter;
     m_splitter->setHandleWidth(1);
     m_splitter->addWidget(buildResults());
-    m_splitter->addWidget(buildEntryPane());
+    m_entryPane = buildEntryPane();
+    m_splitter->addWidget(m_entryPane);
     m_splitter->setStretchFactor(1, 1);
     m_splitter->setSizes({kResultsPaneWidth, kEntryPaneWidth});
     m_splitter->setChildrenCollapsible(false);
     layout->addWidget(m_splitter, 1);
     setCentralWidget(central);
     // The search field lines up with the list under it (mocks/main.html).
-    connect(m_splitter, &QSplitter::splitterMoved, this,
-            [this] { m_search->setFixedWidth(m_splitter->sizes().constFirst() - (2 * kHeaderMargin)); });
-    m_search->setFixedWidth(kResultsPaneWidth - (2 * kHeaderMargin));
+    connect(m_splitter, &QSplitter::splitterMoved, this, &MainWindow::applyLayoutMode);
 
     m_debounce = new QTimer(this);
     m_debounce->setSingleShot(true);
@@ -128,7 +128,13 @@ void MainWindow::setupUi()
     connect(m_debounce, &QTimer::timeout, this, &MainWindow::requestSearch);
     connect(m_results->selectionModel(), &QItemSelectionModel::currentChanged, this,
             &MainWindow::onCurrentResultChanged);
-    connect(m_results, &QListView::activated, this, [this] { recordShownEntry(); });
+    connect(m_results, &QListView::activated, this, [this] {
+        recordShownEntry();
+        showEntryColumn(true);
+    });
+    // In one column a click or Enter opens the entry; moving with the keys keeps the list.
+    connect(m_results, &QListView::clicked, this, [this] { showEntryColumn(true); });
+    connect(m_search, &QLineEdit::textEdited, this, [this] { showEntryColumn(false); });
     connect(m_entry, &EntryView::headwordActivated, this, &MainWindow::followHeadword);
     connect(m_star, &QToolButton::toggled, this, &MainWindow::onFavoriteToggled);
 
@@ -136,6 +142,7 @@ void MainWindow::setupUi()
     buildMainMenu();
     rebuildFilterMenu();
     refreshIcons();
+    applyLayoutMode();
     const QByteArray geometry = m_settings.windowGeometry();
     if (!geometry.isEmpty()) {
         restoreGeometry(geometry);
@@ -176,13 +183,13 @@ QWidget* MainWindow::buildHeader()
     m_menuButton = flatButton(u"menuButton"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
-    auto* layout = new QHBoxLayout(header);
-    layout->setContentsMargins(kHeaderMargin, 0, kHeaderMargin, 0);
-    layout->setSpacing(8);
-    layout->addWidget(m_search);
-    layout->addWidget(m_filterButton);
-    layout->addStretch(1);
-    layout->addWidget(m_menuButton);
+    m_headerLayout = new QHBoxLayout(header);
+    m_headerLayout->setContentsMargins(kHeaderMargin, 0, kHeaderMargin, 0);
+    m_headerLayout->setSpacing(8);
+    m_headerLayout->addWidget(m_search);
+    m_headerLayout->addWidget(m_filterButton);
+    m_headerLayout->addStretch(1);
+    m_headerLayout->addWidget(m_menuButton);
     return header;
 }
 
@@ -342,6 +349,42 @@ void MainWindow::changeEvent(QEvent* event)
     QMainWindow::changeEvent(event);
     if (event->type() == QEvent::PaletteChange && m_search != nullptr) {
         refreshIcons();
+    }
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+    const bool narrow = width() < kNarrowWidth;
+    if (narrow != m_narrow) {
+        m_narrow = narrow;
+        applyLayoutMode();
+    }
+}
+
+void MainWindow::applyLayoutMode()
+{
+    m_results->setVisible(!m_narrow || !m_entryColumn);
+    m_entryPane->setVisible(!m_narrow || m_entryColumn);
+    // Header items: 0 search, 1 filter, 2 spacer, 3 menu. One column: the search takes the room.
+    m_headerLayout->setStretch(0, m_narrow ? 1 : 0);
+    m_headerLayout->setStretch(2, m_narrow ? 0 : 1);
+    if (m_narrow) {
+        m_search->setMinimumWidth(0);
+        m_search->setMaximumWidth(QWIDGETSIZE_MAX);
+    } else {
+        // The search field lines up with the list under it (mocks/main.html).
+        const int listWidth = m_splitter->sizes().constFirst();
+        m_search->setFixedWidth((listWidth > 0 ? listWidth : kResultsPaneWidth) - (2 * kHeaderMargin));
+    }
+    updateNavigation();
+}
+
+void MainWindow::showEntryColumn(bool entry)
+{
+    if (entry != m_entryColumn) {
+        m_entryColumn = entry;
+        applyLayoutMode();
     }
 }
 
@@ -596,6 +639,7 @@ void MainWindow::followHeadword(const QString& headword)
     m_forwardStack.clear();
     openVisit({.dictId = m_current.dictId, .headword = headword});
     m_recordNext = true;
+    showEntryColumn(true);
 }
 
 void MainWindow::openVisit(const Visit& visit)
@@ -610,6 +654,7 @@ void MainWindow::openVisit(const Visit& visit)
 void MainWindow::goBack()
 {
     if (m_backStack.isEmpty()) {
+        showEntryColumn(false); // one column: Back returns to the list
         return;
     }
     m_forwardStack.append(m_current);
@@ -627,7 +672,7 @@ void MainWindow::goForward()
 
 void MainWindow::updateNavigation()
 {
-    m_back->setEnabled(!m_backStack.isEmpty());
+    m_back->setEnabled(!m_backStack.isEmpty() || (m_narrow && m_entryColumn));
     m_forward->setEnabled(!m_forwardStack.isEmpty());
 }
 
