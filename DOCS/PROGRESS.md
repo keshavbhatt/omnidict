@@ -14,6 +14,25 @@ Newest first. One entry per working session.
 | M5 Packaging | todo |
 | M6 Web app | todo |
 
+## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local
+
+Owner direction: mocks for everything before more UI work; nothing published until ready;
+research spellfix1 against a custom suggester before choosing.
+
+- `DOCS/DESIGN.md` (tokens from the app icon, layout, screen list, rules) and 14 HTML mocks in
+  `DOCS/mocks/` following the approach of the owner's Ultimate Media Downloader mocks: the
+  current window restyled plus the rest of M2 (empty search, no match, followed link, filter,
+  main menu, settings, shortcuts, What's new, bug report, About) and M3 (first run,
+  dictionaries installed and available). New in the design: an entry bar with Back, Forward,
+  Copy and the star, and a credit line at the end of every entry. All await review.
+- Spell suggestion: both methods measured on the three real bundles
+  (`DOCS/spell-suggestion.md`). spellfix1 returns unrelated words for every Hindi query; our own
+  trigram and edit-distance method matches it on English and Spanish. Recommendation: our own,
+  in the bundle, with `schema_version` 2 shared with ADR-012 (ADR-013, proposed). Not
+  implemented.
+- PLAN 9 question 2 answered: publishing stays local. CLAUDE.md gains the mocks-first and
+  local-publishing rules.
+
 ## 2026-09-27 - M1 delivered, M2 core features
 
 M1:

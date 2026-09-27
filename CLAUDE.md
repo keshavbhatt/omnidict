@@ -57,6 +57,12 @@ the ones not built.
 - The snap is built by GitHub Actions only, the Flatpak by Flathub's CI only; never push to a
   Flathub fork or open a Flathub PR without the owner's explicit consent.
 - Verify headlessly before asking the owner to look.
+- Mocks before screens: every screen or visible UI change first gets an HTML mock in
+  `DOCS/mocks/` (see `DOCS/DESIGN.md`) that the owner approves; approval is recorded in
+  `DOCS/mocks/index.html` and `DOCS/PROGRESS.md`. No screen is coded from a description alone.
+- Publishing stays local: `make publish` and anything else that exposes bundles, the catalogue
+  or the app publicly waits until the owner says the feature is implemented, tested, reviewed
+  and ready. `make serve` on localhost is the only catalogue.
 - Run `make test` and `make lint` before declaring a task done.
 - Open questions in `DOCS/PLAN.md` section 9 are the owner's: ask, do not assume.
 - Release checklist: date the changelog heading, add the metainfo release, bump

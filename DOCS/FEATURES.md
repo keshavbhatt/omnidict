@@ -36,7 +36,7 @@ expects every ktechpit desktop app to have.
 | B5 | Empty query shows history | M2 | KEEP | done (favourites and recent entries) |
 | B6 | Exact match, then prefix, then FTS full-text ("Also found in definitions") | M2 | KEEP | done; dictionaries ranked by match quality, headword matches before form matches |
 | B7 | Wildcard search (`?`, `*`) | M2 | KEEP | done (`Bundle::searchPattern`) |
-| B8 | Spell suggestion on zero results (spellfix1 vs custom is PLAN.md open question 4) | M2 | KEEP | planned (waits on PLAN 9 question 4) |
+| B8 | Spell suggestion on zero results (spellfix1 vs custom is PLAN.md open question 4) | M2 | KEEP | planned: recommendation in DOCS/spell-suggestion.md (ADR-013, proposed), waits on the owner; look in mocks/main-no-results.html |
 | B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | done |
 | B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | partly: `core::Library` discovers and opens bundles; lazy open and the LRU of 10 connections are still to do |
 | B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | done as `core::SearchEngine` (pure, on the lookup thread) |

@@ -535,9 +535,9 @@ Start with **M0, then M1, then M2** in that order; M1 before M2 so the client is
 ## 9. Open questions (OPEN, ask owner before deciding)
 
 1. ~~Widgets vs QML for the UI~~ RESOLVED: Qt Widgets (D14).
-2. CDN/object store provider for bundle hosting (and monthly bandwidth budget)
+2. CDN/object store provider for bundle hosting (and monthly bandwidth budget). Owner, 2026-09-27: keep everything local for now; nothing is published or exposed publicly until the feature is fully implemented, tested, its UI reviewed and the owner agrees it is ready
 3. ~~App name and `dict_id` prefix conventions~~ RESOLVED: app name Omnidict, identity `com.ktechpit.omnidict` (D17); `dict_id` naming stays `<source>-<src_lang>-<tgt_lang>` (section 5.1) and is unaffected by the app name.
-4. Spell-suggestion implementation (spellfix1 vs custom)
+4. Spell-suggestion implementation (spellfix1 vs custom). Research and a recommendation (our own trigram suggester) in `DOCS/spell-suggestion.md` and ADR-013 (proposed); not implemented until the owner agrees
 5. Whether to ship an initial English monolingual bundle inside the installer or require a first download
 6. Telemetry: none by default, confirm
 
