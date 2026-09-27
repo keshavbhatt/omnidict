@@ -3,6 +3,10 @@
 qt_add_library(omnidict_ui STATIC
     about_dialog.cpp
     about_dialog.h
+    bug_report_dialog.cpp
+    bug_report_dialog.h
+    diagnostics.cpp
+    diagnostics.h
     empty_state.cpp
     empty_state.h
     entry_view.cpp
@@ -17,10 +21,20 @@ qt_add_library(omnidict_ui STATIC
     results_delegate.h
     search_field.cpp
     search_field.h
+    settings_dialog.cpp
+    settings_dialog.h
+    shortcuts_dialog.cpp
+    shortcuts_dialog.h
     style.cpp
     style.h
+    switch_button.cpp
+    switch_button.h
     theme_applier.cpp
     theme_applier.h
+    toast.cpp
+    toast.h
+    whats_new_dialog.cpp
+    whats_new_dialog.h
 )
 omnidict_set_warnings(omnidict_ui)
 
