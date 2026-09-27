@@ -76,6 +76,7 @@ CREATE TABLE pronunciations (
   region    TEXT,
   audio_ref TEXT
 );
+CREATE INDEX idx_pronunciations_entry ON pronunciations(entry_id);
 
 CREATE TABLE senses (
   id         INTEGER PRIMARY KEY,
@@ -96,6 +97,7 @@ CREATE TABLE examples (
   text        TEXT NOT NULL,
   translation TEXT
 );
+CREATE INDEX idx_examples_sense ON examples(sense_id, ordinal);
 
 CREATE TABLE forms (
   form       TEXT NOT NULL,
@@ -104,6 +106,7 @@ CREATE TABLE forms (
   tag        TEXT
 );
 CREATE INDEX idx_forms_norm ON forms(form_norm);
+CREATE INDEX idx_forms_entry ON forms(entry_id);
 
 CREATE TABLE relations (
   entry_id   INTEGER NOT NULL REFERENCES entries(id),
@@ -111,6 +114,7 @@ CREATE TABLE relations (
   type       TEXT NOT NULL,
   target     TEXT NOT NULL
 );
+CREATE INDEX idx_relations_entry ON relations(entry_id);
 
 CREATE VIRTUAL TABLE fts USING fts5(
   headword, definition_plain, example_text,

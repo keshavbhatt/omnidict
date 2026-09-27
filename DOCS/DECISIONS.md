@@ -225,3 +225,26 @@ script, then re-runs its checks. The metainfo written in M5 carries
 `<icon type="stock">com.ktechpit.omnidict</icon>` and the two `<branding>` colours above; the
 snap's `icon:` points at the 512 px PNG or the scalable SVG.
 
+---
+
+## ADR-012: Child-table indexes added within schema version 1 (2026-09-27)
+
+**Status.** Accepted by the agent during M1; **for the owner to confirm**, since the standing
+rule is that schema changes bump `schema_version`.
+
+**Context.** PLAN 4.1 indexed `examples`, `pronunciations`, `forms` and `relations` only for
+lookup, not by their parent. Opening one entry of the 884k-entry `wikt-en` bundle then scanned
+600k examples once per sense (38 ms each), so an entry with 30 senses took over a second.
+
+**Decision.** Four indexes join the DDL: `examples(sense_id, ordinal)`,
+`pronunciations(entry_id)`, `forms(entry_id)`, `relations(entry_id)`. `schema_version` stays
+1: no table, column or meaning changed, so every version-1 reader reads the new bundles as it
+read the old ones, only faster, and no bundle had been published. The version exists to stop a
+reader that cannot understand a bundle; an index never makes that happen.
+
+**Consequences.** `DOCS/schema.md`, PLAN 4.1 and `build.py` carry the same DDL.
+`test_client_queries_never_scan_a_table` checks with `EXPLAIN QUERY PLAN` that every query the
+client runs (`app/src/core/bundle.cpp`) is answered from an index, so a new client query needs
+a matching entry there. Should the owner prefer a strict reading of the rule, the fix is a
+one-line bump to 2 before the first catalog is published.
+

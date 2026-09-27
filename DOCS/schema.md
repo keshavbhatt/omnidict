@@ -39,6 +39,7 @@ CREATE TABLE pronunciations (
   region    TEXT,                        -- e.g. "US", "UK", NULL
   audio_ref TEXT                         -- reserved; NULL in v1
 );
+CREATE INDEX idx_pronunciations_entry ON pronunciations(entry_id);
 
 CREATE TABLE senses (
   id         INTEGER PRIMARY KEY,
@@ -59,6 +60,7 @@ CREATE TABLE examples (
   text        TEXT NOT NULL,             -- restricted HTML
   translation TEXT                       -- for bilingual dictionaries
 );
+CREATE INDEX idx_examples_sense ON examples(sense_id, ordinal);
 
 CREATE TABLE forms (
   form       TEXT NOT NULL,              -- inflected/variant form, e.g. "ran"
@@ -67,6 +69,7 @@ CREATE TABLE forms (
   tag        TEXT                        -- "past", "plural", "alt-spelling", ...
 );
 CREATE INDEX idx_forms_norm ON forms(form_norm);
+CREATE INDEX idx_forms_entry ON forms(entry_id);
 
 CREATE TABLE relations (                 -- synonyms, antonyms, see-also
   entry_id   INTEGER NOT NULL REFERENCES entries(id),
@@ -74,6 +77,7 @@ CREATE TABLE relations (                 -- synonyms, antonyms, see-also
   type       TEXT NOT NULL,              -- "synonym" | "antonym" | "see" | "derived"
   target     TEXT NOT NULL               -- headword text (may not exist in this dict)
 );
+CREATE INDEX idx_relations_entry ON relations(entry_id);
 
 CREATE VIRTUAL TABLE fts USING fts5(
   headword, definition_plain, example_text,

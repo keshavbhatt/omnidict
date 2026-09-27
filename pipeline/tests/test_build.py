@@ -181,3 +181,36 @@ def test_read_jsonl_reports_line_number(tmp_path: Path) -> None:
     )
     with pytest.raises(BuildError, match=re.escape(f"{bad_path}:2:")):
         list(read_jsonl(bad_path))
+
+
+# The queries the desktop client runs for every lookup and entry view
+# (app/src/core/bundle.cpp). Each must be answered from an index: on an
+# 880k-entry bundle a single table scan costs tens of milliseconds.
+_CLIENT_QUERIES = (
+    "SELECT id FROM entries WHERE headword_norm = 'x'",
+    "SELECT entry_id FROM forms WHERE form_norm = 'x'",
+    "SELECT id FROM entries WHERE headword_norm >= 'x' AND headword_norm < 'y'",
+    "SELECT entry_id FROM forms WHERE form_norm >= 'x' AND form_norm < 'y'",
+    "SELECT id, headword, lang, frequency FROM entries WHERE id = 1",
+    "SELECT ipa, region FROM pronunciations WHERE entry_id = 1 ORDER BY id",
+    "SELECT id, ordinal FROM senses WHERE entry_id = 1 ORDER BY ordinal, id",
+    "SELECT text, translation FROM examples WHERE sense_id = 1 ORDER BY ordinal, id",
+    "SELECT form, tag FROM forms WHERE entry_id = 1 ORDER BY rowid",
+    "SELECT type, target FROM relations WHERE entry_id = 1 ORDER BY rowid",
+    "SELECT entry_id FROM fts_map WHERE rowid = 1",
+)
+
+
+@pytest.mark.parametrize("query", _CLIENT_QUERIES)
+def test_client_queries_never_scan_a_table(fixtures_dir: Path, tmp_path: Path, query: str) -> None:
+    spec = DictSpec.from_json(
+        json.loads((fixtures_dir / "sample-en.meta.json").read_text(encoding="utf-8"))
+    )
+    bundle = build_bundle(read_jsonl(fixtures_dir / "sample-en.jsonl"), spec, tmp_path)
+    conn = sqlite3.connect(bundle)
+    try:
+        plan = [row[3] for row in conn.execute(f"EXPLAIN QUERY PLAN {query}")]
+    finally:
+        conn.close()
+    scans = [step for step in plan if step.startswith("SCAN") and "USING" not in step]
+    assert not scans, f"{query}: {plan}"
