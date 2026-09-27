@@ -7,12 +7,52 @@ Newest first. One entry per working session.
 | Milestone | Status |
 |---|---|
 | M0 Scaffold | done locally; CI not yet run (no remote) |
-| M1 Kaikki + packaging + catalog | todo |
-| M2 Qt client (search, entry view, app shell) | todo |
+| M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
+| M2 Qt client (search, entry view, app shell) | core features done; kit app-shell pieces still to do |
 | M3 Manage dictionaries + downloader + About | todo |
 | M4 More converters, real catalog | todo |
 | M5 Packaging | todo |
 | M6 Web app | todo |
+
+## 2026-09-27 - M1 delivered, M2 core features
+
+M1:
+- Kaikki converter (`omnipipe.converters.kaikki`): streams gzipped dumps, merges a word's
+  records into one entry, skips inflection-only records (their forms stay on the lemma), keeps
+  romanizations as forms, maps grammar tags to `pattern` and usage tags to `label`, turns wiki
+  links into `lex:` links. Notes and numbers in DOCS/sources.md.
+- Bundles from the 2026-09-25 dumps: `wikt-hi-en` 23,029 entries (57 MB, 11.5 MB packed),
+  `wikt-es-en` 113,073 (169 MB, 40 MB), `wikt-en` 883,985 (809 MB, 262 MB). English builds in
+  5 minutes with flat memory (112 MB); it skips the final VACUUM because the disk is 98% full.
+- `package.py` (zstd `.odict`, manifest, sha256; deterministic), `catalog.py`, `make fetch /
+  build / package / catalog / serve / all`. Acceptance: all three bundles downloaded from a
+  local HTTP server and verified (size, sha256, installed size); `test_serve.py` runs the same
+  flow on the fixture in CI.
+- Round-trip gate (`tst_real_bundles`): the C++ `Bundle` answers 20 known headwords, 3
+  inflected or romanized forms, a prefix and a full-text query in every built bundle.
+- It caught two real problems. Typing `día` returned the entry `dia` first: exact spellings
+  now rank first. Opening an English entry took over a second because child tables had no
+  parent index: four indexes added (ADR-012, for the owner to confirm), 22.6 s to 45 ms for
+  the whole gate; `test_client_queries_never_scan_a_table` keeps it so.
+- `build.py` streams in batches and builds indexes after the load.
+
+M2 (core features; the kit's app-shell pieces are still open, see FEATURES E1 to E8):
+- Entry HTML contract (DOCS/entry-html.md) with two independent renderers, C++
+  (`core::renderEntry`) and Python (`omnipipe.render`), agreeing byte for byte on 9 golden files.
+- `core::Library` (bundle discovery, both layouts, newest version wins), `core::SearchEngine`
+  (grouped results, exact then prefix then "also found in definitions", wildcards, dictionary
+  filter, dictionaries ranked by match quality), `core::UserData` (history and favourites).
+- Window: search field with 80 ms debounce, dictionary filter, grouped result list, entry view
+  with `lex:` links, star button (Ctrl+D), favourites and recent entries on an empty search.
+  All dictionary access on one lookup thread (`services::LookupService`, ADR-004).
+- Run it: `scripts/dev-run.sh -- --bundles pipeline/out --profile <scratch dir>`.
+  Headless: `OMNIDICT_DEBUG_QUERY=perro OMNIDICT_DEBUG_GRAB=shot.png QT_QPA_PLATFORM=offscreen`.
+- Verified: 8 C++ suites (including `tst_smoke`, which drives the window offscreen through
+  search, open, star and history), 230 pipeline tests, lint clean; screenshots checked for
+  Spanish, English and romanized Hindi queries.
+- Not yet: kit app-shell pieces (settings, log sink, single instance, theme switch, About,
+  bug report, shortcuts sheet, What's new), spell suggestion (open question), lazy opening
+  with an LRU of connections (PLAN 7.3), translations.
 
 ## 2026-09-27 - M0 delivered
 

@@ -28,6 +28,10 @@ make package DICT=wikt-hi-en      # -> out/publish/dicts/<id>/<version>/{*.odict
 make catalog && make serve        # out/publish/catalog.json on http://localhost:8000
 ```
 
+Run the app against them with a scratch profile (never the owner's own data):
+`scripts/dev-run.sh -- --bundles pipeline/out --profile /tmp/omnidict-profile`. Headless check:
+`QT_QPA_PLATFORM=offscreen OMNIDICT_DEBUG_QUERY=perro OMNIDICT_DEBUG_GRAB=shot.png scripts/dev-run.sh -- --bundles pipeline/out`.
+
 `tst_real_bundles` checks every built bundle against `tests/known_headwords.json` and skips
 the ones not built.
 

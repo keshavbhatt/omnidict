@@ -32,15 +32,15 @@ expects every ktechpit desktop app to have.
 | B1 | `core::Bundle` opens one `dict.sqlite`, exposes lookup/search | M0 | KEEP | done |
 | B2 | `core::SqliteDb` RAII wrapper over the sqlite3 C API (ADR-003) | M0 | KEEP | done |
 | B3 | `core::normalize` mirrors the pipeline normalization, shared test vectors | M0 | KEEP | done |
-| B4 | As-you-type prefix search across open bundles (`headword_norm`, `forms.form_norm`), debounced, merged and grouped into `ResultsModel` | M2 | KEEP | planned |
-| B5 | Empty query shows history | M2 | KEEP | planned |
-| B6 | Exact match, then prefix, then FTS full-text ("Also found in definitions") | M2 | KEEP | planned |
-| B7 | Wildcard search (`?`, `*`) | M2 | KEEP | planned |
-| B8 | Spell suggestion on zero results (spellfix1 vs custom is PLAN.md open question 4) | M2 | KEEP | planned |
-| B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | planned |
-| B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | planned |
-| B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | planned |
-| B12 | Dedicated SQLite worker thread per bundle-manager (ADR-004) | M2 | KEEP | planned |
+| B4 | As-you-type prefix search across open bundles (`headword_norm`, `forms.form_norm`), debounced, merged and grouped into `ResultsModel` | M2 | KEEP | done (`core::SearchEngine`, 80 ms debounce in `MainWindow`) |
+| B5 | Empty query shows history | M2 | KEEP | done (favourites and recent entries) |
+| B6 | Exact match, then prefix, then FTS full-text ("Also found in definitions") | M2 | KEEP | done; dictionaries ranked by match quality, headword matches before form matches |
+| B7 | Wildcard search (`?`, `*`) | M2 | KEEP | done (`Bundle::searchPattern`) |
+| B8 | Spell suggestion on zero results (spellfix1 vs custom is PLAN.md open question 4) | M2 | KEEP | planned (waits on PLAN 9 question 4) |
+| B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | done |
+| B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | partly: `core::Library` discovers and opens bundles; lazy open and the LRU of 10 connections are still to do |
+| B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | done as `core::SearchEngine` (pure, on the lookup thread) |
+| B12 | Dedicated SQLite worker thread per bundle-manager (ADR-004) | M2 | KEEP | done: one lookup thread (`services::LookupService`) |
 | B13 | DAWG / perfect-hash search index | v2 | LATER | - |
 | B14 | MeCab/Jieba tokenization for CJK lookup | v2 | LATER | - |
 
@@ -48,11 +48,11 @@ expects every ktechpit desktop app to have.
 
 | # | Feature | Milestone | Decision | Status |
 |---|---|---|---|---|
-| C1 | `core::EntryRenderer`: entry to HTML, client-agnostic template (PLAN D12) | M2 | KEEP | planned |
-| C2 | Visual structure: headword, frequency, IPA, POS heading per sense, pattern, definition, label box, examples | M2 | KEEP | planned |
-| C3 | `lex:` links resolve to an in-app lookup; external links disabled | M2 | KEEP | planned |
-| C4 | Star button adds a favorite; every opened entry is added to history (`core::UserData`) | M2 | KEEP | planned |
-| C5 | Golden-file tests for rendered entry HTML (`tests/golden/`) | M2 | KEEP | planned |
+| C1 | `core::EntryRenderer`: entry to HTML, client-agnostic template (PLAN D12) | M2 | KEEP | done (`core::renderEntry`, contract in DOCS/entry-html.md) |
+| C2 | Visual structure: headword, frequency, IPA, POS heading per sense, pattern, definition, label box, examples | M2 | KEEP | done; the label box is a shaded background, since QTextBrowser draws no borders on inline text |
+| C3 | `lex:` links resolve to an in-app lookup; external links disabled | M2 | KEEP | done |
+| C4 | Star button adds a favorite; every opened entry is added to history (`core::UserData`) | M2 | KEEP | done (`core::UserData`); history records entries the user opens, not the as-you-type preview |
+| C5 | Golden-file tests for rendered entry HTML (`tests/golden/`) | M2 | KEEP | done: 9 goldens shared by the C++ and Python renderers |
 
 ## D. Manage dictionaries
 
