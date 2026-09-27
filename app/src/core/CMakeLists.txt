@@ -11,6 +11,8 @@ qt_add_library(omnidict_core STATIC
     entry_renderer.h
     library.cpp
     library.h
+    log_sink.cpp
+    log_sink.h
     logging.cpp
     logging.h
     normalize.cpp

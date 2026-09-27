@@ -1,6 +1,7 @@
 #include "app/debug_hooks.h"
 #include "app/lookup_command.h"
 #include "app/version.h"
+#include "core/log_sink.h"
 #include "core/settings.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
@@ -91,6 +92,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     roots << dataDir + u"/dictionaries"_s;
 
     QDir().mkpath(dataDir);
+    omnidict::core::LogSink::setLogFile(dataDir + u"/logs/omnidict.log"_s);
     omnidict::core::Settings settings(dataDir + u"/settings.ini"_s);
     const omnidict::ui::ThemeApplier theme(settings);
     QApplication::setWindowIcon(omnidict::ui::icons::brand());
@@ -114,6 +116,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
 
 int main(int argc, char* argv[])
 {
+    omnidict::core::LogSink::install();
     const std::unique_ptr<QCoreApplication> app = wantsWindow(argc, argv)
                                                       ? std::make_unique<QApplication>(argc, argv)
                                                       : std::make_unique<QCoreApplication>(argc, argv);

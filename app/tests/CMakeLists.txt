@@ -57,6 +57,7 @@ omnidict_add_test(tst_suggester tst_suggester.cpp omnidict_core)
 target_compile_definitions(tst_suggester PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}"
     OMNIDICT_SUGGEST_CASES="${OMNIDICT_REPO_ROOT}/tests/suggest_cases.json")
+omnidict_add_test(tst_log_sink tst_log_sink.cpp omnidict_core)
 omnidict_add_test(tst_settings tst_settings.cpp omnidict_core)
 omnidict_add_test(tst_user_data tst_user_data.cpp omnidict_core)
 omnidict_add_test(tst_entry_renderer tst_entry_renderer.cpp omnidict_core)

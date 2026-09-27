@@ -36,7 +36,7 @@ expects every ktechpit desktop app to have.
 | B5 | Empty query shows history | M2 | KEEP | done (favourites and recent entries) |
 | B6 | Exact match, then prefix, then FTS full-text ("Also found in definitions") | M2 | KEEP | done; dictionaries ranked by match quality, headword matches before form matches |
 | B7 | Wildcard search (`?`, `*`) | M2 | KEEP | done (`Bundle::searchPattern`) |
-| B8 | Spell suggestion on zero results | M2 | KEEP (owner, 2026-09-27: our own suggester, ADR-013) | core done: `suggest` table (schema 2), Python reference and `core::Suggester` agree on `tests/suggest_cases.json`; worst case 19 ms on English (`tst_real_bundles`); UI from mocks/main-no-results.html next |
+| B8 | Spell suggestion on zero results | M2 | KEEP (owner, 2026-09-27: our own suggester, ADR-013) | core done: `suggest` table (schema 2), Python reference and `core::Suggester` agree on `tests/suggest_cases.json`; worst case 19 ms on English (`tst_real_bundles`); UI done (mocks/main-no-results.html: "Did you mean" in the list, a no-match state beside it) |
 | B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | done |
 | B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | partly: `core::Library` discovers and opens bundles; lazy open and the LRU of 10 connections are still to do |
 | B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | done as `core::SearchEngine` (pure, on the lookup thread) |
@@ -70,10 +70,10 @@ expects every ktechpit desktop app to have.
 
 | # | Feature | Milestone | Decision | Status |
 |---|---|---|---|---|
-| E1 | Settings facade (`core::Settings`), typed accessors, one defaults table, change signals | M2 | KEEP | planned |
-| E2 | Rotating log sink with diagnostics | M2 | KEEP | planned |
+| E1 | Settings facade (`core::Settings`), typed accessors, one defaults table, change signals | M2 | KEEP | done (`core::Settings`, INI in the profile directory, `tst_settings`) |
+| E2 | Rotating log sink with diagnostics | M2 | KEEP | done (`core::LogSink` from the kit: `<profile>/logs/omnidict.log`, 2 MB rotation, last 1000 lines in memory; `tst_log_sink`) |
 | E3 | Single instance | M2 | KEEP | planned |
-| E4 | Theme: system / light / dark | M2 | KEEP | planned |
+| E4 | Theme: system / light / dark | M2 | KEEP | done: `ui::ThemeApplier` follows the setting and the desktop live; tokens in `ui::Tokens` match DOCS/mocks/mock.css |
 | E5 | About dialog with diagnostics | M2 | KEEP | planned |
 | E6 | Report a bug | M2 | KEEP | planned |
 | E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | planned |
