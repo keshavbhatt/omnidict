@@ -64,7 +64,7 @@ expects every ktechpit desktop app to have.
 | D4 | `core::Catalog`/`core::parseCatalog`: parses `catalog.json` strictly, skips entries with a newer `schema_version`; `services::DictionaryManager` fetches it (24h cache, `OMNIDICT_CATALOG_URL`) and exposes it for the UI to diff against installed | M3 | KEEP | done (backend); UI diffing/tabs still planned |
 | D5 | `core::installBundle`/`core::removeInstalled`: sha256 + size verify (streamed), zstd decompress, `Bundle::open` re-check, install and remove stale versions; `services::DictionaryManager` drives the resumable download (`Range` header, falls back to a fresh download if ignored) and calls it | M3 | KEEP | done (backend); UI progress/actions still planned |
 | D6 | Downloads on the GUI thread's `QNetworkAccessManager` (non-blocking, no thread needed for async I/O); the verify+decompress step (`core::installBundle`) runs on `QThreadPool::globalInstance()` (ADR-004), result posted back via `QMetaObject::invokeMethod` | M3 | KEEP | done (backend) |
-| D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | partly (M2): About lists every open dictionary's attribution, licence link and version; the app's own open-source notices are still to add |
+| D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | done: About's Dictionaries tab credits each dictionary with its licence link; the Open source tab lists Qt, Qt Svg, SQLite, ICU, zstd and Lucide; every entry ends with its dictionary's credit |
 
 ## E. App shell
 

@@ -8,7 +8,7 @@ Newest first. One entry per working session.
 |---|---|
 | M0 Scaffold | done locally; CI not yet run (no remote) |
 | M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
-| M2 Qt client (search, entry view, app shell) | core features done; kit app-shell pieces still to do |
+| M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening with an LRU (B10) still open |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
 | M4 More converters, real catalog | todo |
 | M5 Packaging | todo |
@@ -43,6 +43,34 @@ and `catalog.py` exactly; the dialog UI is separate work.
   `tst_dictionary_manager` (a `QTcpServer`-based HTTP server, 127.0.0.1 only: catalogue fetch,
   the 2-at-a-time limit, cancel, a 404 failure message, and a full install through a resumed
   Range request). `make test` and `make lint` both clean.
+
+## 2026-09-27 - Mocks approved; schema 2 with spelling suggestions; M2 shell and M3 built
+
+Owner decisions: the 14 mocks approved; our own spell suggester (ADR-013); schema_version 2
+(ADR-012 indexes plus the `suggest` table).
+
+- Schema 2: `suggest` FTS5 trigram table with start and end markers; Python reference
+  (`omnipipe.suggest`) and `core::Suggester` agree on `tests/suggest_cases.json`; worst case
+  19 ms on English, 4 ms Spanish, 1 ms Hindi (`tst_real_bundles`). Bundles rebuilt (English
+  809 to 844 MB) and repackaged; the local catalogue lists schema 2.
+- UI from the mocks: design tokens with a live theme switch, tinted Lucide glyphs (ADR-014),
+  settings facade, header with search field and dictionary filter, grouped results with
+  stars, "Did you mean", collapsible "Also found in definitions", entry bar with Back,
+  Forward, Copy and the star, credit line under every entry, empty and no-match states, one
+  column below 720 px. Sheets: settings, shortcuts, What's new, report a bug, About with
+  credits, open-source notices and diagnostics. Clearing history can be undone.
+- App shell from the kit: log sink, single instance per profile.
+- M3: catalogue parsing, verified install (size, sha256, zstd, re-open check), download
+  manager with 2 at a time and resume (ADR-015, Qt Network and zstd), first-run screen,
+  Dictionaries sheet (order, switch off, update, remove, language filters). Headless check:
+  `OMNIDICT_DEBUG_INSTALL=wikt-hi-en` installed the real package in 0.7 s, English (262 MB) in
+  6 s, and the window searched them.
+- Work split across three agents in worktrees (sheets, backend, Dictionaries sheet), merged
+  and reviewed here; every screen checked against its mock in screenshots.
+- Deviations from the mocks: the "from <form>" note on rows found through an inflected form
+  is not shown yet (the search does not return which form matched); the language filters are
+  plain drop-downs; the Installing ring does not spin.
+- Tests: 253 pipeline, 17 C++ suites. Lint clean.
 
 ## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local
 
