@@ -1,0 +1,12 @@
+{
+  "dict_id": "sample-en",
+  "name": "Sample English",
+  "source_lang": "en",
+  "target_lang": "en",
+  "kind": "monolingual",
+  "version": "2026.09.1",
+  "publisher": "Omnidict project",
+  "license": "GPL-3.0-or-later",
+  "license_url": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "attribution": "Hand-written sample data for tests, Omnidict project"
+}

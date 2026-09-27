@@ -1,0 +1,42 @@
+[project]
+name = "omnipipe"
+version = "0.1.0"
+description = "Omnidict data pipeline: converts dictionary sources into canonical bundles."
+license = "GPL-3.0-or-later"
+requires-python = ">=3.12"
+dependencies = [
+    "PyICU",
+    "zstandard",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["omnipipe"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "PTH", "RUF", "N", "ANN"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+
+[[tool.mypy.overrides]]
+module = ["icu", "icu.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

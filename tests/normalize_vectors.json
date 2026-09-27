@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "description": "Headword normalization contract. Read by pipeline/tests/test_normalize.py and app/tests/tst_normalize.cpp.",
+  "vectors": [
+    {
+      "name": "ascii_lowercase_already",
+      "input": "perhaps",
+      "expected": "perhaps"
+    },
+    {
+      "name": "ascii_mixed_case",
+      "input": "Perhaps",
+      "expected": "perhaps"
+    },
+    {
+      "name": "latin_precomposed_cafe",
+      "input": "café",
+      "expected": "cafe"
+    },
+    {
+      "name": "latin_precomposed_naive",
+      "input": "naïve",
+      "expected": "naive"
+    },
+    {
+      "name": "latin_precomposed_angstrom",
+      "input": "Ångström",
+      "expected": "angstrom"
+    },
+    {
+      "name": "latin_precomposed_zurich",
+      "input": "Zürich",
+      "expected": "zurich"
+    },
+    {
+      "name": "latin_decomposed_combining_acute",
+      "input": "é",
+      "expected": "e"
+    },
+    {
+      "name": "german_sharp_s_fold",
+      "input": "Straße",
+      "expected": "strasse"
+    },
+    {
+      "name": "turkish_dotted_capital_i",
+      "input": "İstanbul",
+      "expected": "istanbul"
+    },
+    {
+      "name": "ligature_fi_nfkc",
+      "input": "ﬁle",
+      "expected": "file"
+    },
+    {
+      "name": "fullwidth_latin_nfkc",
+      "input": "ＡＢＣ",
+      "expected": "abc"
+    },
+    {
+      "name": "superscript_digit_nfkc",
+      "input": "H⁵",
+      "expected": "h5"
+    },
+    {
+      "name": "cyrillic_case_fold",
+      "input": "Москва",
+      "expected": "москва"
+    },
+    {
+      "name": "cyrillic_short_i_stripped",
+      "input": "й",
+      "expected": "и"
+    },
+    {
+      "name": "cyrillic_yo_stripped",
+      "input": "ё",
+      "expected": "е"
+    },
+    {
+      "name": "cyrillic_short_i_yo_upper_stripped",
+      "input": "ЙЁ",
+      "expected": "ие"
+    },
+    {
+      "name": "greek_tonos_stripped",
+      "input": "Αθήνα",
+      "expected": "αθηνα"
+    },
+    {
+      "name": "greek_final_sigma_upper",
+      "input": "ΟΔΟΣ",
+      "expected": "οδοσ"
+    },
+    {
+      "name": "greek_final_sigma_lower",
+      "input": "ὁδός",
+      "expected": "οδοσ"
+    },
+    {
+      "name": "devanagari_matras_virama_kept",
+      "input": "कदाचित्",
+      "expected": "कदाचित्"
+    },
+    {
+      "name": "devanagari_hindi_kept",
+      "input": "हिन्दी",
+      "expected": "हिन्दी"
+    },
+    {
+      "name": "devanagari_nukta_kept",
+      "input": "क़",
+      "expected": "क़"
+    },
+    {
+      "name": "bengali_kept",
+      "input": "কখগ",
+      "expected": "কখগ"
+    },
+    {
+      "name": "tamil_kept",
+      "input": "தமிழ்",
+      "expected": "தமிழ்"
+    },
+    {
+      "name": "arabic_harakat_kept",
+      "input": "كِتَاب",
+      "expected": "كِتَاب"
+    },
+    {
+      "name": "arabic_plain",
+      "input": "كتاب",
+      "expected": "كتاب"
+    },
+    {
+      "name": "hebrew_niqqud_kept",
+      "input": "שָׁלוֹם",
+      "expected": "שָׁלוֹם"
+    },
+    {
+      "name": "thai_tone_marks_kept",
+      "input": "ภาษาไทย",
+      "expected": "ภาษาไทย"
+    },
+    {
+      "name": "thai_sara_am_decomposes",
+      "input": "น้ำ",
+      "expected": "น้ํา"
+    },
+    {
+      "name": "cjk_hanzi",
+      "input": "漢字",
+      "expected": "漢字"
+    },
+    {
+      "name": "cjk_zhongwen",
+      "input": "中文",
+      "expected": "中文"
+    },
+    {
+      "name": "japanese_dakuten_stays",
+      "input": "が",
+      "expected": "が"
+    },
+    {
+      "name": "japanese_halfwidth_katakana_nfkc",
+      "input": "ｶﾞ",
+      "expected": "ガ"
+    },
+    {
+      "name": "korean_hangul_precomposed",
+      "input": "한국어",
+      "expected": "한국어"
+    },
+    {
+      "name": "korean_hangul_decomposed_jamo",
+      "input": "한국어",
+      "expected": "한국어"
+    },
+    {
+      "name": "whitespace_tabs_newlines_multi_spaces",
+      "input": "  a\tb\n c  ",
+      "expected": "a b c"
+    },
+    {
+      "name": "whitespace_nbsp_and_ideographic_space",
+      "input": " nbsp　ideo ",
+      "expected": "nbsp ideo"
+    },
+    {
+      "name": "empty_string",
+      "input": "",
+      "expected": ""
+    },
+    {
+      "name": "only_spaces",
+      "input": "   ",
+      "expected": ""
+    },
+    {
+      "name": "mixed_script_latin_devanagari",
+      "input": "café कॉफ़ी",
+      "expected": "cafe कॉफ़ी"
+    },
+    {
+      "name": "latin_after_devanagari_combining_mark_stripped",
+      "input": "हिन्दी á",
+      "expected": "हिन्दी a"
+    },
+    {
+      "name": "punctuation_apostrophes_unchanged",
+      "input": "rock 'n' roll",
+      "expected": "rock 'n' roll"
+    },
+    {
+      "name": "abbreviation_dots_unchanged",
+      "input": "e.g.",
+      "expected": "e.g."
+    },
+    {
+      "name": "ascii_hyphen_unchanged",
+      "input": "well-known",
+      "expected": "well-known"
+    }
+  ]
+}
