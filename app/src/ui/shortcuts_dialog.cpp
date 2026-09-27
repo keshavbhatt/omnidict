@@ -139,7 +139,7 @@ void ShortcutsDialog::addGroup(QVBoxLayout* column, const QString& title, const 
         return;
     }
     auto* heading = new QLabel(title, this);
-    heading->setProperty("section", true);
+    makeSectionLabel(heading);
     heading->setContentsMargins(0, column->count() == 0 ? 0 : 16, 0, 6);
     column->addWidget(heading);
     GroupWidget group{.heading = heading, .rows = {}};

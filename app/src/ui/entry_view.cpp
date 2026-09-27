@@ -3,7 +3,10 @@
 #include "ui/style.h"
 
 #include <QEvent>
+#include <QPainter>
+#include <QRegularExpression>
 #include <QScrollBar>
+#include <QTextDocument>
 #include <QUrl>
 
 using namespace Qt::StringLiterals;
@@ -13,7 +16,10 @@ namespace omnidict::ui {
 namespace {
 constexpr int kMarginX = 8; // with the document margin, mocks/mock.css .entry padding
 constexpr double kHeadwordScale = 2.0;
-constexpr double kSmallScale = 0.87;
+constexpr double kSmallScale = 0.8;    // labels, part of speech, credit
+constexpr double kHeadingScale = 0.87; // the sense heading line
+constexpr int kLabelPadX = 5;
+constexpr qreal kLabelRadius = 4.0;
 } // namespace
 
 EntryView::EntryView(QWidget* parent)
@@ -47,11 +53,64 @@ void EntryView::setTextSize(int pixels)
 
 void EntryView::render()
 {
-    QString html = m_html;
+    QString html = withLabelImages(m_html);
     if (!m_credit.isEmpty()) {
-        html += u"<hr><p class=\"credit\">"_s + m_credit.toHtmlEscaped() + u"</p>"_s;
+        // A table cell, because rich text draws a border only on cells: the 1 px rule of mocks/main.html.
+        html += u"<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top: 28px;\"><tr>"
+                "<td class=\"credit\">"_s +
+                m_credit.toHtmlEscaped() + u"</td></tr></table>"_s;
     }
     setHtml(html);
+}
+
+QString EntryView::plainText() const
+{
+    QTextDocument document;
+    document.setHtml(m_html + u"<p>"_s + m_credit.toHtmlEscaped() + u"</p>"_s);
+    return document.toPlainText();
+}
+
+QString EntryView::withLabelImages(const QString& html)
+{
+    // Rich text draws no border round inline text, and the mock boxes each label.
+    static const QRegularExpression kLabel(u"<span class=\"label\">(.*?)</span>"_s);
+    const Tokens& t = Tokens::current();
+    QFont font = document()->defaultFont();
+    font.setPixelSize(qRound(m_textSize * kSmallScale));
+    const QFontMetrics metrics(font);
+    const qreal dpr = devicePixelRatioF();
+    QString out;
+    qsizetype from = 0;
+    int index = 0;
+    for (const QRegularExpressionMatch& match : kLabel.globalMatch(html)) {
+        QTextDocument unescape;
+        unescape.setHtml(match.captured(1));
+        const QString text = unescape.toPlainText();
+        const QSize size(metrics.horizontalAdvance(text) + (2 * kLabelPadX), metrics.height() + 2);
+        QPixmap box(size * dpr);
+        box.setDevicePixelRatio(dpr);
+        box.fill(Qt::transparent);
+        QPainter painter(&box);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(QPen(t.border, 1.0));
+        painter.drawRoundedRect(QRectF(0.5, 0.5, size.width() - 1.0, size.height() - 1.0), kLabelRadius,
+                                kLabelRadius);
+        painter.setFont(font);
+        painter.setPen(t.muted);
+        painter.drawText(QRect(QPoint(0, 0), size), Qt::AlignCenter, text);
+        painter.end();
+        const QUrl name(u"omnidict-label:%1"_s.arg(index++));
+        document()->addResource(QTextDocument::ImageResource, name, box);
+        out += html.mid(from, match.capturedStart() - from);
+        out +=
+            u"<img src=\"%1\" width=\"%2\" height=\"%3\" style=\"vertical-align: middle;\" alt=\"%4\">"_s.arg(
+                name.toString(), QString::number(size.width()), QString::number(size.height()),
+                text.toHtmlEscaped());
+        out += u"&nbsp;"_s;
+        from = match.capturedEnd();
+    }
+    out += html.mid(from);
+    return out;
 }
 
 void EntryView::changeEvent(QEvent* event)
@@ -79,21 +138,21 @@ void EntryView::applyStyleSheet()
         .prons { color: %2; margin-top: 4px; }
         .region { font-size: %7px; }
         .sense { margin-top: 18px; }
-        .sense-head { margin-bottom: 2px; font-size: %7px; }
+        .sense-head { margin-bottom: 2px; font-size: %11px; }
         .num { font-weight: 700; }
-        .pos { font-weight: 600; font-variant: small-caps; color: %2; }
+        .pos { font-weight: 600; font-size: %7px; text-transform: uppercase; letter-spacing: 0.6px; color: %2; }
         .pattern { color: %3; }
-        .label { background-color: %4; color: %2; font-size: %7px; }
+        .label { color: %2; font-size: %7px; }
         .def { margin-top: 2px; }
         .examples { color: %8; margin-top: 4px; }
         .tr { font-style: italic; }
         .rel, .forms { color: %2; margin-top: 10px; }
         .rel-type { font-weight: 600; }
-        .credit { color: %2; font-size: %9px; }
+        .credit { color: %2; font-size: %9px; border-top: 1px solid %4; padding-top: 12px; }
         a { color: %10; text-decoration: none; }
-    )"_s.arg(t.headword.name(), t.muted.name(), t.pattern.name(), t.hover.name(), t.warm.name(),
-             px(kHeadwordScale), px(kSmallScale), t.example.name(), px(kSmallScale * kSmallScale),
-             t.link.name());
+    )"_s.arg(t.headword.name(), t.muted.name(), t.pattern.name(), t.border.name(), t.warm.name(),
+             px(kHeadwordScale), px(kSmallScale), t.example.name(), px(kSmallScale), t.link.name(),
+             px(kHeadingScale));
     document()->setDefaultStyleSheet(css);
     // The default sheet applies to HTML set after it: render again.
     if (!m_html.isEmpty()) {

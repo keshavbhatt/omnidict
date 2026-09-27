@@ -148,6 +148,17 @@ private Q_SLOTS:
         QVERIFY(!back->isEnabled());
     }
 
+    void copiedEntriesKeepLabelsThatAreDrawnAsImages()
+    {
+        omnidict::ui::EntryView view;
+        view.showEntry(u"<p class=\"def\"><span class=\"label\">derogatory</span> scoundrel</p>"_s,
+                       u"From a test dictionary."_s);
+        QVERIFY(view.toHtml().contains(u"omnidict-label:0"_s)); // shown as a boxed image
+        const QString text = view.plainText();
+        QVERIFY(text.contains(u"derogatory scoundrel"_s));
+        QVERIFY(text.contains(u"From a test dictionary."_s));
+    }
+
     void aboutCreditsEveryDictionary()
     {
         const QList<omnidict::services::DictionaryInfo> dictionaries = {

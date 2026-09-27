@@ -21,8 +21,8 @@ public:
     void showEntry(const QString& html, const QString& credit);
     /// Body text size in pixels; headings scale with it.
     void setTextSize(int pixels);
-    /// The entry as plain text, for the clipboard.
-    [[nodiscard]] QString plainText() const { return toPlainText(); }
+    /// The entry as plain text, for the clipboard (labels included, though they are drawn as images).
+    [[nodiscard]] QString plainText() const;
 
 Q_SIGNALS:
     void headwordActivated(const QString& headword);
@@ -33,6 +33,8 @@ protected:
 private:
     void applyStyleSheet();
     void render();
+    /// The HTML with every label replaced by an image of it in its bordered box.
+    [[nodiscard]] QString withLabelImages(const QString& html);
     void onAnchorClicked(const QUrl& url);
 
     QString m_html;

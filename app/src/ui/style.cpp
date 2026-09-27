@@ -1,6 +1,7 @@
 #include "ui/style.h"
 
 #include <QHash>
+#include <QLabel>
 
 using namespace Qt::StringLiterals;
 
@@ -132,6 +133,21 @@ QToolButton:hover { background: {{hover}}; }
 QToolButton:pressed, QToolButton:checked { background: {{accentSoft}}; }
 QToolButton:focus { border-color: {{accent}}; }
 QToolButton::menu-indicator { image: none; width: 0; }
+/* Segmented choice (mock.css .seg): one frame, hairlines between the options. */
+QFrame[segmented="true"] { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; }
+QFrame[segmented="true"] QToolButton {
+    background: transparent; color: {{text}}; border: none; border-right: 1px solid {{border}};
+    border-radius: 0; min-width: 0; min-height: 0; padding: 6px 14px;
+}
+QFrame[segmented="true"] QToolButton[segmentEdge="first"] { border-top-left-radius: 7px; border-bottom-left-radius: 7px; }
+QFrame[segmented="true"] QToolButton[segmentEdge="last"] {
+    border-right: none; border-top-right-radius: 7px; border-bottom-right-radius: 7px;
+}
+QFrame[segmented="true"] QToolButton:hover { background: {{hover}}; }
+QFrame[segmented="true"] QToolButton:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
+QFrame[segmented="true"] QToolButton:focus { color: {{accent}}; }
+QPushButton[compact="true"] { padding: 0 4px; min-width: 32px; }
+
 QToolButton[chip="true"] {
     background: {{input}}; border: 1px solid {{border}};
     min-height: 34px; padding: 0 10px 0 10px;
@@ -234,6 +250,16 @@ QPalette paletteFor(const Tokens& t)
         palette.setColor(QPalette::Disabled, role, t.muted);
     }
     return palette;
+}
+
+void makeSectionLabel(QLabel* label)
+{
+    constexpr qreal kSpacingPercent = 106.0; // letter-spacing .06em
+    label->setProperty("section", true);
+    QFont font = label->font();
+    font.setCapitalization(QFont::AllUppercase);
+    font.setLetterSpacing(QFont::PercentageSpacing, kSpacingPercent);
+    label->setFont(font);
 }
 
 QString styleSheetFor(const Tokens& t)

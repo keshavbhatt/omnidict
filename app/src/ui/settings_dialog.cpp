@@ -26,7 +26,7 @@ namespace {
 QLabel* makeSectionLabel(QWidget* parent, const QString& text, bool first)
 {
     auto* label = new QLabel(text, parent);
-    label->setProperty("section", true);
+    ui::makeSectionLabel(label);
     label->setContentsMargins(0, first ? 0 : 16, 0, 4);
     return label;
 }
@@ -122,9 +122,7 @@ QWidget* SettingsDialog::buildThemeSegment(QWidget* content)
 {
     auto* themeFrame = new QFrame(content);
     themeFrame->setObjectName(u"themeSegment"_s);
-    const Tokens& tokens = Tokens::current();
-    themeFrame->setStyleSheet(
-        u"QFrame#themeSegment{border:1px solid %1;border-radius:8px;}"_s.arg(tokens.border.name()));
+    themeFrame->setProperty("segmented", true); // the look is in the app style sheet (ui/style.cpp)
     auto* themeLayout = new QHBoxLayout(themeFrame);
     themeLayout->setContentsMargins(0, 0, 0, 0);
     themeLayout->setSpacing(0);
@@ -145,6 +143,8 @@ QWidget* SettingsDialog::buildThemeSegment(QWidget* content)
         themeGroup->addButton(button);
         themeLayout->addWidget(button);
     }
+    m_systemButton->setProperty("segmentEdge", u"first"_s);
+    m_darkButton->setProperty("segmentEdge", u"last"_s);
     connect(m_systemButton, &QToolButton::clicked, this,
             [this] { m_settings.setTheme(core::Theme::System); });
     connect(m_lightButton, &QToolButton::clicked, this, [this] { m_settings.setTheme(core::Theme::Light); });
@@ -163,7 +163,7 @@ QWidget* SettingsDialog::buildTextSizeRow(QWidget* content)
     auto* decrease = new QPushButton(u"A-"_s, sizeRow);
     decrease->setObjectName(u"entryTextSizeDecrease"_s);
     decrease->setFixedWidth(32);
-    decrease->setStyleSheet(u"padding: 0 4px;"_s); // the global 14px padding would clip "A-" at this width
+    decrease->setProperty("compact", true); // the usual 14 px padding would clip "A-"
     decrease->setAccessibleName(tr("Smaller text"));
     connect(decrease, &QPushButton::clicked, this,
             [this] { m_settings.setEntryTextSize(m_settings.entryTextSize() - 1); });
@@ -175,7 +175,7 @@ QWidget* SettingsDialog::buildTextSizeRow(QWidget* content)
     auto* increase = new QPushButton(u"A+"_s, sizeRow);
     increase->setObjectName(u"entryTextSizeIncrease"_s);
     increase->setFixedWidth(32);
-    increase->setStyleSheet(u"padding: 0 4px;"_s);
+    increase->setProperty("compact", true);
     increase->setAccessibleName(tr("Larger text"));
     connect(increase, &QPushButton::clicked, this,
             [this] { m_settings.setEntryTextSize(m_settings.entryTextSize() + 1); });

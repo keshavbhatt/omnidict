@@ -4,6 +4,8 @@
 #include <QPalette>
 #include <QString>
 
+class QLabel;
+
 namespace omnidict::ui {
 
 /// The brand tokens of DOCS/DESIGN.md section 1, per scheme: the one source of
@@ -44,6 +46,10 @@ struct Tokens
 
 /// A Fusion palette built from the tokens, for everything the sheet leaves alone.
 [[nodiscard]] QPalette paletteFor(const Tokens& tokens);
+
+/// Makes `label` a group title (mock.css .group-title): the sheet colours and
+/// sizes it; capitals and spacing are font settings a style sheet cannot make.
+void makeSectionLabel(QLabel* label);
 
 /// The application style sheet. Widgets opt into the looks with dynamic
 /// properties: `primary` and `flat` buttons, `chip` tool buttons, `muted`,
