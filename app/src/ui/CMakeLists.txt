@@ -7,6 +7,8 @@ qt_add_library(omnidict_ui STATIC
     bug_report_dialog.h
     diagnostics.cpp
     diagnostics.h
+    dictionaries_dialog.cpp
+    dictionaries_dialog.h
     empty_state.cpp
     empty_state.h
     entry_view.cpp
