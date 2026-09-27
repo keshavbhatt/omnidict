@@ -11,6 +11,8 @@ qt_add_library(omnidict_ui STATIC
     empty_state.h
     entry_view.cpp
     entry_view.h
+    first_run_panel.cpp
+    first_run_panel.h
     icons.cpp
     icons.h
     logging.cpp

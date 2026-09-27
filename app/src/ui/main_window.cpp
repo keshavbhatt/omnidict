@@ -2,11 +2,13 @@
 
 #include "core/settings.h"
 #include "models/results_model.h"
+#include "services/dictionary_manager.h"
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
 #include "ui/empty_state.h"
 #include "ui/entry_view.h"
+#include "ui/first_run_panel.h"
 #include "ui/icons.h"
 #include "ui/logging.h"
 #include "ui/results_delegate.h"
@@ -77,10 +79,11 @@ QString shortName(const QString& name)
 
 } // namespace
 
-MainWindow::MainWindow(core::Settings& settings, QStringList roots, const QString& userDataPath,
-                       QWidget* parent)
+MainWindow::MainWindow(core::Settings& settings, services::DictionaryManager& manager, QStringList roots,
+                       const QString& userDataPath, QWidget* parent)
     : QMainWindow(parent)
     , m_settings(settings)
+    , m_manager(manager)
     , m_lookup(new services::LookupService) // parentless: moved to the lookup thread below
     , m_roots(std::move(roots))
 {
@@ -122,7 +125,11 @@ void MainWindow::setupUi()
     m_splitter->setStretchFactor(1, 1);
     m_splitter->setSizes({kResultsPaneWidth, kEntryPaneWidth});
     m_splitter->setChildrenCollapsible(false);
-    layout->addWidget(m_splitter, 1);
+    m_firstRun = new FirstRunPanel(m_manager);
+    m_bodyStack = new QStackedWidget;
+    m_bodyStack->addWidget(m_splitter);
+    m_bodyStack->addWidget(m_firstRun);
+    layout->addWidget(m_bodyStack, 1);
     setCentralWidget(central);
     // The search field lines up with the list under it (mocks/main.html).
     connect(m_splitter, &QSplitter::splitterMoved, this, &MainWindow::applyLayoutMode);
@@ -186,6 +193,7 @@ QWidget* MainWindow::buildHeader()
     chipLayout->addWidget(m_filterChevron);
     m_filterButton->setStyleSheet(u"QToolButton { padding-right: 30px; }"_s);
 
+    m_dictionariesButton = flatButton(u"dictionariesButton"_s, tr("Dictionaries (Ctrl+Shift+D)"));
     m_menuButton = flatButton(u"menuButton"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
@@ -195,6 +203,7 @@ QWidget* MainWindow::buildHeader()
     m_headerLayout->addWidget(m_search);
     m_headerLayout->addWidget(m_filterButton);
     m_headerLayout->addStretch(1);
+    m_headerLayout->addWidget(m_dictionariesButton);
     m_headerLayout->addWidget(m_menuButton);
     return header;
 }
@@ -344,7 +353,20 @@ void MainWindow::rebuildFilterMenu()
         m_filterMenu->addSeparator();
     }
     const QLocale locale;
+    const QStringList disabled = m_settings.disabledDictionaries();
+    const QStringList order = m_settings.dictionaryOrder();
+    QList<const services::DictionaryInfo*> shown;
     for (const services::DictionaryInfo& info : std::as_const(m_dictionaries)) {
+        if (!disabled.contains(info.dictId)) {
+            shown.append(&info);
+        }
+    }
+    std::ranges::stable_sort(shown, {}, [&order](const services::DictionaryInfo* info) {
+        const qsizetype at = order.indexOf(info->dictId);
+        return at < 0 ? order.size() : at;
+    });
+    for (const services::DictionaryInfo* dictionaryInfo : std::as_const(shown)) {
+        const services::DictionaryInfo& info = *dictionaryInfo;
         // After a tab, the text goes in the menu's right-hand column.
         addChoice(shortName(info.name) + u'\t' + tr("%1 entries").arg(locale.toString(info.entryCount)),
                   info.dictId);
@@ -359,6 +381,7 @@ void MainWindow::refreshIcons()
     m_filterButton->setIcon(icons::themed(u"books"_s, t.muted));
     m_filterChevron->setPixmap(icons::pixmap(u"down"_s, t.muted, kChevronSize, devicePixelRatioF()));
     m_menuButton->setIcon(icons::themed(u"menu"_s, t.text));
+    onDownloadChanged(); // the Dictionaries button's glyph
     for (const auto& [action, glyph] : std::as_const(m_menuIcons)) {
         action->setIcon(icons::themed(glyph, t.muted));
     }
@@ -390,7 +413,8 @@ void MainWindow::applyLayoutMode()
 {
     m_results->setVisible(!m_narrow || !m_entryColumn);
     m_entryPane->setVisible(!m_narrow || m_entryColumn);
-    // Header items: 0 search, 1 filter, 2 spacer, 3 menu. One column: the search takes the room.
+    // Header items: 0 search, 1 filter, 2 spacer, 3 dictionaries, 4 menu. One column: the search takes the
+    // room.
     m_headerLayout->setStretch(0, m_narrow ? 1 : 0);
     m_headerLayout->setStretch(2, m_narrow ? 0 : 1);
     if (m_narrow) {
@@ -429,6 +453,13 @@ void MainWindow::connectLookup()
 
 void MainWindow::connectSettings()
 {
+    connect(&m_settings, &core::Settings::dictionaryPreferencesChanged, this, [this] {
+        rebuildFilterMenu();
+        requestSearch();
+    });
+    connect(&m_manager, &services::DictionaryManager::installed, this, &MainWindow::reopenLibrary);
+    connect(&m_manager, &services::DictionaryManager::removed, this, &MainWindow::reopenLibrary);
+    connect(&m_manager, &services::DictionaryManager::downloadChanged, this, &MainWindow::onDownloadChanged);
     connect(&m_settings, &core::Settings::entryTextSizeChanged, m_entry, &EntryView::setTextSize);
     connect(&m_settings, &core::Settings::searchOptionsChanged, this, &MainWindow::requestSearch);
 }
@@ -456,10 +487,14 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
                                      ? tr("Search 1 dictionary")
                                      : tr("Search %1 dictionaries").arg(dictionaries.size()));
     rebuildFilterMenu();
-    if (dictionaries.isEmpty()) {
-        m_empty->setContent(u"books"_s, tr("No dictionaries yet"),
-                            tr("Looked in: %1").arg(m_roots.join(u", "_s)));
-        m_stack->setCurrentWidget(m_empty);
+    // With nothing installed the window offers dictionaries instead of a search.
+    const bool none = dictionaries.isEmpty();
+    m_bodyStack->setCurrentWidget(none ? static_cast<QWidget*>(m_firstRun) : m_splitter);
+    m_search->setEnabled(!none);
+    m_filterButton->setEnabled(!none);
+    if (none) {
+        m_search->setPlaceholderText(tr("Add a dictionary to start"));
+        qCInfo(lcUi) << "no dictionaries in" << m_roots;
     }
     Q_EMIT libraryReady();
     requestSearch();
@@ -468,8 +503,9 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
 QString MainWindow::currentDictId() const
 {
     const QString dictId = m_settings.dictionaryFilter();
-    // A filter for a dictionary that is gone searches everything.
-    return m_libraryOpen && dictionary(dictId) == nullptr ? QString() : dictId;
+    // A filter for a dictionary that is gone or switched off searches everything.
+    const bool usable = dictionary(dictId) != nullptr && !m_settings.disabledDictionaries().contains(dictId);
+    return m_libraryOpen && !usable ? QString() : dictId;
 }
 
 const services::DictionaryInfo* MainWindow::dictionary(const QString& dictId) const
@@ -509,7 +545,9 @@ void MainWindow::requestSearch()
                                   .dictId = currentDictId(),
                                   .perDictionary = kPerDictionary,
                                   .fullTextPerDictionary = definitions ? kFullTextPerDictionary : 0,
-                                  .suggestions = m_settings.suggestSpellings() ? kSuggestions : 0};
+                                  .suggestions = m_settings.suggestSpellings() ? kSuggestions : 0,
+                                  .order = m_settings.dictionaryOrder(),
+                                  .excluded = m_settings.disabledDictionaries()};
     QMetaObject::invokeMethod(m_lookup, &services::LookupService::search, Qt::QueuedConnection,
                               m_searchRequest, query);
 }
@@ -520,7 +558,14 @@ void MainWindow::onSearchFinished(quint64 requestId, const core::SearchResults& 
     if (requestId != m_searchRequest) {
         return; // the user has typed on since
     }
-    const int searched = currentDictId().isEmpty() ? static_cast<int>(m_dictionaries.size()) : 1;
+    int searched = 1;
+    if (currentDictId().isEmpty()) {
+        const QStringList disabled = m_settings.disabledDictionaries();
+        searched =
+            static_cast<int>(std::ranges::count_if(m_dictionaries, [&](const services::DictionaryInfo& info) {
+                return !disabled.contains(info.dictId);
+            }));
+    }
     m_model->setResults(results, favorites, searched);
     m_results->scrollToTop();
     Q_EMIT resultsShown();
@@ -724,6 +769,33 @@ void MainWindow::clearEntry()
     }
     showFavoriteState(false);
     updateNavigation();
+}
+
+void MainWindow::reopenLibrary()
+{
+    m_libraryOpen = false;
+    QMetaObject::invokeMethod(m_lookup, &services::LookupService::openLibrary, Qt::QueuedConnection, m_roots);
+}
+
+void MainWindow::onDownloadChanged()
+{
+    // While anything downloads, the Dictionaries button says so (mocks/dictionaries-available.html).
+    int active = 0;
+    for (const services::DownloadStatus& status : m_manager.downloads()) {
+        if (status.state != services::DownloadStatus::Failed) {
+            ++active;
+        }
+    }
+    const Tokens& t = Tokens::current();
+    m_dictionariesButton->setIcon(active > 0 ? icons::themed(u"download"_s, t.accent)
+                                             : icons::themed(u"books"_s, t.text));
+    QString tip = tr("Dictionaries (Ctrl+Shift+D)");
+    if (active == 1) {
+        tip = tr("Dictionaries: 1 download in progress (Ctrl+Shift+D)");
+    } else if (active > 1) {
+        tip = tr("Dictionaries: %1 downloads in progress (Ctrl+Shift+D)").arg(active);
+    }
+    m_dictionariesButton->setToolTip(tip);
 }
 
 void MainWindow::showWelcome()

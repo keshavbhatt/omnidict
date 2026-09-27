@@ -3,6 +3,7 @@
 #include "app/version.h"
 #include "core/log_sink.h"
 #include "core/settings.h"
+#include "services/dictionary_manager.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
 #include "ui/theme_applier.h"
@@ -97,7 +98,10 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     const omnidict::ui::ThemeApplier theme(settings);
     QApplication::setWindowIcon(omnidict::ui::icons::brand());
 
-    omnidict::ui::MainWindow window(settings, roots, dataDir + u"/userdata.sqlite"_s);
+    omnidict::services::DictionaryManager dictionaries(
+        dataDir + u"/dictionaries"_s, dataDir + u"/cache"_s,
+        omnidict::services::DictionaryManager::defaultCatalogUrl());
+    omnidict::ui::MainWindow window(settings, dictionaries, roots, dataDir + u"/userdata.sqlite"_s);
     if (settings.windowGeometry().isEmpty()) {
         window.resize(kWindowWidth, kWindowHeight);
     }

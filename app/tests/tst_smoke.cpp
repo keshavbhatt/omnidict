@@ -1,5 +1,6 @@
 #include "core/settings.h"
 #include "models/results_model.h"
+#include "services/dictionary_manager.h"
 #include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/main_window.h"
@@ -59,7 +60,10 @@ private Q_SLOTS:
     void searchOpenStarAndRemember()
     {
         omnidict::core::Settings settings(m_profile.filePath(u"settings.ini"_s));
-        MainWindow window(settings, {m_bundles.path()}, m_profile.filePath(u"userdata.sqlite"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"settings-dicts"_s),
+                                                      m_profile.filePath(u"settings-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"userdata.sqlite"_s));
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         QSignalSpy shown(&window, &MainWindow::entryShown);
         window.show();
@@ -108,7 +112,10 @@ private Q_SLOTS:
     void noMatchSuggestsAndLinksGoBack()
     {
         omnidict::core::Settings settings(m_profile.filePath(u"links.ini"_s));
-        MainWindow window(settings, {m_bundles.path()}, m_profile.filePath(u"links.sqlite"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"links-dicts"_s),
+                                                      m_profile.filePath(u"links-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"links.sqlite"_s));
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         QSignalSpy shown(&window, &MainWindow::entryShown);
         QSignalSpy listed(&window, &MainWindow::resultsShown);
@@ -164,7 +171,10 @@ private Q_SLOTS:
     {
         const QTemporaryDir empty;
         omnidict::core::Settings settings(m_profile.filePath(u"other.ini"_s));
-        MainWindow window(settings, {empty.path()}, m_profile.filePath(u"other.sqlite"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"other-dicts"_s),
+                                                      m_profile.filePath(u"other-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {empty.path()}, m_profile.filePath(u"other.sqlite"_s));
         QSignalSpy ready(&window, &MainWindow::libraryReady);
         window.show();
         QVERIFY(ready.wait());

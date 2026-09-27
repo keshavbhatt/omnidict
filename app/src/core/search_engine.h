@@ -6,6 +6,7 @@
 #include <QList>
 #include <QMetaType>
 #include <QString>
+#include <QStringList>
 
 namespace omnidict::core {
 
@@ -17,6 +18,12 @@ struct SearchQuery
     int perDictionary = 20; ///< headword results per dictionary
     int fullTextPerDictionary = 5;
     int suggestions = 5; ///< "did you mean" words when nothing matches; 0 turns them off
+    /// Dictionary ids in the user's order; groups of equal match quality follow
+    /// it, and dictionaries not listed come after, in library order.
+    // The braces keep GCC's -Wmissing-field-initializers quiet for designated
+    // initializers that leave these out; clang-tidy calls them redundant.
+    QStringList order{};    // NOLINT(readability-redundant-member-init)
+    QStringList excluded{}; // NOLINT(readability-redundant-member-init): switched-off dictionaries
 };
 
 /// One dictionary's share of the results.
@@ -68,6 +75,8 @@ public:
     [[nodiscard]] SearchResults search(const SearchQuery& query) const;
 
 private:
+    /// The dictionaries the query searches, in its order.
+    [[nodiscard]] QList<const Bundle*> searched(const SearchQuery& query) const;
     [[nodiscard]] QList<SuggestedWord> suggest(const SearchQuery& query, const QString& text) const;
 
     const Library& m_library;

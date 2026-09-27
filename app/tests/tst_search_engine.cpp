@@ -210,6 +210,32 @@ private Q_SLOTS:
         QVERIFY(engine().search({.text = u"prehaps"_s, .suggestions = 0}).suggestions.isEmpty());
     }
 
+    void theUsersOrderDecidesAmongEqualMatches()
+    {
+        // "perhaps" is spelled the same in both: library order puts Another Sample first.
+        const auto dictIds = [](const SearchResults& results) {
+            QStringList ids;
+            for (const ResultGroup& group : results.headwords) {
+                ids << group.dictId;
+            }
+            return ids;
+        };
+        QCOMPARE(dictIds(engine().search({.text = u"perhaps"_s})),
+                 (QStringList{u"sample-two"_s, u"sample-en"_s}));
+        QCOMPARE(dictIds(engine().search({.text = u"perhaps"_s, .order = {u"sample-en"_s}})),
+                 (QStringList{u"sample-en"_s, u"sample-two"_s}));
+    }
+
+    void switchedOffDictionariesAreNotSearched()
+    {
+        const SearchResults results = engine().search({.text = u"perhaps"_s, .excluded = {u"sample-two"_s}});
+        QCOMPARE(results.headwords.size(), 1);
+        QCOMPARE(results.headwords.first().dictId, u"sample-en"_s);
+        QVERIFY(engine()
+                    .search({.text = u"prehaps"_s, .excluded = {u"sample-two"_s, u"sample-en"_s}})
+                    .suggestions.isEmpty());
+    }
+
     void blankQueriesFindNothing()
     {
         QVERIFY(engine().search({.text = u"   "_s}).isEmpty());

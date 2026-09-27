@@ -66,10 +66,8 @@ SearchResults SearchEngine::search(const SearchQuery& query) const
     const bool pattern = isPattern(text);
     const bool fullText = !pattern && text.size() >= kMinFullTextLength && query.fullTextPerDictionary > 0;
 
-    for (const Bundle& bundle : m_library.bundles()) {
-        if (!query.dictId.isEmpty() && bundle.meta().dictId != query.dictId) {
-            continue;
-        }
+    for (const Bundle* found : searched(query)) {
+        const Bundle& bundle = *found;
         const QList<EntryPreview> rows = pattern ? bundle.searchPattern(text, query.perDictionary)
                                                  : headwordRows(bundle, text, query.perDictionary);
         if (!rows.isEmpty()) {
@@ -110,6 +108,24 @@ SearchResults SearchEngine::search(const SearchQuery& query) const
     return results;
 }
 
+QList<const Bundle*> SearchEngine::searched(const SearchQuery& query) const
+{
+    QList<const Bundle*> bundles;
+    for (const Bundle& bundle : m_library.bundles()) {
+        const QString& dictId = bundle.meta().dictId;
+        if ((query.dictId.isEmpty() || dictId == query.dictId) && !query.excluded.contains(dictId)) {
+            bundles.append(&bundle);
+        }
+    }
+    // Listed dictionaries first, in the user's order; the rest keep library order.
+    const auto rank = [&](const Bundle* bundle) {
+        const qsizetype at = query.order.indexOf(bundle->meta().dictId);
+        return at < 0 ? query.order.size() : at;
+    };
+    std::ranges::stable_sort(bundles, {}, rank);
+    return bundles;
+}
+
 QList<SuggestedWord> SearchEngine::suggest(const SearchQuery& query, const QString& text) const
 {
     if (query.suggestions <= 0) {
@@ -122,12 +138,9 @@ QList<SuggestedWord> SearchEngine::suggest(const SearchQuery& query, const QStri
         const Bundle* bundle = nullptr;
     };
     QList<Candidate> found;
-    for (const Bundle& bundle : m_library.bundles()) {
-        if (!query.dictId.isEmpty() && bundle.meta().dictId != query.dictId) {
-            continue;
-        }
-        for (const Suggestion& suggestion : bundle.suggest(text, query.suggestions)) {
-            found.append({.distance = suggestion.distance, .word = suggestion.word, .bundle = &bundle});
+    for (const Bundle* bundle : searched(query)) {
+        for (const Suggestion& suggestion : bundle->suggest(text, query.suggestions)) {
+            found.append({.distance = suggestion.distance, .word = suggestion.word, .bundle = bundle});
         }
     }
     // Closest first; among equals the library order stands.

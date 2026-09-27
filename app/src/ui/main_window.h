@@ -20,6 +20,11 @@ namespace omnidict::core {
 class Settings;
 }
 
+namespace omnidict::services {
+class DictionaryManager;
+struct DownloadStatus;
+} // namespace omnidict::services
+
 namespace omnidict::models {
 class ResultsModel;
 }
@@ -27,6 +32,7 @@ class ResultsModel;
 namespace omnidict::ui {
 
 class EmptyState;
+class FirstRunPanel;
 class EntryView;
 class SearchField;
 
@@ -43,8 +49,9 @@ class MainWindow : public QMainWindow
 public:
     /// `roots`: the directories dictionaries are found in (core::Library::discover);
     /// `userDataPath`: the history and favourites database.
-    MainWindow(core::Settings& settings, QStringList roots, const QString& userDataPath,
-               QWidget* parent = nullptr);
+    /// `manager` downloads and installs into the last of `roots`.
+    MainWindow(core::Settings& settings, services::DictionaryManager& manager, QStringList roots,
+               const QString& userDataPath, QWidget* parent = nullptr);
     ~MainWindow() override; // stops the lookup thread
 
     /// Types a query as if the user had.
@@ -114,6 +121,8 @@ private:
     void changeTextSize(int step);
     void setFilter(const QString& dictId);
     void showWelcome();
+    void reopenLibrary();
+    void onDownloadChanged();
     void showNoMatch(const QString& text, bool hasSuggestions);
     void clearEntry();
     void clearHistory();
@@ -125,6 +134,7 @@ private:
     [[nodiscard]] const services::DictionaryInfo* dictionary(const QString& dictId) const;
 
     core::Settings& m_settings;
+    services::DictionaryManager& m_manager;
     QThread m_lookupThread;
     services::LookupService* m_lookup = nullptr; ///< lives on m_lookupThread, deleted when it finishes
     QStringList m_roots;
@@ -139,6 +149,9 @@ private:
     QToolButton* m_menuButton = nullptr;
     QMenu* m_mainMenu = nullptr;
     QList<std::pair<QAction*, QString>> m_menuIcons; ///< main menu actions and their glyphs
+    QStackedWidget* m_bodyStack = nullptr;           ///< the list and entry, or the first-run panel
+    FirstRunPanel* m_firstRun = nullptr;
+    QToolButton* m_dictionariesButton = nullptr;
     QSplitter* m_splitter = nullptr;
     QListView* m_results = nullptr;
     models::ResultsModel* m_model = nullptr;
