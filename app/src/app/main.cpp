@@ -1,7 +1,10 @@
 #include "app/debug_hooks.h"
 #include "app/lookup_command.h"
 #include "app/version.h"
+#include "core/settings.h"
+#include "ui/icons.h"
 #include "ui/main_window.h"
+#include "ui/theme_applier.h"
 
 #include <QApplication>
 #include <QCommandLineOption>
@@ -86,6 +89,11 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
         root = QDir(root).absolutePath();
     }
     roots << dataDir + u"/dictionaries"_s;
+
+    QDir().mkpath(dataDir);
+    omnidict::core::Settings settings(dataDir + u"/settings.ini"_s);
+    const omnidict::ui::ThemeApplier theme(settings);
+    QApplication::setWindowIcon(omnidict::ui::icons::brand());
 
     omnidict::ui::MainWindow window(roots, dataDir + u"/userdata.sqlite"_s);
     window.resize(kWindowWidth, kWindowHeight);

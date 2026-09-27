@@ -269,3 +269,22 @@ method matched it on English and Spanish, works for any script, and adds no depe
 **Consequences.** A latency test holds suggestions under 100 ms on English (the
 prototype's worst case was 337 ms in Python, so the query needs the tuning described in the
 research note). Shared cases in `tests/suggest_cases.json` keep Python and C++ in step.
+
+---
+
+## ADR-014: Qt Svg and Lucide glyphs for the UI (2026-09-27)
+
+**Status.** Accepted (follows the approved mocks, which draw every control with Lucide glyphs).
+
+**Context.** The approved mocks use one icon family in both themes and in several states
+(normal, muted, accent, disabled, the warm favourite star). Desktop icon themes differ per
+distribution and are missing on Windows and macOS.
+
+**Decision.** The rewrite kit's approach: Lucide SVGs, normalised to `stroke="#000000"`, live in
+`app/src/resources/icons/ui/` and `ui::icons` tints them at runtime with Qt Svg, caching per
+name, colour, size and pixel ratio. Qt Svg is a Qt module from the same SDK and runtime, so it
+adds no new supplier. The filled favourite star is the outline glyph with a fill.
+
+**Consequences.** New glyphs come in with the kit's `icons/pull.sh`. The ISC notice (and MIT for
+the Feather-derived glyphs) ships in `app/src/resources/icons/ui/LICENSE`, is declared in
+`REUSE.toml`, and is listed in About's open-source notices.

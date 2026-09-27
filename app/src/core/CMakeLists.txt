@@ -18,6 +18,9 @@ qt_add_library(omnidict_core STATIC
     result.h
     search_engine.cpp
     search_engine.h
+    settings.cpp
+    settings.h
+    settings_keys.h
     sqlite_db.cpp
     sqlite_db.h
     suggester.cpp

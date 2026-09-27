@@ -1,6 +1,6 @@
 # Third-party components
 
-Nothing is vendored: every component below is a system/runtime library, a snap-provided SDK
+Nothing is vendored except the Lucide glyphs (data files, not code): every other component below is a system/runtime library, a snap-provided SDK
 or runtime, or a package pulled from PyPI at pipeline install time. No new third-party
 dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-008).
 
@@ -15,13 +15,12 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | ruff | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
 | mypy | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
 | pytest | dev-only | MIT | PyPI, via `uv` | `pipeline` tooling |
+| Qt Svg | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps (ADR-014) | `app` (tinted UI glyphs) |
+| Lucide icons | snapshot ba6751a, 2026-09-18 | ISC (Feather-derived ones also MIT) | copied from the rewrite kit's vendored set into `app/src/resources/icons/ui/`, notice in `LICENSE` there (ADR-014) | `app` |
 
 ## Design mocks only
 
 `DOCS/mocks/mock.js` embeds Lucide glyph paths (ISC licence, copied from the rewrite kit's
 vendored set) so the HTML mocks can draw icons. They do not ship in the app.
 
-## Planned, not yet added
-
-Lucide icons (ISC) for the app itself, with their licence notice recorded here when the app
-starts using them.
+The app's glyphs are the Lucide row above; the mocks use the same set.

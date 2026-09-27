@@ -21,3 +21,37 @@ path = [
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Keshav Bhatt (Ktechpit)"
 SPDX-License-Identifier = "LicenseRef-Ktechpit-Licensing-Module"
+
+# UI glyphs from Lucide (ISC); the ones Lucide took from Feather are also MIT.
+# The full notice ships next to them in app/src/resources/icons/ui/LICENSE.
+[[annotations]]
+path = "app/src/resources/icons/ui/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Lucide Icons and Contributors"
+SPDX-License-Identifier = "ISC"
+
+[[annotations]]
+path = [
+    "app/src/resources/icons/ui/alert.svg",
+    "app/src/resources/icons/ui/back.svg",
+    "app/src/resources/icons/ui/check.svg",
+    "app/src/resources/icons/ui/down.svg",
+    "app/src/resources/icons/ui/download.svg",
+    "app/src/resources/icons/ui/forward.svg",
+    "app/src/resources/icons/ui/info.svg",
+    "app/src/resources/icons/ui/more.svg",
+    "app/src/resources/icons/ui/power.svg",
+    "app/src/resources/icons/ui/search.svg",
+    "app/src/resources/icons/ui/trash.svg",
+    "app/src/resources/icons/ui/x.svg"
+]
+precedence = "override"
+SPDX-FileCopyrightText = ["2026 Lucide Icons and Contributors", "2013-present Cole Bemis"]
+SPDX-License-Identifier = "ISC AND MIT"
+
+# The mocks embed Lucide glyph paths in their helper script.
+[[annotations]]
+path = "DOCS/mocks/mock.js"
+precedence = "override"
+SPDX-FileCopyrightText = ["2026 Keshav Bhatt (Ktechpit)", "2026 Lucide Icons and Contributors"]
+SPDX-License-Identifier = "GPL-3.0-or-later AND ISC"
