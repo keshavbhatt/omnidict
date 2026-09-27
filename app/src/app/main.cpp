@@ -1,5 +1,6 @@
 #include "app/debug_hooks.h"
 #include "app/lookup_command.h"
+#include "app/single_instance.h"
 #include "app/version.h"
 #include "core/log_sink.h"
 #include "core/settings.h"
@@ -12,6 +13,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QJsonObject>
 #include <QStandardPaths>
 #include <QTextStream>
 
@@ -93,6 +95,13 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     roots << dataDir + u"/dictionaries"_s;
 
     QDir().mkpath(dataDir);
+    // A second launch on the same profile hands its word to the running window and ends.
+    const QString query = parser.positionalArguments().join(u' ');
+    omnidict::app::SingleInstance instance(omnidict::app::instanceKeyFor(dataDir));
+    if (!instance.isPrimary()) {
+        instance.sendToPrimary({{u"query"_s, query}});
+        return 0;
+    }
     omnidict::core::LogSink::setLogFile(dataDir + u"/logs/omnidict.log"_s);
     omnidict::core::Settings settings(dataDir + u"/settings.ini"_s);
     const omnidict::ui::ThemeApplier theme(settings);
@@ -108,7 +117,16 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     omnidict::app::installDebugHooks(window);
     window.show();
     window.showWhatsNewIfUpdated();
-    const QString query = parser.positionalArguments().join(u' ');
+    QObject::connect(&instance, &omnidict::app::SingleInstance::commandReceived, &window,
+                     [&window](const QJsonObject& command) {
+                         window.showNormal();
+                         window.raise();
+                         window.activateWindow();
+                         const QString word = command.value(u"query"_s).toString();
+                         if (!word.isEmpty()) {
+                             window.setQuery(word);
+                         }
+                     });
     if (!query.isEmpty()) {
         QObject::connect(
             &window, &omnidict::ui::MainWindow::libraryReady, &window,

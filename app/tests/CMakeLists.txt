@@ -78,6 +78,8 @@ target_link_libraries(tst_dictionary_manager PRIVATE Zstd::Zstd)
 target_compile_definitions(tst_dictionary_manager PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
 set_tests_properties(tst_dictionary_manager PROPERTIES TIMEOUT 60)
+# app
+omnidict_add_test(tst_single_instance tst_single_instance.cpp omnidict_app)
 # ui
 omnidict_add_test(tst_smoke tst_smoke.cpp omnidict_ui GUI)
 target_compile_definitions(tst_smoke PRIVATE

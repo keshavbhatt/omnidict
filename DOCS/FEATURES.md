@@ -72,7 +72,7 @@ expects every ktechpit desktop app to have.
 |---|---|---|---|---|
 | E1 | Settings facade (`core::Settings`), typed accessors, one defaults table, change signals | M2 | KEEP | done (`core::Settings`, INI in the profile directory, `tst_settings`) |
 | E2 | Rotating log sink with diagnostics | M2 | KEEP | done (`core::LogSink` from the kit: `<profile>/logs/omnidict.log`, 2 MB rotation, last 1000 lines in memory; `tst_log_sink`) |
-| E3 | Single instance | M2 | KEEP | planned |
+| E3 | Single instance | M2 | KEEP | done (`app::SingleInstance` from the kit, one per profile directory; a second launch hands its word to the open window; `tst_single_instance`) |
 | E4 | Theme: system / light / dark | M2 | KEEP | done: `ui::ThemeApplier` follows the setting and the desktop live; tokens in `ui::Tokens` match DOCS/mocks/mock.css |
 | E5 | About dialog with diagnostics | M2 | KEEP | done (mocks/about.html: dictionary credits, open-source notices, diagnostics tab; `tst_sheets`) |
 | E6 | Report a bug | M2 | KEEP | done (mocks/bug-report.html: GitHub issue or email, diagnostics on the clipboard, nothing sent by the app) |
