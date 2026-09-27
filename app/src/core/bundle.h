@@ -2,8 +2,8 @@
 
 #include "core/entry.h"
 #include "core/result.h"
-#include "core/suggester.h"
 #include "core/sqlite_db.h"
+#include "core/suggester.h"
 
 #include <QList>
 #include <QString>
