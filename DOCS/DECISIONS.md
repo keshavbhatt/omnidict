@@ -1,0 +1,227 @@
+# Architecture Decision Records
+
+Short, numbered, append-only. Format: Context, Decision, Consequences. Headings use a colon,
+not a dash.
+
+---
+
+## ADR-001: Kit conventions override PLAN.md file naming and `.ui` usage (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** `DOCS/PLAN.md` was written before the project adopted the reusable
+`rewrite-kit` conventions (`/home/commander/DCode/rewrite-kit`). The kit's `CODING_STANDARDS.md`
+and `PLAYBOOK.md` already settle file naming, widget construction and library layering for a
+Qt 6/C++20 desktop app; re-deriving those rules for Omnidict would just reinvent them.
+
+**Decision.** Where the kit's conventions and `PLAN.md`'s originally-suggested file names
+disagree, the kit wins: snake_case file names named after their primary class (`bundle.h`,
+`main_window.cpp`, not `Bundle.h`/`MainWindow.cpp`), no `.ui` files (widgets are built in
+code), one static library per directory layer so the linker enforces the dependency arrows,
+`QT_NO_KEYWORDS`/`QT_NO_CAST_FROM_ASCII`/`QT_USE_QSTRINGBUILDER` defined globally, and PMF-only
+signal/slot connects. `DOCS/CODING_STANDARDS.md` is the binding document day to day.
+
+**Consequences.** `PLAN.md` section 3 has been rewritten to match. Any future document that
+repeats a stale (`PascalCase.cpp`, `.ui`) example should be corrected on sight rather than
+treated as an exception.
+
+---
+
+## ADR-002: Identity and paths derive from `app/src/app/version.h.in` only (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Identity strings (application name, display name, organization, domain, desktop
+id) tend to leak into multiple files and drift out of sync when the app is renamed or rebranded.
+
+**Decision.** `app/src/app/version.h.in` is the single source for: application name
+`omnidict`, display name `Omnidict`, organization `ktechpit`, domain `ktechpit.com`, and
+desktop/AppStream id `com.ktechpit.omnidict`. Every other file (CMake, packaging manifests,
+About dialog, settings paths) reads these constants rather than repeating the literals.
+
+**Consequences.** A rebrand or a new build flavour touches one file. CMake configures
+`version.h` from `version.h.in` so the values are available to C++ at compile time.
+
+---
+
+## ADR-003: SQLite through the sqlite3 C API behind a small RAII wrapper (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Qt ships a SQL module (QtSql) that could open dictionary bundles, but it requires
+a SQL driver plugin to be present at runtime, does not guarantee FTS5 support in the plugin
+build shipped by a given distribution, and offers no clean way to force read-only, immutable
+open flags.
+
+**Decision.** The app opens dictionary bundles and the user-data database through the raw
+`sqlite3` C API, wrapped in a small RAII class, `core/sqlite_db` (`SqliteDb`, `SqliteStatement`).
+No other file may call `sqlite3_*` directly or construct a `QSqlDatabase`.
+
+**Consequences.** Guaranteed FTS5 (linked directly, not via a system plugin), explicit
+read-only/immutable open flags for installed bundles, no SQL driver plugin to ship in the snap
+or Flatpak, and the same library and behaviour on every platform. The cost is writing and
+testing a thin wrapper ourselves instead of using QtSql's API.
+
+---
+
+## ADR-004: Threading: SQLite worker thread and download thread pool are approved exceptions (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** `DOCS/CODING_STANDARDS.md` section 5 bans threads "unless measured", to keep the
+app simple. Two specific needs are already known from `PLAN.md` section 7.4: SQLite
+connections are per-thread and must not block the GUI thread, and downloads/decompression are
+I/O-bound work that must not block it either.
+
+**Decision.** A dedicated `QThread` per bundle-manager for SQLite access, and a `QThreadPool`
+for downloads and zstd decompression, are pre-approved exceptions to the "no threads unless
+measured" rule. Nothing else may add a thread without its own measurement and justification.
+
+**Consequences.** These two are not built in M0; they arrive with the services that need them
+(M2 for the SQLite worker, M3 for downloads). The UI thread only ever receives result structs
+over signals, never touches SQLite or the network directly.
+
+---
+
+## ADR-005: Normalization uses ICU on both sides (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Headword lookup must behave identically whether the query is normalized in the
+Python pipeline (building `headword_norm`) or in the C++ client (normalizing what the user
+typed). Both need the same Unicode-aware case folding and diacritic handling.
+
+**Decision.** Normalization is implemented with ICU on both sides: PyICU in `pipeline/omnipipe/normalize.py`,
+ICU4C in `app/src/core/normalize.cpp`. The algorithm, in order:
+
+1. NFKC.
+2. ICU case fold.
+3. NFD.
+4. Drop nonspacing marks (general category Mn) whose base character's script is Latin,
+   Cyrillic or Greek.
+5. NFC.
+6. Collapse runs of Unicode `White_Space` to one space and trim.
+
+`tests/normalize_vectors.json` is the contract: both test suites read it and must agree on
+every vector.
+
+**Consequences.** Known risk: the SDK/runtime snap ships ICU 74, while the pipeline host may
+have a newer ICU (78, as of this writing), so Unicode versions can differ for recently added
+characters. The shared test vectors stick to long-stable characters to avoid flaking on that
+skew, and from M1 the pipeline's ICU version is recorded per bundle (a `meta` key) so a
+mismatch is diagnosable later.
+
+---
+
+## ADR-006: `sort_key` is computed only in the pipeline (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Locale-correct ordering needs an ICU collation key. If both the pipeline and the
+client computed it, a difference between the two ICU versions (see ADR-005) would silently
+reorder entries between a rebuild and a client update.
+
+**Decision.** `sort_key` is computed once, at build time, in the pipeline: an ICU collation
+key for the dictionary's `source_lang` locale, stored as a `BLOB` in `entries.sort_key`. The
+client only ever compares `sort_key` values bytewise (`ORDER BY sort_key`); it never
+recomputes or re-derives one.
+
+**Consequences.** The client's ICU version can never affect ordering. Changing the collation
+algorithm requires rebuilding affected bundles, not shipping a new client.
+
+---
+
+## ADR-007: Licence model (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Omnidict is open source but reserves a path for a future Ktechpit account/licensing
+module, matching the kit's "Model B" precedent (Playlist Downloader).
+
+**Decision.** The program is GPL-3.0-or-later. A reserved path, `app/src/modules/AccountAndLicense/`,
+`app/src/services/licensing/` and `app/src/core/licensing/` (not present until M3), is licensed
+under `LicenseRef-Ktechpit-Licensing-Module` instead, with a GPLv3 section 7 additional
+permission so official builds may combine the two. The tree is REUSE compliant via `REUSE.toml`;
+no per-file SPDX headers are required outside the reserved paths. Dictionary content licences
+are a separate matter, carried per bundle (`PLAN.md` D10) and are a legal attribution
+obligation, not a code licence.
+
+**Consequences.** `LICENSING.md`, `REUSE.toml` and `LICENSES/` describe and enforce this split.
+Any file added under the reserved paths must carry the licensing-module SPDX identifier, not GPL.
+
+---
+
+## ADR-008: Dependencies (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Every third-party dependency has a cost (build complexity, packaging, security
+surface) and needs a documented reason and licence.
+
+**Decision.** App: Qt 6.11, SQLite (FTS5), ICU, and zstd (from M3). Pipeline: PyICU and
+zstandard. Dev-only: ruff, mypy, pytest. All are listed with version, licence and how they are
+obtained in `THIRD_PARTY.md`. No new third-party dependency is added without an ADR and a
+`THIRD_PARTY.md` row.
+
+**Consequences.** `THIRD_PARTY.md` is kept current as a condition of merging any change that
+adds a dependency.
+
+---
+
+## ADR-009: Dev builds use the KDE snap SDK, run against the kf6-core24 runtime (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** The app ships as a snap built on Qt 6.11 against the `kf6-core24` content snap.
+For dev/prod parity, what compiles locally should be exactly what the shipped snap runs
+against, including the exact Qt point release (6.11.1 as of this writing).
+
+**Decision.** `scripts/dev-build.sh` builds against the `kde-qt6-core24-sdk` snap (Qt 6.11.1);
+`scripts/dev-run.sh` runs the result against the `kf6-core24` runtime snap, using the same
+libraries the shipped snap uses at runtime.
+
+**Consequences.** Contributors install both snaps once (`sudo snap install kde-qt6-core24-sdk
+kf6-core24`). A local system-Qt build is not supported as the primary workflow; CI uses the
+same SDK/runtime pair.
+
+---
+
+## ADR-010: Monorepo: CMake root is `app/`, not the repo root (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** `pipeline/` (Python/uv) and `app/` (Qt/CMake) are two independent build systems
+sharing one repository and one `tests/` directory of shared fixtures and vectors.
+
+**Decision.** The CMake project root is `app/` (`app/CMakeLists.txt`), not the repository
+root. Root-level `Makefile` targets (`make fixture`, `make test`, `make lint`) drive both
+build systems and know to `cd`/point into `app/` and `pipeline/` as needed. Scripts and CI
+account for the CMake root not being the repo root.
+
+**Consequences.** IDEs and CI must be pointed at `app/` for CMake configuration, not the repo
+root. This keeps the Python tooling (`pyproject.toml`, `uv.lock`) from ever being mistaken for
+part of the CMake tree, and vice versa.
+
+---
+
+## ADR-011: App icon and brand colours (2026-09-27)
+
+**Status.** Accepted.
+
+**Context.** Flathub, the Snap Store and desktop launchers all need an app icon, a symbolic
+variant and a pair of brand colours. The owner's `flathub-icon` recipe
+(`/home/commander/DCode/flathub-icon`) encodes Flathub's icon quality rules and checks them.
+
+**Decision.** The icon is a closed book (the dictionary) with a lookup badge (a magnifier),
+drawn on the GNOME 128 px grid: blue cover `#3584e4` with a darker spine and a visible page
+block, orange badge `#ffa348`. The symbolic icon is the same book in one colour at 16 px.
+Brand colours: light `#ffd6a5`, dark `#8f4a0f` (warm, complementary to the blue icon). The
+sources are `app/src/resources/icons/hicolor/scalable/apps/com.ktechpit.omnidict.svg` and
+`.../symbolic/apps/com.ktechpit.omnidict-symbolic.svg`; the PNGs next to them (16 to 512 px)
+are rendered from those with the recipe's `build_icon_set.py`, and all of its checks pass.
+
+**Consequences.** Any change to the icon edits the SVGs and re-renders the PNGs with the same
+script, then re-runs its checks. The metainfo written in M5 carries
+`<icon type="stock">com.ktechpit.omnidict</icon>` and the two `<branding>` colours above; the
+snap's `icon:` points at the 512 px PNG or the scalable SVG.
+

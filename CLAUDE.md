@@ -1,0 +1,46 @@
+# Omnidict: project instructions
+
+Omnidict is a cross-platform (Linux first) desktop dictionary app: a Qt 6.11 / C++20 / CMake
+client in `app/`, a Python 3.12 data pipeline (package `omnipipe`) in `pipeline/`, and one
+canonical `.odict` SQLite bundle per dictionary. `DOCS/` holds the plan (`PLAN.md`), the scope
+contract (`FEATURES.md`), decisions (`DECISIONS.md`), the binding coding standards
+(`CODING_STANDARDS.md`), and the progress log (`PROGRESS.md`). Conventions come from the
+reusable kit at `/home/commander/DCode/rewrite-kit` (read-only); `DOCS/CODING_STANDARDS.md` is
+the adapted, binding version for this repo.
+
+## Build and test
+
+```sh
+make fixture   # builds pipeline/out/sample-en/dict.sqlite from tests/fixtures/sample-en.jsonl
+make test      # pipeline tests, builds the fixture, builds the app, runs ctest
+make lint      # ruff, mypy, clang-format, clang-tidy, shellcheck, reuse
+OMNIDICT_CMAKE_ARGS="-DOMNIDICT_BUILD_TESTS=ON -DOMNIDICT_WERROR=ON" scripts/dev-build.sh --tests
+scripts/dev-run.sh -- --lookup pipeline/out/sample-en/dict.sqlite perhaps
+```
+
+## Standing rules
+
+- No em dashes or en dashes anywhere. No commit or PR attribution lines. Commit style:
+  `area: plain sentence` or `area, area: plain sentence`.
+- Never mention accounts or licensing in user-facing release text (`CHANGELOG.md`, metainfo
+  release notes, the What's new sheet, README store copy); that work is described only in
+  commit messages and `DOCS/`. `tst_changelog` enforces this for the changelog. Exception:
+  dictionary content licences and attribution (CC BY-SA and so on) are a legal obligation and
+  ARE shown to users, in the About screen and per dictionary; they still stay out of
+  `CHANGELOG.md` because the changelog guard matches the word "licence"/"license".
+- Never change the SQLite schema or manifest fields without bumping `schema_version` and
+  updating `DOCS/schema.md`.
+- All definition and example markup must pass `omnipipe.html_subset.validate()`; every
+  converter has tests.
+- Headword normalization must stay identical in Python (`pipeline/omnipipe/normalize.py`) and
+  C++ (`app/src/core/normalize.cpp`); both read `tests/normalize_vectors.json`.
+- No content source without a documented licence in `DOCS/sources.md`.
+- Entry rendering stays client-agnostic (PLAN D12). No `web/` work before M5 is complete.
+- No new third-party dependency without an ADR and a `THIRD_PARTY.md` row.
+- The snap is built by GitHub Actions only, the Flatpak by Flathub's CI only; never push to a
+  Flathub fork or open a Flathub PR without the owner's explicit consent.
+- Verify headlessly before asking the owner to look.
+- Run `make test` and `make lint` before declaring a task done.
+- Open questions in `DOCS/PLAN.md` section 9 are the owner's: ask, do not assume.
+- Release checklist: date the changelog heading, add the metainfo release, bump
+  `project(VERSION)` in `app/CMakeLists.txt`, update the snap description.

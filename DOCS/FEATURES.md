@@ -1,0 +1,113 @@
+# FEATURES: the scope contract
+
+Decision legend: **KEEP** (planned for the milestone shown), **LATER** (v2 or beyond), **DROP** (never).
+Status legend: `done`, `in progress`, `planned` (not started), `-` (not applicable, LATER/DROP rows).
+
+Source: `DOCS/PLAN.md` sections 5.3, 6, 7.2, 7A and 8, plus the app-shell rows the rewrite kit
+expects every ktechpit desktop app to have.
+
+## A. Pipeline
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| A1 | Canonical JSONL schema and dataclasses (`schema.py`) | M0 | KEEP | done |
+| A2 | Restricted HTML subset validator (`html_subset.py`) | M0 | KEEP | done |
+| A3 | Headword normalization (`normalize.py`, ICU) with shared test vectors | M0 | KEEP | done |
+| A4 | `build.py`: JSONL to `dict.sqlite` | M0 | KEEP | done |
+| A5 | Pipeline CI quality gates: `html_subset` zero-strip, non-empty preview, round-trip Bundle lookup, schema-migration test | M0 | KEEP | done (CI workflow written, not yet run on GitHub; the schema-migration test arrives with the first `schema_version` bump) |
+| A6 | `package.py`: sqlite to `.odict` (zstd) plus `manifest.json` and sha256 | M1 | KEEP | planned |
+| A7 | `catalog.py`: regenerate `catalog.json` from all manifests | M1 | KEEP | planned |
+| A8 | Kaikki converter (Wiktionary via kaikki.org) | M1 | KEEP | planned |
+| A9 | FreeDict converter | M4 | KEEP | planned |
+| A10 | WordNet converter | M4 | KEEP | planned |
+| A11 | CC-CEDICT converter | M4 | KEEP | planned |
+| A12 | JMdict converter | M4 | KEEP | planned |
+| A13 | KEngDic converter | M4 | KEEP | planned |
+| A14 | StarDict community import, opt-in "unofficial" tier after licence review | v2 | LATER | - |
+
+## B. Bundle and search core
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| B1 | `core::Bundle` opens one `dict.sqlite`, exposes lookup/search | M0 | KEEP | done |
+| B2 | `core::SqliteDb` RAII wrapper over the sqlite3 C API (ADR-003) | M0 | KEEP | done |
+| B3 | `core::normalize` mirrors the pipeline normalization, shared test vectors | M0 | KEEP | done |
+| B4 | As-you-type prefix search across open bundles (`headword_norm`, `forms.form_norm`), debounced, merged and grouped into `ResultsModel` | M2 | KEEP | planned |
+| B5 | Empty query shows history | M2 | KEEP | planned |
+| B6 | Exact match, then prefix, then FTS full-text ("Also found in definitions") | M2 | KEEP | planned |
+| B7 | Wildcard search (`?`, `*`) | M2 | KEEP | planned |
+| B8 | Spell suggestion on zero results (spellfix1 vs custom is PLAN.md open question 4) | M2 | KEEP | planned |
+| B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | planned |
+| B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | planned |
+| B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | planned |
+| B12 | Dedicated SQLite worker thread per bundle-manager (ADR-004) | M2 | KEEP | planned |
+| B13 | DAWG / perfect-hash search index | v2 | LATER | - |
+| B14 | MeCab/Jieba tokenization for CJK lookup | v2 | LATER | - |
+
+## C. Entry view
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| C1 | `core::EntryRenderer`: entry to HTML, client-agnostic template (PLAN D12) | M2 | KEEP | planned |
+| C2 | Visual structure: headword, frequency, IPA, POS heading per sense, pattern, definition, label box, examples | M2 | KEEP | planned |
+| C3 | `lex:` links resolve to an in-app lookup; external links disabled | M2 | KEEP | planned |
+| C4 | Star button adds a favorite; every opened entry is added to history (`core::UserData`) | M2 | KEEP | planned |
+| C5 | Golden-file tests for rendered entry HTML (`tests/golden/`) | M2 | KEEP | planned |
+
+## D. Manage dictionaries
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| D1 | Manage dictionaries dialog: My dictionaries / Available tabs, source/target filters | M3 | KEEP | planned |
+| D2 | Row: name, publisher, size, action button (download / progress ring / delete / update) | M3 | KEEP | planned |
+| D3 | Multiple concurrent downloads allowed (max 2) | M3 | KEEP | planned |
+| D4 | `services::Catalog`: parses `catalog.json`, diffs against installed | M3 | KEEP | planned |
+| D5 | `services::Downloader`: resumable download (`Range` header), sha256 verify, zstd decompress, install and register, remove stale version | M3 | KEEP | planned |
+| D6 | Downloads and decompression on a `QThreadPool` (ADR-004) | M3 | KEEP | planned |
+| D7 | Renders the `attribution` line for every installed bundle plus the app's own open-source notices | M3 | KEEP | planned |
+
+## E. App shell
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| E1 | Settings facade (`core::Settings`), typed accessors, one defaults table, change signals | M2 | KEEP | planned |
+| E2 | Rotating log sink with diagnostics | M2 | KEEP | planned |
+| E3 | Single instance | M2 | KEEP | planned |
+| E4 | Theme: system / light / dark | M2 | KEEP | planned |
+| E5 | About dialog with diagnostics | M2 | KEEP | planned |
+| E6 | Report a bug | M2 | KEEP | planned |
+| E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | planned |
+| E8 | What's new sheet from the bundled changelog | M2 | KEEP | planned |
+| E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | planned |
+
+## F. Packaging
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| F1 | Snap packaging, built in CI | M5 | KEEP | planned |
+| F2 | Flatpak packaging | M5 | KEEP | planned |
+| F3 | AppImage packaging | M5 | KEEP | planned |
+| F4 | CI release workflow | M5 | KEEP | planned |
+| F5 | Windows / macOS builds | v2 | LATER | - |
+
+## G. Web
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| G1 | Static entry-page pre-generation from bundles; no second data path | M6 | KEEP | planned |
+| G2 | Dynamic server: search-as-you-type API, "did you mean", catalog pages, fallback render | M6 | KEEP | planned |
+| G3 | Shared rendering template with the desktop `EntryRenderer`; golden-file parity test | M6 | KEEP | planned |
+| G4 | SEO/compliance: attribution footer, `sitemap.xml`, canonical/hreflang, JSON-LD, `noindex` on search/API, ad slot reservation | M6 | KEEP | planned |
+| G5 | Indian-language focus with Latin-script transliteration search | M6 | KEEP | planned |
+| G6 | Cross-dictionary single-page results | M6 | KEEP | planned |
+| G7 | App funnel: web links to the desktop app and back | M6 | KEEP | planned |
+
+## Non-goals (v1)
+
+| # | Feature | Milestone | Decision | Status |
+|---|---|---|---|---|
+| N1 | Mobile builds | - | DROP | - |
+| N2 | User-contributed / edited dictionaries | - | DROP | - |
+| N3 | Licensed commercial content (Collins, Oxford, etc.); schema must not block it for a later deal | - | DROP | - |
+| N4 | OCR / camera lookup | - | DROP | - |
+| N5 | Cloud sync of user data | - | DROP | - |
