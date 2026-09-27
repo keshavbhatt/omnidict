@@ -1,10 +1,27 @@
 #include "core/search_engine.h"
 
+#include "core/normalize.h"
+
 #include <QSet>
+
+#include <algorithm>
 
 namespace omnidict::core {
 
 namespace {
+
+/// How well a dictionary's results answer the query: 0 when its first entry is
+/// spelled exactly as typed, 1 when it is the same word once normalized, 2 for
+/// prefix matches only. The best dictionaries come first, so the best entry is
+/// the first one in the list.
+int matchRank(const ResultGroup& group, const QString& typed, const QString& key)
+{
+    const EntryPreview& top = group.rows.first();
+    if (top.headword == typed) {
+        return 0;
+    }
+    return normalizeHeadword(top.headword) == key ? 1 : 2;
+}
 
 bool isPattern(const QString& text)
 {
@@ -79,6 +96,13 @@ SearchResults SearchEngine::search(const SearchQuery& query) const
             results.definitions.append(
                 {.dictId = bundle.meta().dictId, .dictName = bundle.meta().name, .rows = others});
         }
+    }
+    if (!pattern) {
+        const QString typed = text.normalized(QString::NormalizationForm_C);
+        const QString key = normalizeHeadword(text);
+        std::ranges::stable_sort(results.headwords, [&](const ResultGroup& a, const ResultGroup& b) {
+            return matchRank(a, typed, key) < matchRank(b, typed, key);
+        });
     }
     return results;
 }

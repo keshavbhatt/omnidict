@@ -2,10 +2,13 @@
 #
 #   app -> ui -> models -> services / platform -> core
 #
-# Only core and app exist so far; the other layers arrive with the milestone
-# that needs them. Nothing links to `ui` except the executable (via `app`).
+# platform arrives with the milestone that needs it. Nothing links to `ui`
+# except the executable (via `app`).
 
 add_subdirectory(core)
+add_subdirectory(services)
+add_subdirectory(models)
+add_subdirectory(ui)
 add_subdirectory(app)
 
 qt_add_executable(omnidict

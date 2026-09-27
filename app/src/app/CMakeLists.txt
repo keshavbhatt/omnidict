@@ -4,6 +4,8 @@
 configure_file(version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/app/version.h" @ONLY)
 
 qt_add_library(omnidict_app STATIC
+    debug_hooks.cpp
+    debug_hooks.h
     lookup_command.cpp
     lookup_command.h
 )
@@ -15,5 +17,5 @@ target_include_directories(omnidict_app PUBLIC
 )
 target_link_libraries(omnidict_app
     PUBLIC
-        omnidict_core
+        omnidict_ui
 )

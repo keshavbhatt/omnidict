@@ -135,6 +135,21 @@ private Q_SLOTS:
         QCOMPARE(headwords(bundle.searchPrefix(u"Books"_s, 10)), QStringList{u"bookshelf"_s});
     }
 
+    void prefixSearchListsHeadwordMatchesBeforeFormMatches()
+    {
+        const QTemporaryDir dir;
+        const QString path =
+            alteredCopy(dir, u"forms.sqlite"_s,
+                        "INSERT INTO forms (form, form_norm, entry_id, tag)"
+                        " SELECT 'mocha', 'mocha', id, NULL FROM entries WHERE headword = 'café'");
+        QVERIFY(!path.isEmpty());
+        const auto bundle = Bundle::open(path);
+        QVERIFY(bundle);
+        // café sorts before the m words, but only its form starts with "m".
+        QCOMPARE(headwords(bundle.value().searchPrefix(u"m"_s, 10)),
+                 (QStringList{u"maybe"_s, u"Monday"_s, u"mouse"_s, u"café"_s}));
+    }
+
     void prefixSearchHonoursTheLimit()
     {
         const Bundle bundle = openFixture();

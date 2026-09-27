@@ -222,7 +222,9 @@ QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
                         u" FROM entries e WHERE e.id IN ("
                         "SELECT id FROM entries WHERE headword_norm >= ?2 AND headword_norm < ?3"
                         " UNION SELECT entry_id FROM forms WHERE form_norm >= ?2 AND form_norm < ?3)"_s +
-                        kPreviewOrder + u" LIMIT ?4"_s;
+                        u" ORDER BY (e.headword = ?1) DESC, (e.headword_norm = ?2) DESC,"
+                        " (e.headword_norm >= ?2 AND e.headword_norm < ?3) DESC, e.sort_key, e.id"
+                        " LIMIT ?4"_s;
     return previews(sql, {asTyped(query), key, prefixUpperBound(key)}, limit);
 }
 

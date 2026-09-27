@@ -29,7 +29,9 @@ struct ResultGroup
 struct SearchResults
 {
     QString text{};
-    QList<ResultGroup> headwords;   ///< exact matches first, then prefix matches
+    /// Dictionaries whose first entry best matches the query first, then in
+    /// library order; within one, exact matches first, then prefix matches.
+    QList<ResultGroup> headwords;
     QList<ResultGroup> definitions; ///< "also found in definitions", entries not in `headwords`
 
     [[nodiscard]] bool isEmpty() const { return headwords.isEmpty() && definitions.isEmpty(); }

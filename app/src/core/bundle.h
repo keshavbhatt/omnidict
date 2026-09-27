@@ -32,8 +32,9 @@ public:
     /// equals the query. Headword matches come first.
     [[nodiscard]] QList<EntryPreview> lookupExact(const QString& query) const;
 
-    /// Entries whose headword or form starts with the query, an exact
-    /// headword match first, then in the dictionary's own sort order.
+    /// Entries whose headword or form starts with the query: an exact headword
+    /// match first, then headwords that start with it, then entries found only
+    /// through a form, each in the dictionary's own order.
     [[nodiscard]] QList<EntryPreview> searchPrefix(const QString& query, int limit) const;
 
     /// Entries whose headword matches a pattern where `?` stands for one

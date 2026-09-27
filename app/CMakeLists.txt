@@ -38,6 +38,8 @@ include(Version)
 set(OMNIDICT_QT_MIN_VERSION "6.11" CACHE STRING "Minimum required Qt6 version")
 find_package(Qt6 ${OMNIDICT_QT_MIN_VERSION} REQUIRED COMPONENTS
     Core
+    Gui
+    Widgets
 )
 qt_standard_project_setup()
 

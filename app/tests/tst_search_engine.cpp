@@ -78,8 +78,10 @@ private Q_SLOTS:
         // A pipeline build: <root>/<dict_id>/dict.sqlite
         QVERIFY(placeBundle(root.filePath(u"sample-en/dict.sqlite"_s)));
         // Installed versions: the newest wins, the older one is not even opened.
+        // Its "book" is capitalised, so for "book" it answers less well than sample-en.
         const char* renamed = "UPDATE meta SET value = 'sample-two' WHERE key = 'dict_id';"
-                              "UPDATE meta SET value = 'Another Sample' WHERE key = 'name';";
+                              "UPDATE meta SET value = 'Another Sample' WHERE key = 'name';"
+                              "UPDATE entries SET headword = 'Book' WHERE headword = 'book';";
         QVERIFY(placeBundle(root.filePath(u"sample-two/2026.10.1/dict.sqlite"_s), renamed));
         QDir().mkpath(root.filePath(u"sample-two/2026.9.2"_s));
         QFile broken(root.filePath(u"sample-two/2026.9.2/dict.sqlite"_s));
@@ -114,11 +116,21 @@ private Q_SLOTS:
 
     void groupsHeadwordsByDictionaryExactFirst()
     {
-        const SearchResults results = engine().search({.text = u"book"_s});
+        const SearchResults results = engine().search({.text = u"bookmark"_s});
         QCOMPARE(dictIds(results.headwords), (QStringList{u"sample-two"_s, u"sample-en"_s}));
         QCOMPARE(results.headwords.first().dictName, u"Another Sample"_s);
-        QCOMPARE(headwords(results.headwords.first().rows),
+        QCOMPARE(headwords(results.headwords.last().rows), QStringList{u"bookmark"_s});
+        QCOMPARE(headwords(engine().search({.text = u"book"_s}).headwords.first().rows),
                  (QStringList{u"book"_s, u"bookmark"_s, u"bookshelf"_s}));
+    }
+
+    void theDictionaryWithTheExactSpellingComesFirst()
+    {
+        // Library order puts sample-two first, but only sample-en has "book" as typed.
+        const SearchResults results = engine().search({.text = u"book"_s});
+        QCOMPARE(dictIds(results.headwords), (QStringList{u"sample-en"_s, u"sample-two"_s}));
+        QCOMPARE(dictIds(engine().search({.text = u"Book"_s}).headwords),
+                 (QStringList{u"sample-two"_s, u"sample-en"_s}));
     }
 
     void inflectedFormsFindTheirEntryFirst()
