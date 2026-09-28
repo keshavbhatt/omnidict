@@ -124,6 +124,9 @@ private:
     /// Appends what the reply has buffered to the part file; false when the write fails.
     [[nodiscard]] static bool writeAvailable(Download& download);
     void onDownloadFinished(const QString& dictId);
+    /// True when the whole catalogued file arrived; otherwise fails the download
+    /// with the reason (and re-reads the catalogue when the server's file changed).
+    [[nodiscard]] bool receivedWhole(Download& download, const QNetworkReply& reply);
     void onInstallFinished(const QString& dictId, const core::Result<QString>& result);
 
     QString m_dictionariesRoot;

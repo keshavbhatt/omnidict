@@ -368,7 +368,7 @@ private Q_SLOTS:
         QVERIFY(QTest::qWaitFor(
             [&] { return stateOf(manager.downloads(), u"dict-changed"_s) == DownloadStatus::Failed; }, 5000));
         const auto downloads = manager.downloads();
-        QVERIFY(downloads.first().error.contains(u"has changed"_s));
+        QVERIFY(downloads.first().error.contains(u"updated on the server"_s));
         QVERIFY(!QFile::exists(QDir(cacheDir.path()).filePath(u"downloads/dict-changed-1.odict.part"_s)));
     }
 

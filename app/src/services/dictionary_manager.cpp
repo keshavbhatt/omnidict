@@ -371,19 +371,7 @@ void DictionaryManager::onDownloadFinished(const QString& dictId)
                      /*keepPartial=*/false);
         return;
     }
-    if (download->status.received != download->entry.sizeCompressed) {
-        qCWarning(lcDownloads) << dictId << "received" << download->status.received << "of"
-                               << download->entry.sizeCompressed << "bytes";
-        // All the server announced arrived, yet the size is not the catalogue's: the
-        // file on the server changed (a newer build) since the catalogue was read.
-        bool announced = false;
-        const qint64 length = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(&announced);
-        if (announced && download->resumeOffset + length == download->status.received) {
-            failDownload(dictId, tr("The file on the server has changed; check for updates, then try again"),
-                         /*keepPartial=*/false);
-            return;
-        }
-        failDownload(dictId, tr("The download ended early; try again"), /*keepPartial=*/true);
+    if (!receivedWhole(*download, *reply)) {
         return;
     }
     download->status.state = DownloadStatus::Installing;
@@ -400,6 +388,29 @@ void DictionaryManager::onDownloadFinished(const QString& dictId)
             self, [self, dictId, result]() { self->onInstallFinished(dictId, result); },
             Qt::QueuedConnection);
     });
+}
+
+bool DictionaryManager::receivedWhole(Download& download, const QNetworkReply& reply)
+{
+    const QString& dictId = download.status.dictId;
+    if (download.status.received == download.entry.sizeCompressed) {
+        return true;
+    }
+    qCWarning(lcDownloads) << dictId << "received" << download.status.received << "of"
+                           << download.entry.sizeCompressed << "bytes";
+    // All the server announced arrived, yet the size is not the catalogue's: the
+    // file on the server changed (a newer build) since the catalogue was read.
+    // Reading the catalogue again gives the row the new file, so Retry works.
+    bool announced = false;
+    const qint64 length = reply.header(QNetworkRequest::ContentLengthHeader).toLongLong(&announced);
+    if (announced && download.resumeOffset + length == download.status.received) {
+        failDownload(dictId, tr("This dictionary was updated on the server; try again"),
+                     /*keepPartial=*/false);
+        refreshCatalog(/*force=*/true);
+        return false;
+    }
+    failDownload(dictId, tr("The download ended early; try again"), /*keepPartial=*/true);
+    return false;
 }
 
 void DictionaryManager::onInstallFinished(const QString& dictId, const core::Result<QString>& result)
