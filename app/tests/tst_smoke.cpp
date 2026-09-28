@@ -222,6 +222,14 @@ private Q_SLOTS:
         QVERIFY(
             html.contains(u"<a href=\"https://creativecommons.org/licenses/by-sa/4.0/\">CC-BY-SA-4.0</a>"_s));
         QVERIFY(omnidict::ui::AboutDialog::aboutHtml({}).contains(u"No dictionaries"_s));
+        QVERIFY(!html.contains(u"Source"_s)); // a bundle from before schema 3 records none
+
+        // The upstream source, named by its site (mocks/about.html note 4).
+        QList<omnidict::services::DictionaryInfo> withSource = dictionaries;
+        withSource[0].sourceUrl = u"https://download.freedict.org/dictionaries/deu-eng/1.9-fd1/src.tar.xz"_s;
+        QVERIFY(omnidict::ui::AboutDialog::aboutHtml(withSource)
+                    .contains(u"Source: <a href=\"https://download.freedict.org/dictionaries/deu-eng/1.9-fd1/"
+                              u"src.tar.xz\">download.freedict.org</a>"_s));
     }
 
     void noDictionariesSaysWhereItLooked()

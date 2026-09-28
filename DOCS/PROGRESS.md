@@ -55,7 +55,8 @@ Newest first. One entry per working session.
   `package.py --flat-urls`, `catalog.py --previous --manifests-only`, `make ci-bundle-<id>`
   and `.github/workflows/dictionaries.yml` (manual start only), checked locally end to end on
   Sumerian; it cannot run until the repository exists.
-- Proposed mock, awaiting approval: a Source link on each About card (`about.html` note 4).
+- About cards link each dictionary's upstream source after its licence, named by its site
+  (mock approved 2026-09-28); Kengdic links GitHub's page for the file at the pinned commit.
 
 ## 2026-09-27 - M3 download and install backend
 

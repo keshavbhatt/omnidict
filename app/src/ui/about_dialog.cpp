@@ -61,6 +61,18 @@ const QList<OpenSourceNotice>& openSourceNotices()
     return kNotices;
 }
 
+/// "<a href=url>site</a>" for a dictionary's upstream source (mocks/about.html note 4),
+/// named by its site; empty for a bundle that records none (built before schema 3).
+QString sourceLink(const services::DictionaryInfo& dictionary)
+{
+    if (dictionary.sourceUrl.isEmpty()) {
+        return {};
+    }
+    const QUrl url(dictionary.sourceUrl);
+    const QString site = url.host().isEmpty() ? dictionary.sourceUrl : url.host();
+    return u"<a href=\"%1\">%2</a>"_s.arg(dictionary.sourceUrl.toHtmlEscaped(), site.toHtmlEscaped());
+}
+
 QFrame* makeCard(QWidget* parent)
 {
     auto* card = new QFrame(parent);
@@ -187,8 +199,12 @@ QWidget* AboutDialog::buildDictionariesTab(QWidget* tabParent)
                                     ? dictionary.license.toHtmlEscaped()
                                     : u"<a href=\"%1\">%2</a>"_s.arg(dictionary.licenseUrl.toHtmlEscaped(),
                                                                      dictionary.license.toHtmlEscaped());
-        auto* attribution =
-            new QLabel(tr("%1. Licence: %2").arg(dictionary.attribution.toHtmlEscaped(), license), card);
+        const QString source = sourceLink(dictionary);
+        const QString credit =
+            source.isEmpty() ? tr("%1. Licence: %2").arg(dictionary.attribution.toHtmlEscaped(), license)
+                             : tr("%1. Licence: %2. Source: %3")
+                                   .arg(dictionary.attribution.toHtmlEscaped(), license, source);
+        auto* attribution = new QLabel(credit, card);
         attribution->setProperty("muted", true);
         attribution->setProperty("small", true);
         attribution->setTextFormat(Qt::RichText);
@@ -294,9 +310,12 @@ QString AboutDialog::aboutHtml(const QList<services::DictionaryInfo>& dictionari
                                     ? dictionary.license.toHtmlEscaped()
                                     : u"<a href=\"%1\">%2</a>"_s.arg(dictionary.licenseUrl.toHtmlEscaped(),
                                                                      dictionary.license.toHtmlEscaped());
+        const QString source = sourceLink(dictionary);
+        const QString licenceAndSource =
+            source.isEmpty() ? license : license + u". "_s + QObject::tr("Source") + u": "_s + source;
         html += u"<p><b>%1</b><br>%2<br>%3: %4. %5 %6, %7 %8.</p>"_s.arg(
             dictionary.name.toHtmlEscaped(), dictionary.attribution.toHtmlEscaped(), QObject::tr("Licence"),
-            license, QObject::tr("Version"), dictionary.version.toHtmlEscaped(),
+            licenceAndSource, QObject::tr("Version"), dictionary.version.toHtmlEscaped(),
             locale.toString(dictionary.entryCount), QObject::tr("entries"));
     }
     return html;

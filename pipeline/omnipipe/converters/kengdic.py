@@ -112,6 +112,11 @@ def raw_url(commit: str) -> str:
     return f"https://raw.githubusercontent.com/{REPOSITORY}/{commit}/{DATA_FILE}"
 
 
+def source_page_url(commit: str) -> str:
+    """GitHub's page for the data file at `commit`: the source link shown to readers."""
+    return f"https://github.com/{REPOSITORY}/blob/{commit}/{DATA_FILE}"
+
+
 def dump_path(cache_dir: Path) -> Path:
     return cache_dir / DATA_FILE
 
@@ -197,7 +202,7 @@ def spec_for(version: str, commit: str = "") -> DictSpec:
         kind="bilingual",
         source_lang_name="Korean",
         target_lang_name="English",
-        source_url=raw_url(commit) if commit else f"https://github.com/{REPOSITORY}",
+        source_url=source_page_url(commit) if commit else f"https://github.com/{REPOSITORY}",
     )
 
 
@@ -425,6 +430,7 @@ __all__ = [
     "raw_url",
     "read_dump_info",
     "read_rows",
+    "source_page_url",
     "spec_for",
 ]
 
