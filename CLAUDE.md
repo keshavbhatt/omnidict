@@ -65,7 +65,9 @@ override with the `OMNIDICT_CATALOG_URL` environment variable (dev/test only, ne
   `DOCS/mocks/index.html` and `DOCS/PROGRESS.md`. No screen is coded from a description alone.
 - Publishing stays local: `make publish` and anything else that exposes bundles, the catalogue
   or the app publicly waits until the owner says the feature is implemented, tested, reviewed
-  and ready. `make serve` on localhost is the only catalogue.
+  and ready. `make serve` on localhost is the only catalogue. The source code itself is
+  public (github.com/keshavbhatt/omnidict, owner, 2026-09-28, for free CI); dictionary
+  releases, store listings and Flathub still wait for the owner.
 - Run `make test` and `make lint` before declaring a task done.
 - Open questions in `DOCS/PLAN.md` section 9 are the owner's: ask, do not assume.
 - Release checklist: date the changelog heading, add the metainfo release, bump
