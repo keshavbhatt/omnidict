@@ -32,6 +32,13 @@ Newest first. One entry per working session.
   senses first; licence `MPL-2.0 OR LGPL-2.0-or-later` from the upstream README
   (DOCS/sources.md "Kengdic notes" has the discrepancy with its `datapackage.json`). Added to
   `tests/known_headwords.json`.
+- Owner-reported fixes: language drop-downs open a 12-row scrolling list instead of a
+  screen-high popup (`combobox-popup: 0`); "English", "español" and "中文" replace Qt's
+  territory names ("American English", "español de España", "简体中文"); the About footer
+  spans the sheet like the other sheets.
+- Proposed mocks, awaiting approval: Available tab with a catalogue count, a Provider filter
+  and an entries column (`dictionaries-available.html`); an empty Installed tab with a Browse
+  dictionaries button (`dictionaries-empty.html`).
 - Found: Qt cannot name 153 of the 320 Wiktionary language codes, so the language filter
   would show bare codes; open question for the owner.
 

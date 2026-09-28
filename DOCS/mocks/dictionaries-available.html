@@ -59,59 +59,69 @@
   <div class="overlay">
     <div class="sheet" style="width:760px">
       <div class="sheet-head"><h2>Dictionaries</h2></div>
-      <div class="tabs"><span>Installed (3)</span><span class="on">Available</span></div>
+      <div class="tabs"><span>Installed (3)</span><span class="on">Available (308)</span></div>
       <div class="sheet-body">
         <div class="row" style="gap:8px">
-          <input class="input" placeholder="Filter by name" style="flex:1">
+          <input class="input" placeholder="Filter by name" style="flex:1;min-width:0">
           <span class="chip">From: Any language<svg class="ic s"><use href="#i-down"/></svg></span>
           <span class="chip">To: English<svg class="ic s"><use href="#i-down"/></svg></span>
+          <span class="chip">Provider: Any<svg class="ic s"><use href="#i-down"/></svg></span>
         </div>
         <div style="display:flex;flex-direction:column">
           <div class="set">
-            <div class="t"><div>French - English</div><div class="d">Wiktionary</div></div>
-            <span class="muted small">38 MB</span>
-            <button class="btn primary small">Download</button>
+            <div class="t"><div>English</div><div class="d">Wiktionary</div></div>
+            <span class="muted small" style="width:118px;text-align:right">857,931 entries</span>
+            <span class="muted small" style="width:52px;text-align:right">275 MB</span>
+            <span style="width:92px;display:flex;justify-content:flex-end"><svg class="ic s" style="color:var(--success)"><use href="#i-check"/></svg><span class="muted small" style="margin-left:6px">Installed</span></span>
           </div>
           <div class="set">
-            <div class="t"><div>German - English</div><div class="d">Wiktionary</div></div>
+            <div class="t"><div>French - English</div><div class="d">Wiktionary</div></div>
+            <span class="muted small" style="width:118px;text-align:right">154,212 entries</span>
+            <span class="muted small" style="width:52px;text-align:right">38 MB</span>
+            <span style="width:92px;display:flex;justify-content:flex-end"><button class="btn primary small">Download</button></span>
+          </div>
+          <div class="set">
+            <div class="t"><div>German - English</div><div class="d">FreeDict</div></div>
+            <span class="muted small" style="width:118px;text-align:right">517,534 entries</span>
             <div class="ring" style="--p:62"></div>
             <span class="muted small">62%, 21 of 34 MB</span>
             <button class="btn flat icon" title="Cancel"><svg class="ic s"><use href="#i-x"/></svg></button>
           </div>
           <div class="set">
             <div class="t"><div>Japanese - English</div><div class="d">JMdict</div></div>
-            <div class="ring" style="--p:15"></div>
-            <span class="muted small">15%, 9 of 58 MB</span>
-            <button class="btn flat icon" title="Cancel"><svg class="ic s"><use href="#i-x"/></svg></button>
-          </div>
-          <div class="set">
-            <div class="t"><div>Chinese - English</div><div class="d">CC-CEDICT</div></div>
+            <span class="muted small" style="width:118px;text-align:right">216,344 entries</span>
             <span class="pill">Waiting</span>
             <button class="btn flat icon" title="Cancel"><svg class="ic s"><use href="#i-x"/></svg></button>
           </div>
           <div class="set">
-            <div class="t"><div>WordNet English</div><div class="d">WordNet</div></div>
-            <button class="btn primary small">Download</button>
+            <div class="t"><div>Korean - English</div><div class="d">Kengdic</div></div>
+            <span class="muted small" style="width:118px;text-align:right">106,211 entries</span>
+            <span class="muted small" style="width:52px;text-align:right">12 MB</span>
+            <span style="width:92px;display:flex;justify-content:flex-end"><button class="btn primary small">Download</button></span>
           </div>
           <div class="set">
-            <div class="t"><div>Spanish - English</div><div class="d">Wiktionary</div></div>
-            <svg class="ic s" style="color:var(--success)"><use href="#i-check"/></svg>
-            <span class="muted small">Installed</span>
+            <div class="t"><div>Old English - English</div><div class="d">Wiktionary</div></div>
+            <span class="muted small" style="width:118px;text-align:right">22,406 entries</span>
+            <span class="muted small" style="width:52px;text-align:right">6.8 MB</span>
+            <span style="width:92px;display:flex;justify-content:flex-end"><button class="btn primary small">Download</button></span>
           </div>
         </div>
       </div>
       <div class="sheet-foot">
-        <span class="muted small">Catalogue from localhost:8000, updated 2 hours ago</span>
+        <span class="muted small">Showing 24 of 308 dictionaries. Catalogue from localhost:8000, updated 2 hours ago</span>
         <button class="btn flat small" title="Read the catalogue again (F5)"><svg class="ic s"><use href="#i-refresh"/></svg>Refresh</button>
         <span class="grow"></span>
         <button class="btn primary">Done</button>
       </div>
     </div>
   </div>
-  <span class="pin" style="left:955px;top:352px">1</span>
+  <span class="pin" style="left:880px;top:398px">1</span>
   <span class="pin" style="left:1119px;top:52px">2</span>
-  <span class="pin" style="left:505px;top:627px">3</span>
-  <span class="pin" style="left:955px;top:435px">4</span>
+  <span class="pin" style="left:560px;top:570px">3</span>
+  <span class="pin" style="left:840px;top:570px">4</span>
+  <span class="pin" style="left:498px;top:112px">6</span>
+  <span class="pin" style="left:968px;top:152px">7</span>
+  <span class="pin" style="left:800px;top:212px">8</span>
 </div>
 <section class="notes"><h2>Notes</h2><ol>
     <li><b>Two at a time.</b>German - English and Japanese - English download together; Chinese - English (CC-CEDICT) waits its turn and starts as soon as a slot frees up.</li>
@@ -119,5 +129,8 @@
     <li><b>Local catalogue.</b>The list here comes from a catalogue served on localhost:8000 for development; nothing is published anywhere until the owner decides to.</li>
     <li><b>Refresh (approved 2026-09-28).</b>The catalogue is read when this sheet opens if the copy on disk is more than 24 hours old, and on "Check for updates". Refresh (or F5) reads it now. It is also read again on its own when a download finds the server's file newer than the catalogue ("This dictionary was updated on the server; try again"), so Retry gets the new file.</li>
     <li><b>On failure.</b>A download that fails shows Retry in place of its progress, with a short reason such as "Connection lost".</li>
+    <li><b>Catalogue count (proposed 2026-09-28).</b>The tab says how many dictionaries the catalogue offers, "Available (308)"; when a filter narrows the list, the footer says "Showing 24 of 308 dictionaries".</li>
+    <li><b>Provider filter (proposed 2026-09-28).</b>A third drop-down next to From and To: Any, Wiktionary, FreeDict, WordNet, JMdict, CC-CEDICT, Kengdic, each with its count ("Wiktionary (14)"). It filters on the catalogue's source, so a new user can pick "Wiktionary" and find English straight away. All three drop-downs open a short scrolling list (12 rows), never a list the height of the screen.</li>
+    <li><b>Entries column (proposed 2026-09-28).</b>Each row shows its number of entries, right-aligned in its own column before the size, so dictionaries can be compared at a glance. The number comes from the catalogue (`entry_count`), no schema change. The column stays while a row downloads.</li>
   </ol></section>
 </body></html>
