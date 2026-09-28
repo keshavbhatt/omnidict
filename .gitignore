@@ -51,6 +51,32 @@ stage/
 .DS_Store
 Thumbs.db
 
-# Local agent settings
-.claude/settings.local.json
-.claude/worktrees/
+# Local agent state: settings, worktrees, anything a session leaves behind
+.claude/
+
+# Secrets and credentials: never committed (CI reads them from repository secrets)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+snapcraft-credentials*
+*.credentials
+
+# Dictionary data: bundles, downloads and dumps are built or fetched, never committed
+# (pipeline/out/ and pipeline/sources/ above; these catch copies elsewhere)
+*.odict
+*.odict.part
+*.jsonl.gz
+*.src.tar.xz
+/dict.sqlite
+
+# Scratch output: logs, local profiles and screenshot grabs (the store set is in screenshots/store/)
+*.log
+/profile*/
+/screenshots/raw/
+
+# Packaging build trees
+.flatpak-builder/
+/repo/
+snap/.snapcraft/

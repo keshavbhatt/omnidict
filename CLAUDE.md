@@ -5,7 +5,7 @@ client in `app/`, a Python 3.12 data pipeline (package `omnipipe`) in `pipeline/
 canonical `.odict` SQLite bundle per dictionary. `DOCS/` holds the plan (`PLAN.md`), the scope
 contract (`FEATURES.md`), decisions (`DECISIONS.md`), the binding coding standards
 (`CODING_STANDARDS.md`), and the progress log (`PROGRESS.md`). Conventions come from the
-reusable kit at `/home/commander/DCode/rewrite-kit` (read-only); `DOCS/CODING_STANDARDS.md` is
+owner's reusable rewrite kit, kept outside this repository (read-only); `DOCS/CODING_STANDARDS.md` is
 the adapted, binding version for this repo.
 
 ## Build and test

@@ -57,8 +57,9 @@ repository is public, and asks for a `<release>` entry, which the release checkl
 ## Store text and search
 
 The metainfo's name, summary (35 characters, Flathub's quality limit), first three keywords
-and description follow `/home/commander/DCode/FlathubSEO/docs/flathub-search-algorithm.md`;
-the research behind the choices is in `FlathubSEO/docs/omnidict-keyword-research.md`. Keep
+and description follow the owner's FlathubSEO notes (`docs/flathub-search-algorithm.md`, kept
+outside this repository); the research behind the choices is in its
+`docs/omnidict-keyword-research.md`. Keep
 `dictionary`, `wiktionary` and `thesaurus` as the first three keywords. Store text never
 mentions accounts or licensing (CLAUDE.md).
 

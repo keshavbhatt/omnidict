@@ -10,7 +10,7 @@ not a dash.
 **Status.** Accepted.
 
 **Context.** `DOCS/PLAN.md` was written before the project adopted the reusable
-`rewrite-kit` conventions (`/home/commander/DCode/rewrite-kit`). The kit's `CODING_STANDARDS.md`
+`rewrite-kit` conventions (the owner's reusable kit, kept outside this repository). The kit's `CODING_STANDARDS.md`
 and `PLAYBOOK.md` already settle file naming, widget construction and library layering for a
 Qt 6/C++20 desktop app; re-deriving those rules for Omnidict would just reinvent them.
 
@@ -210,7 +210,7 @@ part of the CMake tree, and vice versa.
 
 **Context.** Flathub, the Snap Store and desktop launchers all need an app icon, a symbolic
 variant and a pair of brand colours. The owner's `flathub-icon` recipe
-(`/home/commander/DCode/flathub-icon`) encodes Flathub's icon quality rules and checks them.
+(kept outside this repository) encodes Flathub's icon quality rules and checks them.
 
 **Decision.** The icon is a closed book (the dictionary) with a lookup badge (a magnifier),
 drawn on the GNOME 128 px grid: blue cover `#3584e4` with a darker spine and a visible page

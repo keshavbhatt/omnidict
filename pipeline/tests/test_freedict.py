@@ -878,8 +878,8 @@ def test_detect_license_reads_an_explicit_choice_as_or() -> None:
 @pytest.mark.parametrize(
     ("people", "expected"),
     [
-        ("Michael Bunk <michael.bunk@gmail.com>", "Michael Bunk"),
-        ("Kevin Donnelly (kevin@dotmon.com); Anna Smith", "Kevin Donnelly; Anna Smith"),
+        ("Ada Editor <ada.editor@example.com>", "Ada Editor"),
+        ("Ben Compiler (ben@example.net); Anna Smith", "Ben Compiler; Anna Smith"),
         ("editor@example.org; Anna Smith", "Anna Smith"),
         ("Tomaz Jacquet; Denis Arnaud", "Tomaz Jacquet; Denis Arnaud"),
         ("someone@example.org", ""),
