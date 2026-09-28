@@ -101,7 +101,8 @@
         </div>
       </div>
       <div class="sheet-foot">
-        <span class="muted small">Catalogue from localhost:8000, updated today</span>
+        <span class="muted small">Catalogue from localhost:8000, updated 2 hours ago</span>
+        <button class="btn flat small" title="Read the catalogue again (F5)"><svg class="ic s"><use href="#i-refresh"/></svg>Refresh</button>
         <span class="grow"></span>
         <button class="btn primary">Done</button>
       </div>
@@ -116,6 +117,7 @@
     <li><b>Two at a time.</b>German - English and Japanese - English download together; Chinese - English (CC-CEDICT) waits its turn and starts as soon as a slot frees up.</li>
     <li><b>Keeps going.</b>Closing this sheet does not pause downloads. The header's Dictionaries button then shows a small progress ring so their status is still visible.</li>
     <li><b>Local catalogue.</b>The list here comes from a catalogue served on localhost:8000 for development; nothing is published anywhere until the owner decides to.</li>
+    <li><b>Refresh (proposed 2026-09-28).</b>The catalogue is read when this sheet opens if the copy on disk is more than 24 hours old, and on "Check for updates". Refresh (or F5) reads it now. It is also read again on its own when a download finds the server's file newer than the catalogue ("This dictionary was updated on the server; try again"), so Retry gets the new file.</li>
     <li><b>On failure.</b>A download that fails shows Retry in place of its progress, with a short reason such as "Connection lost".</li>
   </ol></section>
 </body></html>
