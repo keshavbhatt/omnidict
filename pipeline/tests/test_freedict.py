@@ -759,3 +759,102 @@ def test_make_spec_uses_authors_or_default_publisher() -> None:
     assert spec.kind == "bilingual"
     assert "Jane Doe" in spec.attribution
     assert spec.license == "GPL-2.0-or-later"
+
+
+def _tarball_with(files: dict[str, bytes]) -> bytes:
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:xz") as tar:
+        for path, data in files.items():
+            info = tarfile.TarInfo(name=path)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    return buffer.getvalue()
+
+
+def _entry_for(name: str) -> DatabaseEntry:
+    src, tgt = name.split("-")
+    return DatabaseEntry(
+        name=name,
+        src_lang3=src,
+        tgt_lang3=tgt,
+        edition="0.1.1",
+        headwords=5000,
+        src_url="https://example.invalid/x.src.tar.xz",
+        src_sha512="",
+    )
+
+
+def _headwords(tarball: bytes, name: str, tmp_path: Path) -> list[str]:
+    path = tmp_path / "t.tar.xz"
+    path.write_bytes(tarball)
+    stats = freedict.ConversionStats()
+    return [e.headword for e in freedict.convert_tei_file(path, _entry_for(name), stats)]
+
+
+def test_translation_marked_on_the_quote(tmp_path: Path) -> None:
+    # spa-ast, oci-cat, mkd-bul: an untyped <cit> holding <quote type="trans">.
+    tei = full_tei(
+        '<entry><form><orth>aún</orth></form><sense><cit><quote type="trans">entá</quote>'
+        "</cit></sense></entry>"
+    )
+    path = tmp_path / "t.tar.xz"
+    path.write_bytes(make_tarball("spa-ast", tei))
+    entries = list(
+        freedict.convert_tei_file(path, _entry_for("spa-ast"), freedict.ConversionStats())
+    )
+    assert [e.headword for e in entries] == ["aún"]
+    assert entries[0].senses[0].definition == "entá"
+
+
+def test_the_dictionary_file_is_chosen_over_a_header_only_file(tmp_path: Path) -> None:
+    # lat-deu ships lat-deu-header.tei before lat-deu.tei.
+    header_only = full_tei("")
+    real = full_tei(
+        '<entry><form><orth>aqua</orth></form><sense><cit type="trans"><quote>Wasser</quote>'
+        "</cit></sense></entry>"
+    )
+    tarball = _tarball_with(
+        {"lat-deu/lat-deu-header.tei": header_only, "lat-deu/lat-deu.tei": real}
+    )
+    assert _headwords(tarball, "lat-deu", tmp_path) == ["aqua"]
+
+
+def test_included_files_are_followed_in_place(tmp_path: Path) -> None:
+    # eng-pol keeps one file per letter behind <xi:include>.
+    main = full_tei(
+        '<include href="letters/a.xml" xmlns="http://www.w3.org/2001/XInclude"/>'
+        '<include href="letters/b.xml" xmlns="http://www.w3.org/2001/XInclude"/>'
+        '<include href="letters/missing.xml" xmlns="http://www.w3.org/2001/XInclude"/>'
+    )
+
+    def letter(word: str) -> bytes:
+        return (
+            '<div xmlns="http://www.tei-c.org/ns/1.0"><entry><form><orth>'
+            f'{word}</orth></form><sense><cit type="trans"><quote>x</quote></cit></sense>'
+            "</entry></div>"
+        ).encode()
+
+    tarball = _tarball_with(
+        {
+            "eng-pol/eng-pol.tei": main,
+            "eng-pol/letters/a.xml": letter("apple"),
+            "eng-pol/letters/b.xml": letter("bread"),
+        }
+    )
+    assert _headwords(tarball, "eng-pol", tmp_path) == ["apple", "bread"]
+
+
+def test_nested_senses_give_their_innermost_translations(tmp_path: Path) -> None:
+    # eng-pol: <sense level="0"><xr/><sense level="1"><sense level="2"><cit/>.
+    tei = full_tei(
+        '<entry><form><orth>AA</orth></form><sense level="0"><xr><ref>Alcoholics Anonymous</ref>'
+        '</xr><sense level="1"><sense level="2"><cit type="trans"><quote>Anonimowi Alkoholicy'
+        "</quote></cit></sense></sense></sense></entry>"
+    )
+    path = tmp_path / "t.tar.xz"
+    path.write_bytes(make_tarball("eng-pol", tei))
+    entries = list(
+        freedict.convert_tei_file(path, _entry_for("eng-pol"), freedict.ConversionStats())
+    )
+    assert [s.definition for s in entries[0].senses] == ["Anonimowi Alkoholicy"]
+    assert [r.target for r in entries[0].relations] == ["Alcoholics Anonymous"]

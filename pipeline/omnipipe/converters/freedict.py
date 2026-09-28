@@ -53,12 +53,12 @@ import tarfile
 import urllib.error
 import urllib.request
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from itertools import islice
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import IO, ClassVar
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element
@@ -918,16 +918,22 @@ def _entry_gram_grp(entry_el: Element) -> tuple[str | None, str | None]:
 
 
 def _translations(sense_el: Element) -> list[str]:
+    """The sense's translations: `<cit type="trans"><quote>`, or, as some
+    dictionaries write it (spa-ast, oci-cat, mkd-bul), an untyped `<cit>`
+    holding `<quote type="trans">`."""
     out: list[str] = []
     for cit in sense_el.findall(_tag("cit")):
-        if cit.get("type") != "trans":
+        cit_type = cit.get("type")
+        if cit_type == "trans":
+            quotes = [q for q in [cit.find(_tag("quote"))] if q is not None]
+        elif cit_type is None:
+            quotes = [q for q in cit.findall(_tag("quote")) if q.get("type") == "trans"]
+        else:
             continue
-        quote = cit.find(_tag("quote"))
-        if quote is None:
-            continue
-        text = _clean_text(quote)
-        if text and text not in out:
-            out.append(text)
+        for quote in quotes:
+            text = _clean_text(quote)
+            if text and text not in out:
+                out.append(text)
     return out
 
 
@@ -1031,8 +1037,14 @@ def parse_tei_entry(entry_el: Element, stats: ConversionStats) -> _ParsedEntry |
     pos = map_pos(pos_raw, stats.unknown_pos) if pos_raw else None
     pattern = _gen_pattern(gen_raw)
 
-    sense_els = entry_el.findall(_tag("sense"))
-    sense_sources = sense_els if sense_els else [entry_el]
+    # Senses can nest (eng-pol: level 0 > 1 > 2, translations only in the
+    # innermost): every sense that carries a translation or definition itself
+    # counts, at any depth; the others only hold references.
+    sense_els = list(entry_el.iter(_tag("sense")))
+    carrying = [
+        s for s in sense_els if s.find(_tag("cit")) is not None or s.find(_tag("def")) is not None
+    ]
+    sense_sources = carrying if sense_els else [entry_el]
 
     senses: list[Sense] = []
     relations: list[Relation] = []
@@ -1059,10 +1071,11 @@ def parse_tei_entry(entry_el: Element, stats: ConversionStats) -> _ParsedEntry |
         )
         relations.extend(_xr_relations(sense_el, len(senses)))
     if sense_els:
-        # Defensive: some dictionaries may place `<xr>` directly under `<entry>`
-        # rather than inside a `<sense>`. Not seen in the corpus checked, but
-        # cheap to handle rather than silently drop.
+        # `<xr>` directly under `<entry>`, or on a sense that only groups
+        # others (eng-pol's outer senses), belongs to the entry as a whole.
         relations.extend(_xr_relations(entry_el, None))
+        for grouping in (s for s in sense_els if s not in carrying):
+            relations.extend(_xr_relations(grouping, None))
 
     if not senses:
         stats.skipped_other += 1
@@ -1116,21 +1129,37 @@ class _Accumulator:
         )
 
 
-def iter_tei_entries(fileobj: IO[bytes]) -> Iterator[Element]:
+XINCLUDE_NS = "http://www.w3.org/2001/XInclude"
+
+
+def iter_tei_entries(
+    fileobj: IO[bytes], include: Callable[[str], IO[bytes] | None] | None = None
+) -> Iterator[Element]:
     """`<entry>` elements of a TEI body, streamed: memory stays bounded no
     matter how large the dictionary, by clearing each entry (and the root's
-    already-visited children) once it has been yielded."""
+    already-visited children) once it has been yielded.
+
+    An `<xi:include href="...">` (eng-pol keeps one file per letter) is followed
+    through `include`, which opens the referenced file; its entries come in place."""
     events = ET.iterparse(fileobj, events=("start", "end"))
     try:
         _, root = next(events)
     except StopIteration:
         return
     entry_tag = _tag("entry")
+    include_tag = f"{{{XINCLUDE_NS}}}include"
     for event, elem in events:
-        if event == "end" and elem.tag == entry_tag:
+        if event != "end":
+            continue
+        if elem.tag == entry_tag:
             yield elem
             elem.clear()
             root.clear()
+        elif elem.tag == include_tag and include is not None:
+            href = elem.get("href")
+            included = include(href) if href else None
+            if included is not None:
+                yield from iter_tei_entries(included, include)
 
 
 def convert_tei_entries(
@@ -1160,14 +1189,32 @@ def convert_tei_file(
 ) -> Iterator[Entry]:
     lang = lang_code(entry.src_lang3)
     with tarfile.open(tarball_path, mode="r:xz") as tar:
-        for member in tar:
-            if member.name.endswith(".tei"):
-                fileobj = tar.extractfile(member)
-                if fileobj is None:
-                    raise FreeDictError(f"{member.name}: has no content")
-                yield from convert_tei_entries(iter_tei_entries(fileobj), lang, stats)
-                return
-    raise FreeDictError(f"{tarball_path}: no .tei member found")
+        member = main_tei_member(tar.getmembers(), entry.name)
+        if member is None:
+            raise FreeDictError(f"{tarball_path}: no .tei member found")
+        fileobj = tar.extractfile(member)
+        if fileobj is None:
+            raise FreeDictError(f"{member.name}: has no content")
+        base = PurePosixPath(member.name).parent
+
+        def include(href: str) -> IO[bytes] | None:
+            try:
+                return tar.extractfile(str(base / href))
+            except KeyError:
+                logger.warning("%s: included file %s is not in the archive", member.name, href)
+                return None
+
+        yield from convert_tei_entries(iter_tei_entries(fileobj, include), lang, stats)
+
+
+def main_tei_member(members: Sequence[tarfile.TarInfo], name: str) -> tarfile.TarInfo | None:
+    """The dictionary's own TEI file: `<name>/<name>.tei`, else the largest `.tei`
+    (lat-deu also ships a header-only `lat-deu-header.tei`)."""
+    teis = [m for m in members if m.isfile() and m.name.endswith(".tei")]
+    for member in teis:
+        if PurePosixPath(member.name).name == f"{name}.tei":
+            return member
+    return max(teis, key=lambda m: m.size, default=None)
 
 
 # ---------------------------------------------------------------------------
