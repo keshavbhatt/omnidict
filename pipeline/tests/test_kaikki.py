@@ -524,3 +524,15 @@ def test_a_leading_asterisk_is_dropped_from_forms() -> None:
         [record("aba", "adv", [sense("away")], forms=[{"form": "*afa"}, {"form": "*aba"}])]
     )
     assert [f.form for f in entry.forms] == ["afa"]  # "*aba" is the headword itself
+
+
+def test_possessive_forms_are_left_out() -> None:
+    forms = [
+        {"form": "talossa", "tags": ["inessive", "singular"]},
+        {"form": "talossani", "tags": ["inessive", "singular", "possessive", "first-person"]},
+        {"form": "taloja", "tags": ["partitive", "plural"]},
+        {"form": "talostani", "tags": ["elative", "first-person", "singular-possessive"]},
+        {"form": "taloistamme", "tags": ["elative", "first-person", "plural-possessive"]},
+    ]
+    [entry] = convert([record("talo", "noun", [sense("house")], forms=forms)])
+    assert [f.form for f in entry.forms] == ["talossa", "taloja"]

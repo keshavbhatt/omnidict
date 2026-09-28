@@ -165,6 +165,11 @@ _REGION_TAGS: Mapping[str, str] = {
 }
 # Form tags that mark inflection-table bookkeeping rather than a word form.
 _NOISE_FORM_TAGS = frozenset({"table-tags", "inflection-template", "class"})
+# Possessive forms ("talossani", in my house) multiply a Finnish noun's table about six
+# times: 74% of Finnish forms and a 3.3 GB bundle. They are left out; the plain cases still
+# find their entry (owner, 2026-09-29; DOCS/sources.md "Kaikki notes").
+# Kaikki marks them "possessive", "singular-possessive" or "plural-possessive".
+_SKIPPED_FORM_TAG_SUFFIX = "possessive"
 
 _MAX_EXAMPLES_PER_SENSE = 3
 _MAX_EXAMPLE_CHARS = 300
@@ -677,6 +682,7 @@ def _forms(record: Json, headword: str) -> list[Form]:
             not text
             or text in (headword, "-")
             or _NOISE_FORM_TAGS.intersection(tags)
+            or any(tag.endswith(_SKIPPED_FORM_TAG_SUFFIX) for tag in tags)
             or any(tag.startswith("error") for tag in tags)
         ):
             continue

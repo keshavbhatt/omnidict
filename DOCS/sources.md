@@ -34,7 +34,12 @@ Converter: `pipeline/omnipipe/converters/kaikki.py`, run as
   (`--include-form-of` keeps them): the lemma lists the same inflections as `forms`, which is
   how a lookup of `comí` finds `comer`. For Spanish this drops 687k of 811k records.
 - **Forms.** Inflection-table bookkeeping (`table-tags`, `inflection-template`, `class`,
-  `error-*`) is dropped, duplicates removed, at most 150 per entry. Romanizations are kept with
+  `error-*`) is dropped, duplicates removed, at most 150 per entry. Possessive forms (any tag
+  ending in `possessive`: `possessive`, `singular-possessive`, `plural-possessive`) are left out
+  (owner, 2026-09-29): Finnish attaches possessive endings to every case, which made
+  `wikt-fi-en` 490 MB to download and 3.3 GB installed at 133 forms per entry; without them it
+  keeps 29 (a streamed sample), and *talossa* still finds *talo* while *talossani* does not.
+  Hungarian and Turkish lose theirs the same way. Romanizations are kept with
   the tag `romanization`, so Latin-script input finds Hindi entries (`kadacit` finds
   कदाचित्). This is plain diacritic-free matching of Wiktionary's romanization, not the
   phonetic transliteration search planned for the web app (PLAN 7A.5).
