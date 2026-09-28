@@ -72,6 +72,13 @@ QToolButton* flatButton(const QString& objectName, const QString& toolTip)
 }
 
 /// "Spanish-English (Wiktionary)" without the source in brackets, for the chip.
+/// A credit line that already ends a sentence, without its full stop (we add our own).
+QString withoutFinalStop(const QString& text)
+{
+    const QString trimmed = text.trimmed();
+    return trimmed.endsWith(u'.') ? trimmed.chopped(1) : trimmed;
+}
+
 QString shortName(const QString& name)
 {
     const qsizetype open = name.lastIndexOf(u" ("_s);
@@ -641,9 +648,10 @@ void MainWindow::onEntryLoaded(quint64 requestId, const QString& dictId, const c
     }
     m_current = {.dictId = dictId, .headword = entry.headword};
     const services::DictionaryInfo* info = dictionary(dictId);
-    const QString credit = info != nullptr
-                               ? tr("%1. %2, version %3.").arg(info->attribution, info->name, info->version)
-                               : QString();
+    const QString credit =
+        info != nullptr
+            ? tr("%1. %2, version %3.").arg(withoutFinalStop(info->attribution), info->name, info->version)
+            : QString();
     m_entry->showEntry(html, credit);
     m_stack->setCurrentWidget(m_entry);
     m_crumb->setText(info != nullptr ? info->name : QString());

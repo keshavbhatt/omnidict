@@ -5,6 +5,8 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QFont>
+#include <QFontInfo>
 #include <QStyleFactory>
 #include <QStyleHints>
 
@@ -21,6 +23,18 @@ ThemeApplier::ThemeApplier(core::Settings& settings, QObject* parent)
     } else {
         qCWarning(lcUi) << "Fusion style unavailable; using the platform default";
     }
+    // Chinese, Japanese and Korean text falls back to sans-serif faces when the
+    // desktop has them; left to itself fontconfig may pick a serif one (DOCS/DESIGN.md: one UI face).
+    QFont font = QApplication::font();
+    // The resolved face, not an alias such as "Sans Serif": an alias in a family
+    // list would hand Latin text to the first CJK face too.
+    QStringList families = {QFontInfo(font).family()};
+    families << u"Noto Sans CJK SC"_s << u"Noto Sans CJK JP"_s << u"Noto Sans CJK TC"_s
+             << u"Noto Sans CJK KR"_s << u"Source Han Sans SC"_s << u"Source Han Sans CN"_s
+             << u"Source Han Sans JP"_s << u"Source Han Sans"_s << u"WenQuanYi Micro Hei"_s
+             << u"Noto Sans Devanagari"_s;
+    font.setFamilies(families);
+    QApplication::setFont(font);
     apply();
     connect(&m_settings, &core::Settings::themeChanged, this, &ThemeApplier::apply);
     connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, [this] {
