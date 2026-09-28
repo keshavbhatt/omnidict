@@ -32,6 +32,7 @@
 #include <QListView>
 #include <QLocale>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QTimer>
@@ -230,6 +231,7 @@ QWidget* MainWindow::buildResults()
     m_results->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_results->setMouseTracking(true); // hover rows
     m_results->installEventFilter(this);
+    qApp->installEventFilter(this); // the mouse's Back and Forward buttons (handleMouseNavigation)
     m_results->setMinimumWidth(kResultsPaneWidth - 80);
     applyListTextSize(m_settings.entryTextSize());
     connect(delegate, &ResultsDelegate::actionActivated, this, &MainWindow::onResultAction);
@@ -775,6 +777,34 @@ void MainWindow::goForward()
     openVisit(m_forwardStack.takeLast());
 }
 
+bool MainWindow::handleMouseNavigation(QObject* watched, QEvent* event)
+{
+    // The mouse's side buttons go Back and Forward anywhere in this window, as in a
+    // browser. Filtered for the whole application because the list and the entry
+    // accept every press themselves; other windows (sheets) are left alone.
+    if (event->type() != QEvent::MouseButtonPress && event->type() != QEvent::MouseButtonRelease &&
+        event->type() != QEvent::MouseButtonDblClick) {
+        return false;
+    }
+    const auto* mouse = static_cast<QMouseEvent*>(event);
+    if (mouse->button() != Qt::BackButton && mouse->button() != Qt::ForwardButton) {
+        return false;
+    }
+    const auto* widget = qobject_cast<QWidget*>(watched);
+    if (widget == nullptr || widget->window() != this) {
+        return false;
+    }
+    // Act once, on release (as browsers do); swallow the press so nothing else reacts.
+    if (event->type() == QEvent::MouseButtonRelease) {
+        if (mouse->button() == Qt::BackButton && m_back->isEnabled()) {
+            goBack();
+        } else if (mouse->button() == Qt::ForwardButton && m_forward->isEnabled()) {
+            goForward();
+        }
+    }
+    return true;
+}
+
 void MainWindow::updateNavigation()
 {
     m_back->setEnabled(!m_backStack.isEmpty() || (m_narrow && m_entryColumn));
@@ -957,6 +987,9 @@ void MainWindow::clearHistory()
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
+    if (handleMouseNavigation(watched, event)) {
+        return true;
+    }
     if (event->type() != QEvent::KeyPress) {
         return QMainWindow::eventFilter(watched, event);
     }

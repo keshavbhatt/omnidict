@@ -147,6 +147,19 @@ private Q_SLOTS:
         back->click();
         QTRY_COMPARE(shown.last().at(1).toString(), u"dictionary"_s);
         QVERIFY(!back->isEnabled());
+
+        // The mouse's side buttons over the entry do the same, as in a browser.
+        auto* forward = window.findChild<QToolButton*>(u"forwardButton"_s);
+        QWidget* entryArea = window.findChild<omnidict::ui::EntryView*>()->viewport();
+        QVERIFY(forward->isEnabled());
+        QTest::mouseClick(entryArea, Qt::ForwardButton);
+        QTRY_COMPARE(shown.last().at(1).toString(), u"word"_s);
+        QTest::mouseClick(entryArea, Qt::BackButton);
+        QTRY_COMPARE(shown.last().at(1).toString(), u"dictionary"_s);
+        const qsizetype visits = shown.size();
+        QTest::mouseClick(entryArea, Qt::BackButton); // nothing further back: no change
+        QTest::qWait(50);
+        QCOMPARE(shown.size(), visits);
     }
 
     void copiedEntriesKeepLabelsThatAreDrawnAsImages()

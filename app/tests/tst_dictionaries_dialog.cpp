@@ -6,11 +6,13 @@
 #include "ui/style.h"
 #include "ui/switch_button.h"
 
+#include <QApplication>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
+#include <QFrame>
 #include <QHostAddress>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -29,6 +31,7 @@
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTimer>
 #include <QToolButton>
 
 #include <zstd.h>
@@ -567,6 +570,42 @@ private Q_SLOTS:
             }
         }
         QVERIFY(foundInstalledLabel);
+    }
+
+    void removeConfirmationFooterSpansTheSheet()
+    {
+        QTemporaryDir dictDir;
+        const QString path = dictDir.filePath(u"a/1/dict.sqlite"_s);
+        writeDummyFile(path);
+        Settings settings(iniPath(u"confirm"_s));
+        DictionaryManager manager(dictDir.path(), dictDir.path(), QUrl(u"http://127.0.0.1:1/catalog.json"_s));
+        const QList<DictionaryInfo> installed{makeInstalled(u"a"_s, u"A Dictionary"_s, u"1"_s, path)};
+        if (!qEnvironmentVariableIsEmpty("OMNIDICT_GRAB_DIR")) {
+            Tokens::setCurrentScheme(true);
+            qApp->setPalette(paletteFor(Tokens::current()));
+            qApp->setStyleSheet(styleSheetFor(Tokens::current()));
+        }
+        DictionariesDialog dialog(manager, settings, installed, dictDir.path());
+
+        bool checked = false;
+        QTimer::singleShot(0, this, [&checked] {
+            auto* confirm = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            QVERIFY(confirm != nullptr && confirm->objectName() == u"confirmRemoveDialog"_s);
+            QVERIFY(QTest::qWaitForWindowExposed(confirm));
+            auto* foot = confirm->findChild<QFrame*>(u"confirmRemoveFoot"_s);
+            QVERIFY(foot != nullptr);
+            QCOMPARE(foot->geometry().left(), 0);
+            QCOMPARE(foot->geometry().width(), confirm->width());
+            QCOMPARE(foot->geometry().bottom(), confirm->height() - 1);
+            if (!qEnvironmentVariableIsEmpty("OMNIDICT_GRAB_DIR")) {
+                confirm->grab().save(QString::fromUtf8(qgetenv("OMNIDICT_GRAB_DIR")) +
+                                     u"/confirm-remove.png"_s);
+            }
+            checked = true;
+            confirm->reject();
+        });
+        dialog.findChild<QMenu*>(u"moreMenu_a"_s)->findChild<QAction*>(u"removeAction_a"_s)->trigger();
+        QVERIFY(checked);
     }
 
     void removeAbsentForDictionaryOutsideRoot()

@@ -54,6 +54,7 @@ constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
 constexpr int kLanguageComboVisibleItems = 12;
 constexpr int kActionSpacing = 6;
+constexpr int kConfirmWidth = 380;
 /// A drop-down's width beyond its text: the sheet's 12 px left and 4 px right
 /// padding, the 26 px arrow, and a little air.
 constexpr int kComboChrome = 12 + 4 + 26 + 8;
@@ -758,10 +759,17 @@ void DictionariesDialog::confirmRemove(const QString& dictId, const QString& nam
     QDialog confirm(this);
     confirm.setWindowTitle(titleWithApp(tr("Remove dictionary")));
     confirm.setModal(true);
+    confirm.setObjectName(u"confirmRemoveDialog"_s);
+    // The footer spans the sheet edge to edge (mock.css .sheet-foot); only the message is inset.
     auto* layout = new QVBoxLayout(&confirm);
-    layout->setContentsMargins(20, 20, 20, 0);
-    layout->setSpacing(16);
-    layout->addWidget(new QLabel(tr("Remove %1? This frees %2.").arg(name, humanSize(freed)), &confirm));
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    auto* message = new QLabel(tr("Remove %1? This frees %2.").arg(name, humanSize(freed)), &confirm);
+    message->setWordWrap(true);
+    auto* body = new QVBoxLayout; // the app sheet overrides a label's own margins
+    body->setContentsMargins(20, 20, 20, 20);
+    body->addWidget(message);
+    layout->addLayout(body);
     layout->addStretch(1);
 
     auto* foot = new QFrame(&confirm);
@@ -780,7 +788,10 @@ void DictionariesDialog::confirmRemove(const QString& dictId, const QString& nam
     footLayout->addWidget(remove);
     layout->addWidget(foot);
 
-    confirm.resize(380, confirm.sizeHint().height());
+    foot->setObjectName(u"confirmRemoveFoot"_s);
+    // A known width first, so the wrapped message gets its height right (DOCS/LESSONS.md).
+    confirm.setMinimumWidth(kConfirmWidth);
+    confirm.adjustSize();
     if (confirm.exec() == QDialog::Accepted) {
         m_manager.remove(dictId);
     }

@@ -15,6 +15,6 @@ The first version: look words up offline in dictionaries from Wiktionary.
 - "Did you mean" suggestions when a word is misspelled, in every script.
 - Words that appear only inside definitions are listed under "Also found in definitions".
 - Favourites and recent lookups; Ctrl+D stars the entry on screen.
-- Links inside an entry open that word, and Back returns.
+- Links inside an entry open that word, and Back returns; the mouse's back and forward buttons work as in a browser.
 - Light and dark themes that follow the desktop, and a text size you can change.
 - Keyboard shortcuts for everything, listed with F1.

@@ -120,6 +120,8 @@ private:
     void openVisit(const Visit& visit);
     void goBack();
     void goForward();
+    /// The mouse's Back and Forward buttons: true when `event` was one of them.
+    bool handleMouseNavigation(QObject* watched, QEvent* event);
     void updateNavigation();
     void copyEntry();
     void changeTextSize(int step);
