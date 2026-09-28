@@ -44,11 +44,14 @@ jobs:
       - name: Build the sample bundle
         run: make fixture
 
+      # Handed to the app job below, whose C++ tests read what the pipeline wrote: a
+      # hand-off between jobs, not a download, so it is kept one day only.
       - uses: actions/upload-artifact@v4
         with:
           name: sample-en-bundle
           path: pipeline/out/sample-en/dict.sqlite
           if-no-files-found: error
+          retention-days: 1
 
   app:
     needs: pipeline
