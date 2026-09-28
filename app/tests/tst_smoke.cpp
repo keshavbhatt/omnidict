@@ -159,6 +159,25 @@ private Q_SLOTS:
         QVERIFY(text.contains(u"From a test dictionary."_s));
     }
 
+    void thePlaceholderCountsOnlySwitchedOnDictionaries()
+    {
+        omnidict::core::Settings settings(m_profile.filePath(u"placeholder.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"placeholder-dicts"_s),
+                                                      m_profile.filePath(u"placeholder-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"placeholder.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        window.show();
+        QVERIFY(ready.wait());
+        auto* search = window.findChild<QLineEdit*>(u"search"_s);
+        QCOMPARE(search->placeholderText(), u"Search 1 dictionary"_s);
+        settings.setDisabledDictionaries({u"sample-en"_s});
+        QCOMPARE(search->placeholderText(), u"Switch on a dictionary to search"_s);
+        settings.setDisabledDictionaries({});
+        settings.setDictionaryFilter(u"sample-en"_s);
+        QCOMPARE(search->placeholderText(), u"Search Sample English"_s);
+    }
+
     void aboutCreditsEveryDictionary()
     {
         const QList<omnidict::services::DictionaryInfo> dictionaries = {

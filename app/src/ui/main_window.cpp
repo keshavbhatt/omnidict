@@ -387,6 +387,21 @@ void MainWindow::rebuildFilterMenu()
     connect(manage, &QAction::triggered, this, [this] { showDictionaries(); });
     const services::DictionaryInfo* chosen = dictionary(selected);
     m_filterButton->setText(chosen != nullptr ? shortName(chosen->name) : tr("All dictionaries"));
+
+    // The placeholder names what a search covers: switched-off dictionaries do not count.
+    // Plurals by hand: without a translation loaded, %n forms render literally.
+    if (!m_libraryOpen) {
+        m_search->setPlaceholderText(tr("Search"));
+    } else if (m_dictionaries.isEmpty()) {
+        m_search->setPlaceholderText(tr("Add a dictionary to start"));
+    } else if (chosen != nullptr && !disabled.contains(chosen->dictId)) {
+        m_search->setPlaceholderText(tr("Search %1").arg(shortName(chosen->name)));
+    } else if (shown.isEmpty()) {
+        m_search->setPlaceholderText(tr("Switch on a dictionary to search"));
+    } else {
+        m_search->setPlaceholderText(shown.size() == 1 ? tr("Search 1 dictionary")
+                                                       : tr("Search %1 dictionaries").arg(shown.size()));
+    }
 }
 
 void MainWindow::refreshIcons()
@@ -467,10 +482,12 @@ void MainWindow::connectLookup()
 
 void MainWindow::connectSettings()
 {
-    connect(&m_settings, &core::Settings::dictionaryPreferencesChanged, this, [this] {
-        rebuildFilterMenu();
+    const auto preferencesChanged = [this] {
+        rebuildFilterMenu(); // also the search placeholder
         requestSearch();
-    });
+    };
+    connect(&m_settings, &core::Settings::dictionaryPreferencesChanged, this, preferencesChanged);
+    connect(&m_settings, &core::Settings::dictionaryFilterChanged, this, preferencesChanged);
     connect(&m_manager, &services::DictionaryManager::installed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::removed, this, &MainWindow::reopenLibrary);
     connect(&m_manager, &services::DictionaryManager::downloadChanged, this, &MainWindow::onDownloadChanged);
@@ -501,11 +518,7 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
     for (const QString& problem : problems) {
         qCWarning(lcUi) << "dictionary not usable:" << problem;
     }
-    // Plurals by hand: without a translation loaded, %n forms render literally.
-    m_search->setPlaceholderText(dictionaries.size() == 1
-                                     ? tr("Search 1 dictionary")
-                                     : tr("Search %1 dictionaries").arg(dictionaries.size()));
-    rebuildFilterMenu();
+    rebuildFilterMenu(); // also the search placeholder
     if (m_dictionariesDialog != nullptr) {
         m_dictionariesDialog->setInstalled(dictionaries);
     }
@@ -515,7 +528,6 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
     m_search->setEnabled(!none);
     m_filterButton->setEnabled(!none);
     if (none) {
-        m_search->setPlaceholderText(tr("Add a dictionary to start"));
         qCInfo(lcUi) << "no dictionaries in" << m_roots;
     }
     Q_EMIT libraryReady();
@@ -542,9 +554,7 @@ const services::DictionaryInfo* MainWindow::dictionary(const QString& dictId) co
 
 void MainWindow::setFilter(const QString& dictId)
 {
-    m_settings.setDictionaryFilter(dictId);
-    rebuildFilterMenu();
-    requestSearch();
+    m_settings.setDictionaryFilter(dictId); // dictionaryFilterChanged does the rest
 }
 
 void MainWindow::requestSearch()

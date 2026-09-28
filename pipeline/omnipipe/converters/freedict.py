@@ -708,6 +708,16 @@ def list_eligible(
 # ---------------------------------------------------------------------------
 
 _DEFAULT_PUBLISHER = "FreeDict contributors"
+# "Name <someone@example.org>", "(someone@example.org)" or a bare address.
+_EMAIL_RE = re.compile(r"\s*[<(\[]?[\w.+-]+@[\w-]+(?:\.[\w-]+)+[>)\]]?")
+
+
+def without_emails(people: str) -> str:
+    """The names in a TEI author list without their email addresses: the credit
+    needs the names, and the app shows it on every entry."""
+    text = _EMAIL_RE.sub("", people)
+    text = re.sub(r"\s*;\s*(;\s*)+", "; ", text)  # separators left around a removed address
+    return text.strip(" ;,")
 
 
 def make_spec(entry: DatabaseEntry, header: HeaderInfo) -> DictSpec:
@@ -715,7 +725,7 @@ def make_spec(entry: DatabaseEntry, header: HeaderInfo) -> DictSpec:
         raise FreeDictError(f"{entry.name}: no recognised licence, cannot build a DictSpec")
     src_code = lang_code(entry.src_lang3)
     tgt_code = lang_code(entry.tgt_lang3)
-    publisher = header.authors or _DEFAULT_PUBLISHER
+    publisher = without_emails(header.authors) or _DEFAULT_PUBLISHER
     title = (
         header.title
         or f"{lang_name(entry.src_lang3)}-{lang_name(entry.tgt_lang3)} FreeDict Dictionary"

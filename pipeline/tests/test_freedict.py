@@ -873,3 +873,17 @@ def test_detect_license_reads_an_explicit_choice_as_or() -> None:
     )
     assert result is not None
     assert result[0] == "GPL-2.0-or-later OR CC-BY-SA-3.0"
+
+
+@pytest.mark.parametrize(
+    ("people", "expected"),
+    [
+        ("Michael Bunk <michael.bunk@gmail.com>", "Michael Bunk"),
+        ("Kevin Donnelly (kevin@dotmon.com); Anna Smith", "Kevin Donnelly; Anna Smith"),
+        ("editor@example.org; Anna Smith", "Anna Smith"),
+        ("Tomaz Jacquet; Denis Arnaud", "Tomaz Jacquet; Denis Arnaud"),
+        ("someone@example.org", ""),
+    ],
+)
+def test_credits_keep_names_but_not_email_addresses(people: str, expected: str) -> None:
+    assert freedict.without_emails(people) == expected
