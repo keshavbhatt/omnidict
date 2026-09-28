@@ -72,7 +72,9 @@ Owner decisions: the 14 mocks approved; our own spell suggester (ADR-013); schem
   are drawn as the mock's chips; the Installing ring turns. Owner, 2026-09-28: no dictionary
   ships with the app (PLAN 9 question 5). Update checked end to end: a real Hindi package
   marked 2026.09.2 installed over 2026.09.1 and removed the old folder. Start-up with 54
-  dictionaries: 0.87 s and 76 MB peak, so lazy opening waits (FEATURES B10).
+  dictionaries: 0.87 s and 76 MB peak, so lazy opening waits (FEATURES B10). Owner,
+  2026-09-28: no telemetry (PLAN 9 question 6); the licensing module and the GitHub remote
+  wait until later.
 - Tests: 253 pipeline, 17 C++ suites. Lint clean.
 
 ## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local

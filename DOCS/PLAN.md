@@ -543,7 +543,7 @@ Start with **M0, then M1, then M2** in that order; M1 before M2 so the client is
 3. ~~App name and `dict_id` prefix conventions~~ RESOLVED: app name Omnidict, identity `com.ktechpit.omnidict` (D17); `dict_id` naming stays `<source>-<src_lang>-<tgt_lang>` (section 5.1) and is unaffected by the app name.
 4. ~~Spell-suggestion implementation (spellfix1 vs custom)~~ RESOLVED (owner, 2026-09-27): our own trigram and edit-distance suggester in the bundle, `schema_version` 2 (ADR-013, research in `DOCS/spell-suggestion.md`)
 5. ~~Whether to ship an initial English monolingual bundle inside the installer or require a first download~~ RESOLVED (owner, 2026-09-28): no dictionary ships with the app; the first run offers downloads (mocks/main-no-dictionaries.html)
-6. Telemetry: none by default, confirm
+6. ~~Telemetry: none by default, confirm~~ RESOLVED (owner, 2026-09-28): no telemetry. The app sends nothing on its own; the only network use is the dictionary catalogue and downloads, and bug reports go out only when the user sends them
 
 ---
 
