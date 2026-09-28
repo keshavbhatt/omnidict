@@ -111,6 +111,62 @@
         "neccessary": "necessary",
         "ambigous": "ambiguous"
       }
+    },
+    "freedict-de-en": {
+      "headwords": [
+        "Wasser",
+        "Haus",
+        "Hund",
+        "Katze",
+        "essen",
+        "sprechen",
+        "Kind",
+        "Buch",
+        "Tag",
+        "Nacht",
+        "Mann",
+        "Frau",
+        "Baum",
+        "Sonne",
+        "Mond",
+        "Freund",
+        "Liebe",
+        "Hand",
+        "Auge",
+        "Brot"
+      ],
+      "forms": {
+        "Abf.": "Abfahrt",
+        "Abk.": "Abkürzung",
+        "AU": "Abgasuntersuchung"
+      },
+      "full_text": "water"
+    },
+    "freedict-fr-en": {
+      "headwords": [
+        "eau",
+        "maison",
+        "chien",
+        "chat",
+        "manger",
+        "parler",
+        "enfant",
+        "livre",
+        "jour",
+        "nuit",
+        "homme",
+        "femme",
+        "arbre",
+        "soleil",
+        "lune",
+        "ami",
+        "amour",
+        "main",
+        "oeil",
+        "pain"
+      ],
+      "forms": {},
+      "full_text": "dog"
     }
   }
 }
