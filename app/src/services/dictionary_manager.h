@@ -68,6 +68,8 @@ public:
     /// Invalid when the catalogue has never been fetched or loaded from cache.
     [[nodiscard]] QDateTime catalogFetchedAt() const { return m_catalogFetchedAt; }
     [[nodiscard]] QUrl catalogUrl() const { return m_catalogUrl; }
+    /// A catalogue request is on its way (it ends in catalogChanged or catalogFailed).
+    [[nodiscard]] bool isRefreshingCatalog() const { return m_catalogReply != nullptr; }
 
     [[nodiscard]] QList<DownloadStatus> downloads() const;
 

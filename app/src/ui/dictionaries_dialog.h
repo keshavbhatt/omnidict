@@ -85,6 +85,8 @@ private:
     void refreshLanguageFilters();
     void updateInstalledFooter();
     void updateAvailableFooter();
+    /// Reads the catalogue now (Refresh, F5).
+    void refreshCatalog();
     [[nodiscard]] QStringList orderedInstalledIds() const;
     void moveSelectedRow(int direction);
     void writeOrderFromList();
@@ -105,6 +107,7 @@ private:
     QComboBox* m_toCombo = nullptr;
     QWidget* m_availableList = nullptr; ///< a QVBoxLayout of rows, plus a trailing stretch
     QLabel* m_availableFooter = nullptr;
+    QPushButton* m_refreshButton = nullptr;
     QPushButton* m_tryAgainButton = nullptr;
 
     /// dictId -> version, set when install() is called and consumed when

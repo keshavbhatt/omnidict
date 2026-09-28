@@ -326,6 +326,34 @@ private Q_SLOTS:
         QVERIFY(update != nullptr);
     }
 
+    void refreshReadsTheCatalogueAgain()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        server.addRoute(
+            u"/catalog.json"_s,
+            catalogJson(QJsonArray{manifest(u"a"_s, u"A Dictionary"_s, u"2026.10.1"_s, u"es"_s, u"en"_s,
+                                            u"Wiktionary"_s, u"http://example.invalid/a"_s, body)}));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"refresh"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        QVERIFY(catalogChanged.wait(5000)); // the read on opening
+
+        auto* refresh = dialog.findChild<QPushButton*>(u"refreshCatalogButton"_s);
+        auto* footer = dialog.findChild<QLabel*>(u"availableFooter"_s);
+        QVERIFY(refresh != nullptr && footer != nullptr);
+        QVERIFY(footer->text().contains(u"just now"_s));
+        refresh->click();
+        QVERIFY(!refresh->isEnabled()); // Refreshing... until the answer comes
+        QVERIFY(catalogChanged.wait(5000));
+        QVERIFY(refresh->isEnabled());
+        QCOMPARE(refresh->text(), u"Refresh"_s);
+        QCOMPARE(catalogChanged.size(), 2);
+    }
+
     void availableTabLanguageFilterHidesRows()
     {
         TestHttpServer server;

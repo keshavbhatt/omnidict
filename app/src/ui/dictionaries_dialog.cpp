@@ -27,6 +27,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSet>
+#include <QShortcut>
 #include <QSignalBlocker>
 #include <QTabWidget>
 #include <QTimer>
@@ -493,8 +494,19 @@ QFrame* DictionariesDialog::buildAvailableFoot(QWidget* page)
     m_availableFooter->setObjectName(u"availableFooter"_s);
     m_availableFooter->setProperty("muted", true);
     m_availableFooter->setProperty("small", true);
-    m_availableFooter->setWordWrap(true);
-    footLayout->addWidget(m_availableFooter, 1);
+    footLayout->addWidget(m_availableFooter);
+    // mocks/dictionaries-available.html: Refresh reads the catalogue now (also F5).
+    m_refreshButton =
+        new QPushButton(icons::themed(u"refresh"_s, Tokens::current().text), tr("Refresh"), foot);
+    m_refreshButton->setObjectName(u"refreshCatalogButton"_s);
+    m_refreshButton->setProperty("flat", true);
+    makeSmall(m_refreshButton);
+    m_refreshButton->setToolTip(tr("Read the catalogue again (F5)"));
+    connect(m_refreshButton, &QPushButton::clicked, this, &DictionariesDialog::refreshCatalog);
+    footLayout->addWidget(m_refreshButton);
+    footLayout->addStretch(1);
+    auto* refreshKey = new QShortcut(QKeySequence(Qt::Key_F5), this);
+    connect(refreshKey, &QShortcut::activated, this, &DictionariesDialog::refreshCatalog);
     m_tryAgainButton = new QPushButton(tr("Try again"), foot);
     m_tryAgainButton->setObjectName(u"tryAgainButton"_s);
     m_tryAgainButton->hide();
@@ -872,13 +884,29 @@ void DictionariesDialog::updateInstalledFooter()
     m_installedFooter->setText(tr("%1 dictionaries use %2").arg(m_installed.size()).arg(humanSize(total)));
 }
 
+void DictionariesDialog::refreshCatalog()
+{
+    m_manager.refreshCatalog(/*force=*/true);
+    updateAvailableFooter();
+}
+
 void DictionariesDialog::updateAvailableFooter()
 {
-    if (!m_catalogFailure.isEmpty()) {
+    const bool refreshing = m_manager.isRefreshingCatalog();
+    m_refreshButton->setEnabled(!refreshing);
+    m_refreshButton->setText(refreshing ? tr("Refreshing...") : tr("Refresh"));
+    const bool failed = !m_catalogFailure.isEmpty() && !refreshing;
+    // One line beside Refresh; only the longer failure reason, shown alone, wraps.
+    m_availableFooter->setWordWrap(failed);
+    m_availableFooter->setSizePolicy(failed ? QSizePolicy::Expanding : QSizePolicy::Preferred,
+                                     QSizePolicy::Preferred);
+    if (failed) {
         m_availableFooter->setText(tr("Catalogue unavailable: %1").arg(m_catalogFailure));
+        m_refreshButton->hide(); // Try again says the same
         m_tryAgainButton->show();
         return;
     }
+    m_refreshButton->show();
     m_tryAgainButton->hide();
 
     const QUrl url = m_manager.catalogUrl();
@@ -893,9 +921,17 @@ void DictionariesDialog::updateAvailableFooter()
     }
     const QDate fetchedDate = fetchedAt.toLocalTime().date();
     const QDate today = QDate::currentDate();
+    const qint64 minutes = fetchedAt.secsTo(QDateTime::currentDateTimeUtc()) / 60;
+    constexpr qint64 kMinutesPerHour = 60;
     QString when;
-    if (fetchedDate == today) {
-        when = tr("today");
+    // Plurals by hand: without a translation loaded, %n forms render literally.
+    if (minutes < 1) {
+        when = tr("just now");
+    } else if (minutes < kMinutesPerHour) {
+        when = minutes == 1 ? tr("1 minute ago") : tr("%1 minutes ago").arg(minutes);
+    } else if (fetchedDate == today) {
+        const qint64 hours = minutes / kMinutesPerHour;
+        when = hours == 1 ? tr("1 hour ago") : tr("%1 hours ago").arg(hours);
     } else if (fetchedDate == today.addDays(-1)) {
         when = tr("yesterday");
     } else {
