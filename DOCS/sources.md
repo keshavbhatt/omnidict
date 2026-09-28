@@ -246,6 +246,17 @@ Converter: `pipeline/omnipipe/converters/freedict.py`, run as
   As of 2026-09-28: 291 of 305 dictionaries are eligible; 14 excluded for too few headwords,
   0 for licence (the 11 that first looked unclear all resolved once the unversioned-URL and
   plain-text passes were added; see `detect_license` in `freedict.py`).
+- **Several licences.** A header naming more than one licence gets an SPDX `AND` expression
+  of all of them (deu-eng: "GPL-3.0-only AND AGPL-3.0-only", each covering part of the
+  work). `OR` is never inferred: complying with every licence named is always safe, and GPL
+  boilerplate ("or (at your option) any later version") would make a choice look present.
+- **Copyleft obligations.** Most FreeDict dictionaries are GPL or CC BY-SA. Anyone who
+  distributes a bundle built from a GPL dictionary must also make its corresponding source
+  available: the FreeDict `.src.tar.xz` release (its URL is in the index and in
+  `pipeline/sources/freedict/`) together with this pipeline's converter, which is itself
+  GPL-3.0-or-later in this repository. Before the catalogue is published (PLAN 9 question 2),
+  the publishing side must link each GPL bundle's source release; that is an open task for
+  publishing, not for the local catalogue.
 - **Identity.** `dict_id` is `freedict-<src>-<tgt>` with ISO 639-1 codes where one exists
   (`_LANG_TABLE` in `freedict.py`), else the FreeDict/ISO 639-3 code (`ast`, `ckb`, `kha`,
   `kmr`, `rom`, `swh`->`sw`... the full table is in the converter). `name` is

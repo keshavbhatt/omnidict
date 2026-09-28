@@ -413,13 +413,24 @@ def detect_license(
     licence named in plain text with no link at all. A GPL-family id (GPL,
     AGPL, LGPL, GFDL) gets "-or-later" when the text says so, else "-only".
     """
+    found: list[tuple[str, str]] = []
     for target, _text in refs:
         for pattern, base, has_variant in _LICENSE_URL_PATTERNS:
             if pattern.search(target):
                 if not has_variant:
-                    return base, target
-                suffix = "-or-later" if _OR_LATER_RE.search(availability_text) else "-only"
-                return f"{base}{suffix}", target
+                    spdx = base
+                else:
+                    suffix = "-or-later" if _OR_LATER_RE.search(availability_text) else "-only"
+                    spdx = f"{base}{suffix}"
+                if spdx not in (known for known, _ in found):
+                    found.append((spdx, target))
+                break
+    if found:
+        # Several licences at once (deu-eng: "under the terms of both the GPLv3 and
+        # the AGPLv3 ... each applies to different parts"): an SPDX AND expression.
+        # Always AND: that complies with every licence named, whereas reading a
+        # choice into GPL boilerplate ("or (at your option)") could under-comply.
+        return " AND ".join(spdx for spdx, _ in found), found[0][1]
     for target, text in refs:
         for pattern, family in _UNVERSIONED_FAMILY_PATTERNS:
             if pattern.search(target):

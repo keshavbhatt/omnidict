@@ -135,16 +135,17 @@ def test_unknown_licence_is_none_not_guessed() -> None:
     assert header.license_url is None
 
 
-def test_detect_license_prefers_first_recognised_ref_in_order() -> None:
+def test_detect_license_names_every_licence_that_applies() -> None:
+    # deu-eng's header: GPLv3 and AGPLv3 each cover part of the work.
     result = detect_license(
-        "both licenses apply",
+        "under the terms of both the GPLv3 and the AGPLv3, where each applies to different parts",
         [
             ("https://www.gnu.org/licenses/gpl-3.0.html", "GPLv3"),
             ("https://www.gnu.org/licenses/agpl-3.0.html", "AGPLv3"),
+            ("https://www.gnu.org/licenses/gpl-3.0.html", "GPLv3 again"),
         ],
     )
-    assert result is not None
-    assert result[0] == "GPL-3.0-only"
+    assert result == ("GPL-3.0-only AND AGPL-3.0-only", "https://www.gnu.org/licenses/gpl-3.0.html")
 
 
 def test_detect_license_resolves_an_unversioned_gnu_url_from_the_link_text() -> None:
