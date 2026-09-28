@@ -35,8 +35,11 @@ Run the app against them with a scratch profile (never the owner's own data):
 `tst_real_bundles` checks every built bundle against `tests/known_headwords.json` and skips
 the ones not built.
 
-The dictionary catalogue is fetched from `http://localhost:8000/catalog.json` by default;
-override with the `OMNIDICT_CATALOG_URL` environment variable (dev/test only, never a public URL).
+The dictionary catalogue is fetched from the rolling GitHub release by default
+(`https://github.com/keshavbhatt/omnidict/releases/download/dictionaries/catalog.json`, ADR-016;
+the owner switched it on 2026-09-29). To test a local catalogue from `make serve`, set
+`OMNIDICT_CATALOG_URL=http://localhost:8000/catalog.json`; a cached catalogue from another address
+is never reused.
 
 ## Standing rules
 
@@ -65,9 +68,10 @@ override with the `OMNIDICT_CATALOG_URL` environment variable (dev/test only, ne
   `DOCS/mocks/index.html` and `DOCS/PROGRESS.md`. No screen is coded from a description alone.
 - Publishing stays local: `make publish` and anything else that exposes bundles, the catalogue
   or the app publicly waits until the owner says the feature is implemented, tested, reviewed
-  and ready. `make serve` on localhost is the only catalogue. The source code itself is
-  public (github.com/keshavbhatt/omnidict, owner, 2026-09-28, for free CI); dictionary
-  releases, store listings and Flathub still wait for the owner.
+  and ready. The source code is public (github.com/keshavbhatt/omnidict, owner, 2026-09-28)
+  and the app reads the dictionaries workflow's rolling release (owner, 2026-09-29); the
+  workflow runs only when the owner starts it. Store listings and Flathub still wait for the
+  owner.
 - Run `make test` and `make lint` before declaring a task done.
 - Open questions in `DOCS/PLAN.md` section 9 are the owner's: ask, do not assume.
 - Release checklist: date the changelog heading, add the metainfo release, bump

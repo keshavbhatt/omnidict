@@ -23,6 +23,9 @@ namespace {
 
 constexpr qint64 kCatalogTtlSeconds = qint64{24} * 60 * 60;
 const QString kCatalogCacheFile = u"catalog.json"_s;
+/// The address the cached catalogue came from, next to it: a cache from another
+/// address (the localhost catalogue of a development build) is never used.
+const QString kCatalogSourceFile = u"catalog.source"_s;
 const QString kDownloadsSubdir = u"downloads"_s;
 
 /// A freshly queued download's status: Waiting, nothing received yet.
@@ -53,7 +56,8 @@ QUrl DictionaryManager::defaultCatalogUrl()
     if (!env.isEmpty()) {
         return QUrl::fromUserInput(QString::fromUtf8(env));
     }
-    return {u"http://localhost:8000/catalog.json"_s};
+    // The rolling release (ADR-016): the catalogue is replaced in place, so this never changes.
+    return {u"https://github.com/keshavbhatt/omnidict/releases/download/dictionaries/catalog.json"_s};
 }
 
 QList<DownloadStatus> DictionaryManager::downloads() const
@@ -87,6 +91,12 @@ void DictionaryManager::loadCachedCatalog()
     if (!info.isFile()) {
         return;
     }
+    QFile source(QDir(m_cacheDir).filePath(kCatalogSourceFile));
+    if (!source.open(QIODevice::ReadOnly) ||
+        QUrl(QString::fromUtf8(source.readAll().trimmed())) != m_catalogUrl) {
+        qCInfo(lcDownloads) << "cached catalog.json came from another address; reading" << m_catalogUrl;
+        return;
+    }
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         return;
@@ -109,6 +119,10 @@ void DictionaryManager::writeCatalogCache(const QByteArray& body) const
         return;
     }
     file.write(body);
+    QFile source(QDir(m_cacheDir).filePath(kCatalogSourceFile));
+    if (source.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        source.write(m_catalogUrl.toEncoded() + '\n');
+    }
 }
 
 void DictionaryManager::refreshCatalog(bool force)

@@ -282,6 +282,33 @@ private Q_SLOTS:
         QVERIFY(changed.wait(5000));
         QCOMPARE(manager.catalog().catalogVersion, 1);
         QVERIFY(QFile::exists(QDir(cacheDir.path()).filePath(u"catalog.json"_s)));
+
+        // The cache is used again for the same address, never for another one: a switch of
+        // catalogue (the localhost one of a development build, then GitHub's) reads anew.
+        const DictionaryManager sameAddress(dictDir.path(), cacheDir.path(),
+                                            server.urlFor(u"/catalog.json"_s));
+        QVERIFY(sameAddress.catalogFetchedAt().isValid());
+        QCOMPARE(sameAddress.catalog().catalogVersion, 1);
+        const DictionaryManager otherAddress(dictDir.path(), cacheDir.path(),
+                                             server.urlFor(u"/other.json"_s));
+        QVERIFY(!otherAddress.catalogFetchedAt().isValid());
+        QCOMPARE(otherAddress.catalog().catalogVersion, 0);
+    }
+
+    void theDefaultCatalogueIsTheRollingRelease()
+    {
+        const QByteArray saved = qgetenv("OMNIDICT_CATALOG_URL");
+        qunsetenv("OMNIDICT_CATALOG_URL");
+        QCOMPARE(
+            DictionaryManager::defaultCatalogUrl(),
+            QUrl(u"https://github.com/keshavbhatt/omnidict/releases/download/dictionaries/catalog.json"_s));
+        qputenv("OMNIDICT_CATALOG_URL", "http://localhost:8000/catalog.json");
+        QCOMPARE(DictionaryManager::defaultCatalogUrl(), QUrl(u"http://localhost:8000/catalog.json"_s));
+        if (saved.isEmpty()) {
+            qunsetenv("OMNIDICT_CATALOG_URL");
+        } else {
+            qputenv("OMNIDICT_CATALOG_URL", saved);
+        }
     }
 
     void twoAtATimeLimitWithThreeInstalls()

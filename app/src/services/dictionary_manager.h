@@ -60,8 +60,8 @@ public:
                                QObject* parent = nullptr);
     ~DictionaryManager() override; // QFile is incomplete in this header (Download::file)
 
-    /// http://localhost:8000/catalog.json, overridable with the
-    /// OMNIDICT_CATALOG_URL environment variable.
+    /// The rolling release's catalog.json on GitHub (ADR-016), overridable with the
+    /// OMNIDICT_CATALOG_URL environment variable (the localhost catalogue in development).
     [[nodiscard]] static QUrl defaultCatalogUrl();
 
     [[nodiscard]] const core::Catalog& catalog() const { return m_catalog; }
