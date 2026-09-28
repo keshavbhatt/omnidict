@@ -201,10 +201,11 @@ QComboBox QAbstractItemView {
     selection-background-color: {{hover}}; selection-color: {{text}};
 }
 
-QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
+/* A slim handle with room on the content side: rows and buttons never touch it. */
+QScrollBar:vertical { background: transparent; width: 19px; margin: 3px 3px 3px 10px; }
 QScrollBar::handle:vertical { background: {{border}}; border-radius: 3px; min-height: 32px; }
 QScrollBar::handle:vertical:hover { background: {{muted}}; }
-QScrollBar:horizontal { background: transparent; height: 10px; margin: 2px; }
+QScrollBar:horizontal { background: transparent; height: 19px; margin: 10px 3px 3px 3px; }
 QScrollBar::handle:horizontal { background: {{border}}; border-radius: 3px; min-width: 32px; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
 QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
