@@ -426,3 +426,93 @@ def test_cli_builds_a_bundle_with_source_metadata(hindi_like_cache: Path, tmp_pa
 def test_cli_rejects_an_unknown_dictionary(capsys: pytest.CaptureFixture[str]) -> None:
     assert kaikki.main(["--dict", "wikt-xx-en", "--no-fetch"]) == 1
     assert "unknown dictionary" in capsys.readouterr().err
+
+
+# --- the language list -----------------------------------------------------------
+
+INDEX_PAGE = """
+<li><a href="All%20languages%20combined/index.html">All languages combined (900 senses)</a></li>
+<li><a href="Lipo/index.html">Lipo (5000 senses)</a></li>
+<li><a href="Translingual/index.html">Translingual (4000 senses)</a></li>
+<li><a href="Old%20Lipo/index.html">Old Lipo (1000 senses)</a></li>
+<li><a href="Proto-Lipo/index.html">Proto-Lipo (3000 senses)</a></li>
+<li><a href="Ye%27lipo/index.html">Ye&#x27;lipo (999 senses)</a></li>
+"""
+
+
+def test_parse_index_reads_names_and_sense_counts() -> None:
+    parsed = kaikki.parse_index(INDEX_PAGE)
+    assert [(p.language, p.senses) for p in parsed][-1] == ("Ye'lipo", 999)
+    assert len(parsed) == 6
+
+
+def test_eligible_languages_apply_the_cut_off_and_the_exclusions() -> None:
+    parsed = kaikki.parse_index(INDEX_PAGE)
+    kept = kaikki.eligible_languages(parsed, min_senses=1000, include_reconstructed=False)
+    assert [k.language for k in kept] == ["Lipo", "Old Lipo"]
+    with_proto = kaikki.eligible_languages(parsed, min_senses=1000, include_reconstructed=True)
+    assert [k.language for k in with_proto] == ["Lipo", "Old Lipo", "Proto-Lipo"]
+
+
+def test_dump_urls_drop_spaces_and_punctuation_from_the_file_name() -> None:
+    assert kaikki.dump_url("Old English").endswith(
+        "/Old%20English/kaikki.org-dictionary-OldEnglish.jsonl.gz"
+    )
+    assert kaikki.dump_url("Franco-Provençal").endswith(
+        "/Franco-Proven%C3%A7al/kaikki.org-dictionary-FrancoProven%C3%A7al.jsonl.gz"
+    )
+    assert kaikki.dump_path(Path("c"), "Ye'kwana") == Path("c/Yekwana.jsonl.gz")
+
+
+def test_dictionary_ids_and_names_follow_the_language() -> None:
+    english = kaikki.dictionary_for("English", "en")
+    assert (english.dict_id, english.name, english.kind) == (
+        "wikt-en",
+        "English (Wiktionary)",
+        "monolingual",
+    )
+    old = kaikki.dictionary_for("Old Polish", "zlw-opl")
+    assert (old.dict_id, old.name, old.kind) == (
+        "wikt-zlw-opl-en",
+        "Old Polish-English (Wiktionary)",
+        "bilingual",
+    )
+
+
+def test_languages_file_round_trips_and_rejects_a_wrong_id(tmp_path: Path) -> None:
+    path = tmp_path / "languages.tsv"
+    found = [(kaikki.dictionary_for("Lipo", "lpo"), 5000)]
+    kaikki.write_languages(found, path)
+    assert kaikki.read_languages(path) == [found[0][0]]
+    path.write_text(path.read_text().replace("wikt-lpo-en", "wikt-xx-en"))
+    with pytest.raises(KaikkiError, match="should be 'wikt-lpo-en'"):
+        kaikki.read_languages(path)
+
+
+def test_the_checked_in_languages_file_keeps_the_owner_decisions() -> None:
+    ids = {d.dict_id for d in kaikki.DICTIONARIES}
+    languages = {d.language for d in kaikki.DICTIONARIES}
+    assert {"wikt-en", "wikt-es-en", "wikt-hi-en", "wikt-la-en", "wikt-grc-en"} <= ids
+    assert "Old English" in languages
+    assert "Translingual" not in languages
+    assert not {"Mandarin", "Cantonese", "Hokkien"} & languages
+    assert not any(language.startswith("Proto-") for language in languages)
+    assert len(ids) == len(kaikki.DICTIONARIES)
+
+
+def test_first_record_code_reads_only_the_start_of_the_dump(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = {"word": "a", "lang": "Old Lipo", "lang_code": "olp"}
+    body = gzip.compress((json.dumps(first) + "\n" + "x" * 500_000).encode())
+    ranges: list[str | None] = []
+
+    def urlopen(request: urllib.request.Request, timeout: float) -> FakeResponse:
+        ranges.append(request.get_header("Range"))
+        return FakeResponse(body[:1000], "")
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert kaikki.first_record_code("Old Lipo") == "olp"
+    assert ranges == ["bytes=0-131071"]
+    with pytest.raises(KaikkiError, match="not a Lipo word"):
+        kaikki.first_record_code("Lipo")

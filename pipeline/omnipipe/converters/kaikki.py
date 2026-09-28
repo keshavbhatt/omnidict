@@ -30,7 +30,9 @@ import re
 import shutil
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
+import zlib
 from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -173,6 +175,7 @@ _MAX_DERIVED = 30
 _MAX_RELATED = 20
 
 _WORD_CHAR_RE = re.compile(r"\w")
+_NON_WORD_RE = re.compile(r"\W")
 
 type Json = Mapping[str, object]
 
@@ -209,11 +212,57 @@ class KaikkiDict:
         )
 
 
-DICTIONARIES: Sequence[KaikkiDict] = (
-    KaikkiDict("wikt-en", "English", "en", "English (Wiktionary)"),
-    KaikkiDict("wikt-es-en", "Spanish", "es", "Spanish-English (Wiktionary)"),
-    KaikkiDict("wikt-hi-en", "Hindi", "hi", "Hindi-English (Wiktionary)"),
+# The languages built, one row each: `dict_id  language  lang_code  senses`. Generated
+# by `--discover` (DOCS/sources.md "Wiktionary languages") and checked in, so a build
+# never depends on what kaikki.org lists that day.
+LANGUAGES_FILE = Path(__file__).resolve().parents[2] / "kaikki-languages.tsv"
+_LANGUAGES_HEADER = ("dict_id", "language", "lang_code", "senses")
+
+# Owner decision 2026-09-28: every language with at least this many senses, historical
+# languages included, Translingual (symbols and scientific names) left out.
+MIN_SENSES = 1000
+_EXCLUDED_LANGUAGES = frozenset(
+    {
+        "Translingual",
+        "All languages combined",
+        # Wiktionary files these varieties' words under "Chinese" (wikt-zh-en); their own
+        # dumps are romanizations and redirects (7 to 207 entries, DOCS/sources.md).
+        "Mandarin",
+        "Cantonese",
+        "Hokkien",
+    }
 )
+
+
+def dict_id_for(lang_code: str) -> str:
+    """`wikt-en` for English itself, `wikt-<code>-en` for every other language."""
+    return "wikt-en" if lang_code == "en" else f"wikt-{lang_code}-en"
+
+
+def dictionary_for(language: str, lang_code: str) -> KaikkiDict:
+    name = "English (Wiktionary)" if lang_code == "en" else f"{language}-English (Wiktionary)"
+    return KaikkiDict(dict_id_for(lang_code), language, lang_code, name)
+
+
+def read_languages(path: Path = LANGUAGES_FILE) -> list[KaikkiDict]:
+    """The dictionaries listed in the languages file, in file order."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or tuple(lines[0].split("\t")) != _LANGUAGES_HEADER:
+        expected = "\t".join(_LANGUAGES_HEADER)
+        raise KaikkiError(f"{path}: expected the header {expected!r}")
+    dictionaries: list[KaikkiDict] = []
+    for number, line in enumerate(lines[1:], start=2):
+        fields = line.split("\t")
+        if len(fields) != len(_LANGUAGES_HEADER):
+            raise KaikkiError(f"{path}:{number}: expected {len(_LANGUAGES_HEADER)} columns")
+        dictionary = dictionary_for(fields[1], fields[2])
+        if dictionary.dict_id != fields[0]:
+            raise KaikkiError(f"{path}:{number}: {fields[0]!r} should be {dictionary.dict_id!r}")
+        dictionaries.append(dictionary)
+    return dictionaries
+
+
+DICTIONARIES: Sequence[KaikkiDict] = read_languages()
 
 
 def find_dictionary(dict_id: str) -> KaikkiDict:
@@ -252,12 +301,19 @@ class DumpInfo:
         )
 
 
+def file_stem(language: str) -> str:
+    """Kaikki's file name for a language: its name without spaces or punctuation."""
+    return _NON_WORD_RE.sub("", language)
+
+
 def dump_url(language: str) -> str:
-    return f"{KAIKKI_BASE_URL}/{language}/kaikki.org-dictionary-{language}.jsonl.gz"
+    folder = urllib.parse.quote(language)
+    stem = urllib.parse.quote(file_stem(language))
+    return f"{KAIKKI_BASE_URL}/{folder}/kaikki.org-dictionary-{stem}.jsonl.gz"
 
 
 def dump_path(cache_dir: Path, language: str) -> Path:
-    return cache_dir / f"{language}.jsonl.gz"
+    return cache_dir / f"{file_stem(language)}.jsonl.gz"
 
 
 def read_dump_info(dump: Path) -> DumpInfo:
@@ -311,6 +367,92 @@ def fetch_dump(cache_dir: Path, language: str, *, timeout: float = 300.0) -> Pat
     info_path.write_text(json.dumps(info.to_json(), indent=2) + "\n", encoding="utf-8")
     logger.info("fetched %s (%s)", target, last_modified)
     return target
+
+
+# ---------------------------------------------------------------------------
+# Discovery: which languages kaikki.org has, and each one's Wiktionary code.
+# ---------------------------------------------------------------------------
+
+_INDEX_ROW_RE = re.compile(r'<a href="[^"]+/index\.html">([^<]+?) \((\d+) senses\)</a>')
+# Enough of a dump's start to hold its first record once decompressed.
+_FIRST_RECORD_BYTES = 128 * 1024
+
+
+@dataclass(frozen=True, slots=True)
+class IndexedLanguage:
+    language: str
+    senses: int
+
+
+def parse_index(page: str) -> list[IndexedLanguage]:
+    """The languages on kaikki.org's dictionary index page, with their sense counts."""
+    return [
+        IndexedLanguage(html.unescape(name), int(count))
+        for name, count in _INDEX_ROW_RE.findall(page)
+    ]
+
+
+def eligible_languages(
+    indexed: Iterable[IndexedLanguage], *, min_senses: int, include_reconstructed: bool
+) -> list[IndexedLanguage]:
+    """The languages to build: big enough, not excluded, reconstructed ones on request."""
+    return [
+        entry
+        for entry in indexed
+        if entry.senses >= min_senses
+        and entry.language not in _EXCLUDED_LANGUAGES
+        and (include_reconstructed or not entry.language.startswith("Proto-"))
+    ]
+
+
+def _get(url: str, *, timeout: float, byte_range: int | None = None) -> bytes:
+    headers = {"User-Agent": USER_AGENT}
+    if byte_range is not None:
+        headers["Range"] = f"bytes=0-{byte_range - 1}"
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return bytes(response.read())
+    except urllib.error.HTTPError as exc:
+        raise KaikkiError(f"cannot fetch {url}: HTTP {exc.code}") from exc
+    except urllib.error.URLError as exc:
+        raise KaikkiError(f"cannot fetch {url}: {exc.reason}") from exc
+
+
+def first_record_code(language: str, *, timeout: float = 60.0) -> str:
+    """The Wiktionary language code of a dump, read from its first record only."""
+    url = dump_url(language)
+    head = _get(url, timeout=timeout, byte_range=_FIRST_RECORD_BYTES)
+    try:
+        text = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(head).decode("utf-8", "ignore")
+        record = json.loads(text.split("\n", 1)[0])
+    except (zlib.error, json.JSONDecodeError) as exc:
+        raise KaikkiError(f"{url}: cannot read the first record") from exc
+    code = record.get("lang_code") if isinstance(record, dict) else None
+    if not isinstance(code, str) or record.get("lang") != language:
+        raise KaikkiError(f"{url}: the first record is not a {language} word")
+    return code
+
+
+def discover(
+    *, min_senses: int = MIN_SENSES, include_reconstructed: bool = False, timeout: float = 60.0
+) -> list[tuple[KaikkiDict, int]]:
+    """Every eligible language on kaikki.org as a dictionary, with its sense count."""
+    page = _get(f"{KAIKKI_BASE_URL}/", timeout=timeout).decode("utf-8")
+    found: list[tuple[KaikkiDict, int]] = []
+    for entry in eligible_languages(
+        parse_index(page), min_senses=min_senses, include_reconstructed=include_reconstructed
+    ):
+        code = first_record_code(entry.language, timeout=timeout)
+        found.append((dictionary_for(entry.language, code), entry.senses))
+        logger.info("%s: %s, %d senses", entry.language, code, entry.senses)
+    return found
+
+
+def write_languages(found: Iterable[tuple[KaikkiDict, int]], path: Path = LANGUAGES_FILE) -> None:
+    lines = ["\t".join(_LANGUAGES_HEADER)]
+    lines += [f"{d.dict_id}\t{d.language}\t{d.lang_code}\t{senses}" for d, senses in found]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def bundle_version(dump_date: date, build: int = 1) -> str:
@@ -730,6 +872,18 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="skip the final VACUUM (it needs a temporary copy of the whole bundle)",
     )
     parser.add_argument("--list", action="store_true", help="list the dictionaries and exit")
+    parser.add_argument("--ids-only", action="store_true", help="with --list, print only dict_ids")
+    parser.add_argument(
+        "--discover",
+        action="store_true",
+        help=f"rewrite {LANGUAGES_FILE.name} from kaikki.org's current language index",
+    )
+    parser.add_argument("--min-senses", type=int, default=MIN_SENSES, help="with --discover")
+    parser.add_argument(
+        "--include-reconstructed",
+        action="store_true",
+        help="with --discover, keep reconstructed (Proto-) languages",
+    )
     return parser.parse_args(argv)
 
 
@@ -737,9 +891,23 @@ def main(argv: list[str] | None = None) -> int:
     """CLI: fetch a language's dump if needed, convert it, build its bundle."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     args = _parse_args(sys.argv[1:] if argv is None else argv)
+    if args.discover:
+        try:
+            found = discover(
+                min_senses=args.min_senses, include_reconstructed=args.include_reconstructed
+            )
+        except KaikkiError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        write_languages(found)
+        print(f"wrote {len(found)} languages to {LANGUAGES_FILE}")
+        return 0
     if args.list:
         for dictionary in DICTIONARIES:
-            print(f"{dictionary.dict_id}\t{dictionary.name}\t{dump_url(dictionary.language)}")
+            if args.ids_only:
+                print(dictionary.dict_id)
+            else:
+                print(f"{dictionary.dict_id}\t{dictionary.name}\t{dump_url(dictionary.language)}")
         return 0
     if not args.dict_id:
         print("error: --dict is required (see --list)", file=sys.stderr)
@@ -790,17 +958,28 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = [
     "DICTIONARIES",
+    "LANGUAGES_FILE",
     "ConversionStats",
     "DumpInfo",
+    "IndexedLanguage",
     "KaikkiConverter",
     "KaikkiDict",
     "KaikkiError",
     "bundle_version",
     "convert_records",
+    "dict_id_for",
+    "dictionary_for",
+    "discover",
+    "eligible_languages",
     "fetch_dump",
+    "file_stem",
+    "first_record_code",
     "gloss_html",
     "map_pos",
+    "parse_index",
+    "read_languages",
     "read_records",
+    "write_languages",
 ]
 
 if __name__ == "__main__":

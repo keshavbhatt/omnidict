@@ -1,0 +1,321 @@
+dict_id	language	lang_code	senses
+wikt-en	English	en	1787236
+wikt-la-en	Latin	la	1008871
+wikt-es-en	Spanish	es	875726
+wikt-it-en	Italian	it	719680
+wikt-de-en	German	de	633412
+wikt-pt-en	Portuguese	pt	526569
+wikt-ru-en	Russian	ru	492474
+wikt-fr-en	French	fr	459894
+wikt-zh-en	Chinese	zh	391037
+wikt-sv-en	Swedish	sv	347331
+wikt-fi-en	Finnish	fi	310090
+wikt-pl-en	Polish	pl	266850
+wikt-gl-en	Galician	gl	248944
+wikt-ja-en	Japanese	ja	237328
+wikt-ca-en	Catalan	ca	228230
+wikt-nl-en	Dutch	nl	190560
+wikt-lv-en	Latvian	lv	172691
+wikt-ro-en	Romanian	ro	148110
+wikt-eo-en	Esperanto	eo	137467
+wikt-el-en	Greek	el	112952
+wikt-ar-en	Arabic	ar	101305
+wikt-ang-en	Old English	ang	94096
+wikt-sh-en	Serbo-Croatian	sh	92127
+wikt-nb-en	Norwegian Bokmål	nb	91352
+wikt-hu-en	Hungarian	hu	90659
+wikt-grc-en	Ancient Greek	grc	90475
+wikt-cs-en	Czech	cs	85304
+wikt-mt-en	Maltese	mt	83992
+wikt-ko-en	Korean	ko	81949
+wikt-uk-en	Ukrainian	uk	81469
+wikt-mk-en	Macedonian	mk	76698
+wikt-bg-en	Bulgarian	bg	75438
+wikt-nn-en	Norwegian Nynorsk	nn	72931
+wikt-enm-en	Middle English	enm	69942
+wikt-da-en	Danish	da	68015
+wikt-vi-en	Vietnamese	vi	62237
+wikt-tr-en	Turkish	tr	60299
+wikt-hi-en	Hindi	hi	58151
+wikt-tl-en	Tagalog	tl	56334
+wikt-id-en	Indonesian	id	56250
+wikt-ga-en	Irish	ga	51751
+wikt-ast-en	Asturian	ast	43080
+wikt-cy-en	Welsh	cy	36056
+wikt-lt-en	Lithuanian	lt	34851
+wikt-sq-en	Albanian	sq	33182
+wikt-is-en	Icelandic	is	32839
+wikt-ka-en	Georgian	ka	31263
+wikt-sa-en	Sanskrit	sa	31041
+wikt-hy-en	Armenian	hy	29291
+wikt-ta-en	Tamil	ta	28690
+wikt-te-en	Telugu	te	28652
+wikt-fa-en	Persian	fa	28190
+wikt-nv-en	Navajo	nv	27852
+wikt-th-en	Thai	th	27768
+wikt-ceb-en	Cebuano	ceb	25276
+wikt-got-en	Gothic	got	25150
+wikt-gd-en	Scottish Gaelic	gd	24485
+wikt-sw-en	Swahili	sw	24006
+wikt-he-en	Hebrew	he	23832
+wikt-az-en	Azerbaijani	az	22986
+wikt-io-en	Ido	io	22286
+wikt-ms-en	Malay	ms	22226
+wikt-sk-en	Slovak	sk	21494
+wikt-eu-en	Basque	eu	20225
+wikt-rif-en	Tarifit	rif	19613
+wikt-ur-en	Urdu	ur	17945
+wikt-pa-en	Punjabi	pa	17637
+wikt-ml-en	Malayalam	ml	16973
+wikt-et-en	Estonian	et	16929
+wikt-kk-en	Kazakh	kk	16122
+wikt-yi-en	Yiddish	yi	15876
+wikt-non-en	Old Norse	non	15739
+wikt-bn-en	Bengali	bn	15713
+wikt-km-en	Khmer	km	15317
+wikt-ota-en	Ottoman Turkish	ota	15097
+wikt-my-en	Burmese	my	14554
+wikt-rsk-en	Pannonian Rusyn	rsk	14318
+wikt-pi-en	Pali	pi	12986
+wikt-xcl-en	Old Armenian	xcl	12881
+wikt-fo-en	Faroese	fo	12820
+wikt-nrf-en	Norman	nrf	12363
+wikt-lb-en	Luxembourgish	lb	12249
+wikt-aii-en	Assyrian Neo-Aramaic	aii	12011
+wikt-fro-en	Old French	fro	11044
+wikt-af-en	Afrikaans	af	10948
+wikt-izh-en	Ingrian	izh	10838
+wikt-be-en	Belarusian	be	10502
+wikt-gu-en	Gujarati	gu	9998
+wikt-kw-en	Cornish	kw	9625
+wikt-sl-en	Slovene	sl	9530
+wikt-bcl-en	Central Bikol	bcl	9081
+wikt-sga-en	Old Irish	sga	8833
+wikt-mn-en	Mongolian	mn	8586
+wikt-egy-en	Egyptian	egy	8553
+wikt-lld-en	Ladin	lld	8435
+wikt-syc-en	Classical Syriac	syc	8410
+wikt-mr-en	Marathi	mr	8315
+wikt-kmr-en	Northern Kurdish	kmr	8166
+wikt-oc-en	Occitan	oc	8161
+wikt-yo-en	Yoruba	yo	8101
+wikt-mak-en	Makasar	mak	7996
+wikt-ady-en	West Circassian	ady	7733
+wikt-jv-en	Javanese	jv	7710
+wikt-zlw-opl-en	Old Polish	zlw-opl	7402
+wikt-se-en	Northern Sami	se	7350
+wikt-sco-en	Scots	sco	7236
+wikt-haw-en	Hawaiian	haw	6491
+wikt-liv-en	Livonian	liv	6410
+wikt-aht-en	Ahtna	aht	6322
+wikt-as-en	Assamese	as	6023
+wikt-cu-en	Old Church Slavonic	cu	5898
+wikt-kix-en	Khiamniungan Naga	kix	5812
+wikt-tg-en	Tajik	tg	5764
+wikt-rup-en	Aromanian	rup	5693
+wikt-cim-en	Cimbrian	cim	5641
+wikt-vec-en	Venetan	vec	5593
+wikt-crh-en	Crimean Tatar	crh	5585
+wikt-zlw-ocs-en	Old Czech	zlw-ocs	5568
+wikt-pdt-en	Plautdietsch	pdt	5531
+wikt-frm-en	Middle French	frm	5431
+wikt-gv-en	Manx	gv	5382
+wikt-mi-en	Māori	mi	5314
+wikt-ba-en	Bashkir	ba	5309
+wikt-ug-en	Uyghur	ug	5290
+wikt-nci-en	Classical Nahuatl	nci	5207
+wikt-uz-en	Uzbek	uz	5190
+wikt-sah-en	Yakut	sah	4912
+wikt-or-en	Odia	or	4898
+wikt-zu-en	Zulu	zu	4864
+wikt-fy-en	West Frisian	fy	4831
+wikt-vot-en	Votic	vot	4743
+wikt-dsb-en	Lower Sorbian	dsb	4688
+wikt-bo-en	Tibetan	bo	4664
+wikt-ky-en	Kyrgyz	ky	4597
+wikt-scn-en	Sicilian	scn	4577
+wikt-vo-en	Volapük	vo	4478
+wikt-ajp-en	South Levantine Arabic	ajp	4361
+wikt-ia-en	Interlingua	ia	4360
+wikt-mg-en	Malagasy	mg	4316
+wikt-dum-en	Middle Dutch	dum	4311
+wikt-goh-en	Old High German	goh	4283
+wikt-su-en	Sundanese	su	4238
+wikt-csb-en	Kashubian	csb	4162
+wikt-taa-en	Lower Tanana	taa	4116
+wikt-lzz-en	Laz	lzz	4083
+wikt-za-en	Zhuang	za	4026
+wikt-cop-en	Coptic	cop	4009
+wikt-kn-en	Kannada	kn	3958
+wikt-qu-en	Quechua	qu	3926
+wikt-egl-en	Emilian	egl	3850
+wikt-ush-en	Ushojo	ush	3789
+wikt-kaw-en	Old Javanese	kaw	3751
+wikt-szl-en	Silesian	szl	3703
+wikt-xh-en	Xhosa	xh	3699
+wikt-ykg-en	Northern Yukaghir	ykg	3598
+wikt-bar-en	Bavarian	bar	3573
+wikt-am-en	Amharic	am	3553
+wikt-phl-en	Palula	phl	3390
+wikt-ks-en	Kashmiri	ks	3354
+wikt-lo-en	Lao	lo	3335
+wikt-yol-en	Yola	yol	3330
+wikt-vep-en	Veps	vep	3224
+wikt-acw-en	Hijazi Arabic	acw	3222
+wikt-arc-en	Aramaic	arc	3217
+wikt-mnc-en	Manchu	mnc	3207
+wikt-lad-en	Ladino	lad	3190
+wikt-sux-en	Sumerian	sux	3168
+wikt-pdc-en	Pennsylvania German	pdc	3141
+wikt-shn-en	Shan	shn	3140
+wikt-gmw-ecg-en	East Central German	gmw-ecg	3125
+wikt-ne-en	Nepali	ne	3087
+wikt-ny-en	Chichewa	ny	3036
+wikt-kl-en	Greenlandic	kl	3034
+wikt-nds-en	Low German	nds	3016
+wikt-wa-en	Walloon	wa	3010
+wikt-pra-en	Prakrit	pra	2973
+wikt-gsw-en	Alemannic German	gsw	2970
+wikt-frp-en	Franco-Provençal	frp	2877
+wikt-txb-en	Tocharian B	txb	2856
+wikt-mdf-en	Moksha	mdf	2830
+wikt-li-en	Limburgish	li	2826
+wikt-ary-en	Moroccan Arabic	ary	2804
+wikt-osx-en	Old Saxon	osx	2783
+wikt-hrx-en	Hunsrik	hrx	2749
+wikt-ha-en	Hausa	ha	2717
+wikt-br-en	Breton	br	2639
+wikt-lij-en	Ligurian	lij	2612
+wikt-rm-en	Romansh	rm	2605
+wikt-fur-en	Friulian	fur	2591
+wikt-mch-en	Ye'kwana	mch	2585
+wikt-shi-en	Tashelhit	shi	2566
+wikt-gmh-en	Middle High German	gmh	2559
+wikt-hil-en	Hiligaynon	hil	2550
+wikt-ain-en	Ainu	ain	2546
+wikt-stq-en	Saterland Frisian	stq	2524
+wikt-ht-en	Haitian Creole	ht	2521
+wikt-dv-en	Dhivehi	dv	2511
+wikt-unm-en	Unami	unm	2480
+wikt-tk-en	Turkmen	tk	2477
+wikt-aa-en	Afar	aa	2456
+wikt-mhr-en	Eastern Mari	mhr	2445
+wikt-srn-en	Sranan Tongo	srn	2357
+wikt-tpi-en	Tok Pisin	tpi	2348
+wikt-odt-en	Old Dutch	odt	2343
+wikt-mkj-en	Mokilese	mkj	2328
+wikt-tpw-en	Old Tupi	tpw	2327
+wikt-chr-en	Cherokee	chr	2306
+wikt-ff-en	Fula	ff	2302
+wikt-alt-en	Southern Altai	alt	2293
+wikt-tt-en	Tatar	tt	2237
+wikt-akk-en	Akkadian	akk	2234
+wikt-pam-en	Kapampangan	pam	2232
+wikt-klj-en	Khalaj	klj	2222
+wikt-sd-en	Sindhi	sd	2161
+wikt-ps-en	Pashto	ps	2157
+wikt-an-en	Aragonese	an	2139
+wikt-kum-en	Kumyk	kum	2117
+wikt-ysr-en	Sirenik	ysr	2080
+wikt-oj-en	Ojibwe	oj	2070
+wikt-mfe-en	Mauritian Creole	mfe	2068
+wikt-udm-en	Udmurt	udm	2042
+wikt-mh-en	Marshallese	mh	2041
+wikt-txg-en	Tangut	txg	2035
+wikt-ilo-en	Ilocano	ilo	2027
+wikt-gmq-osw-en	Old Swedish	gmq-osw	2015
+wikt-cv-en	Chuvash	cv	2001
+wikt-roa-opt-en	Old Galician-Portuguese	roa-opt	1993
+wikt-tly-en	Talysh	tly	1981
+wikt-sjd-en	Kildin Sami	sjd	1981
+wikt-wyi-en	Woiwurrung	wyi	1957
+wikt-arz-en	Egyptian Arabic	arz	1955
+wikt-ak-en	Akan	ak	1921
+wikt-ki-en	Kikuyu	ki	1915
+wikt-hsb-en	Upper Sorbian	hsb	1915
+wikt-ln-en	Lingala	ln	1904
+wikt-nap-en	Neapolitan	nap	1885
+wikt-ban-en	Balinese	ban	1877
+wikt-ss-en	Swazi	ss	1853
+wikt-nhn-en	Central Nahuatl	nhn	1853
+wikt-wym-en	Vilamovian	wym	1824
+wikt-rgn-en	Romagnol	rgn	1814
+wikt-tyz-en	Tày	tyz	1790
+wikt-sjs-en	Senhaja de Srair	sjs	1782
+wikt-ab-en	Abkhaz	ab	1782
+wikt-tft-en	Ternate	tft	1781
+wikt-slr-en	Salar	slr	1735
+wikt-ckb-en	Central Kurdish	ckb	1725
+wikt-sc-en	Sardinian	sc	1723
+wikt-frr-en	North Frisian	frr	1717
+wikt-mnw-en	Mon	mnw	1717
+wikt-gag-en	Gagauz	gag	1709
+wikt-kbd-en	East Circassian	kbd	1671
+wikt-kpv-en	Komi-Zyrian	kpv	1646
+wikt-osp-en	Old Spanish	osp	1644
+wikt-gho-en	Ghomara	gho	1640
+wikt-cbk-en	Chavacano	cbk	1607
+wikt-iba-en	Iban	iba	1578
+wikt-tsg-en	Tausug	tsg	1569
+wikt-cic-en	Chickasaw	cic	1563
+wikt-no-en	Norwegian	no	1545
+wikt-si-en	Sinhalese	si	1519
+wikt-jje-en	Jeju	jje	1516
+wikt-uby-en	Ubykh	uby	1480
+wikt-kok-en	Konkani	kok	1475
+wikt-mns-nor-en	Northern Mansi	mns-nor	1469
+wikt-kea-en	Kabuverdianu	kea	1429
+wikt-myv-en	Erzya	myv	1426
+wikt-ist-en	Istriot	ist	1422
+wikt-pap-en	Papiamentu	pap	1408
+wikt-mww-en	White Hmong	mww	1400
+wikt-krl-en	Karelian	krl	1397
+wikt-bnt-phu-en	Phuthi	bnt-phu	1396
+wikt-ryu-en	Okinawan	ryu	1396
+wikt-dlm-en	Dalmatian	dlm	1392
+wikt-om-en	Oromo	om	1373
+wikt-ksw-en	S'gaw Karen	ksw	1356
+wikt-cho-en	Choctaw	cho	1355
+wikt-zza-en	Zazaki	zza	1349
+wikt-ce-en	Chechen	ce	1341
+wikt-atv-en	Northern Altai	atv	1332
+wikt-zlw-slv-en	Slovincian	zlw-slv	1327
+wikt-sip-en	Sikkimese	sip	1309
+wikt-gmw-cfr-en	Central Franconian	gmw-cfr	1297
+wikt-arn-en	Mapudungun	arn	1292
+wikt-uga-en	Ugaritic	uga	1292
+wikt-rom-en	Romani	rom	1288
+wikt-so-en	Somali	so	1285
+wikt-syl-en	Sylheti	syl	1265
+wikt-omq-sjq-en	San Juan Quiahije Chatino	omq-sjq	1255
+wikt-fj-en	Fijian	fj	1250
+wikt-tkl-en	Tokelauan	tkl	1235
+wikt-orv-en	Old East Slavic	orv	1216
+wikt-grt-en	Garo	grt	1214
+wikt-mrw-en	Maranao	mrw	1213
+wikt-okm-en	Middle Korean	okm	1192
+wikt-wlm-en	Middle Welsh	wlm	1189
+wikt-smj-en	Lule Sami	smj	1160
+wikt-co-en	Corsican	co	1158
+wikt-apc-en	North Levantine Arabic	apc	1156
+wikt-mag-en	Magahi	mag	1148
+wikt-gug-en	Paraguayan Guarani	gug	1144
+wikt-kne-en	Kankanaey	kne	1125
+wikt-mni-en	Manipuri	mni	1117
+wikt-pms-en	Piedmontese	pms	1113
+wikt-os-en	Ossetian	os	1105
+wikt-ti-en	Tigrinya	ti	1088
+wikt-gwt-en	Gawar-Bati	gwt	1083
+wikt-xmf-en	Mingrelian	xmf	1071
+wikt-tyv-en	Tuvan	tyv	1063
+wikt-tum-en	Tumbuka	tum	1056
+wikt-ket-en	Ket	ket	1055
+wikt-mzs-en	Macanese	mzs	1048
+wikt-mga-en	Middle Irish	mga	1038
+wikt-mqs-en	West Makian	mqs	1031
+wikt-lmo-en	Lombard	lmo	1025
+wikt-sat-en	Santali	sat	1024
+wikt-afb-en	Gulf Arabic	afb	1021
+wikt-lkt-en	Lakota	lkt	1015
+wikt-bm-en	Bambara	bm	1012
+wikt-fax-en	Fala	fax	1004
