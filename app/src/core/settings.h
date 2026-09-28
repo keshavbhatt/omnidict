@@ -29,7 +29,8 @@ class Settings : public QObject
     Q_DISABLE_COPY_MOVE(Settings)
 
 public:
-    /// Entry text size in pixels, and its bounds (Ctrl+Plus, Ctrl+Minus, Ctrl+0).
+    /// Text size in pixels for the entry (the result list uses one pixel less), and its
+    /// bounds (Ctrl+Plus, Ctrl+Minus, Ctrl+0).
     static constexpr int kDefaultEntryTextSize = 15;
     static constexpr int kMinEntryTextSize = 11;
     static constexpr int kMaxEntryTextSize = 28;

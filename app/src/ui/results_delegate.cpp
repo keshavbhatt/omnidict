@@ -4,6 +4,7 @@
 #include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QFontInfo>
 #include <QFontMetricsF>
 #include <QMouseEvent>
 #include <QPainter>
@@ -41,10 +42,21 @@ Kind kindOf(const QModelIndex& index)
     return index.data(Model::KindRole).value<Kind>();
 }
 
+// The design sizes above are for a 14 px list font; they scale with the list's
+// font, which follows the text-size setting (Ctrl+Plus, Ctrl+Minus, Ctrl+0).
+constexpr qreal kDesignBasePixels = 14.0;
+
+/// `designPixels` at the list font's actual size.
+int scaled(const QFont& base, int designPixels)
+{
+    const int basePixels = base.pixelSize() > 0 ? base.pixelSize() : QFontInfo(base).pixelSize();
+    return std::max(1, qRound(designPixels * basePixels / kDesignBasePixels));
+}
+
 QFont headingFont(const QFont& base)
 {
     QFont font = base;
-    font.setPixelSize(kHeadingPixelSize);
+    font.setPixelSize(scaled(base, kHeadingPixelSize));
     font.setWeight(QFont::Bold);
     font.setCapitalization(QFont::AllUppercase);
     font.setLetterSpacing(QFont::PercentageSpacing, 100.0 + kHeadingLetterSpacing);
@@ -54,7 +66,7 @@ QFont headingFont(const QFont& base)
 QFont detailFont(const QFont& base)
 {
     QFont font = base;
-    font.setPixelSize(kHeadingPixelSize);
+    font.setPixelSize(scaled(base, kHeadingPixelSize));
     font.setWeight(QFont::Medium);
     return font;
 }
@@ -66,10 +78,11 @@ QFont headwordFont(const QFont& base)
     return font;
 }
 
-QFont pixelFont(const QFont& base, int pixels)
+/// The list font at a design size (scaled like everything else).
+QFont pixelFont(const QFont& base, int designPixels)
 {
     QFont font = base;
-    font.setPixelSize(pixels);
+    font.setPixelSize(scaled(base, designPixels));
     return font;
 }
 

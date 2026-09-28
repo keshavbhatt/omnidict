@@ -231,6 +231,7 @@ QWidget* MainWindow::buildResults()
     m_results->setMouseTracking(true); // hover rows
     m_results->installEventFilter(this);
     m_results->setMinimumWidth(kResultsPaneWidth - 80);
+    applyListTextSize(m_settings.entryTextSize());
     connect(delegate, &ResultsDelegate::actionActivated, this, &MainWindow::onResultAction);
     return m_results;
 }
@@ -497,6 +498,7 @@ void MainWindow::connectSettings()
             [this] { showDictionaries(activeDownloads() > 0); });
     connect(m_firstRun, &FirstRunPanel::browseRequested, this, [this] { showDictionaries(true); });
     connect(&m_settings, &core::Settings::entryTextSizeChanged, m_entry, &EntryView::setTextSize);
+    connect(&m_settings, &core::Settings::entryTextSizeChanged, this, &MainWindow::applyListTextSize);
     connect(&m_settings, &core::Settings::searchOptionsChanged, this, &MainWindow::requestSearch);
 }
 
@@ -784,6 +786,15 @@ void MainWindow::copyEntry()
     if (m_stack->currentWidget() == m_entry && !m_current.headword.isEmpty()) {
         QGuiApplication::clipboard()->setText(m_entry->plainText());
     }
+}
+
+void MainWindow::applyListTextSize(int entryPixels)
+{
+    // One size for the whole window: the list reads one pixel smaller than the entry.
+    QFont font = m_results->font();
+    font.setPixelSize(entryPixels - 1);
+    m_results->setFont(font);
+    m_results->doItemsLayout(); // row heights follow the new size
 }
 
 void MainWindow::changeTextSize(int step)

@@ -123,6 +123,7 @@ private:
     void updateNavigation();
     void copyEntry();
     void changeTextSize(int step);
+    void applyListTextSize(int entryPixels);
     void setFilter(const QString& dictId);
     void showWelcome();
     void reopenLibrary();

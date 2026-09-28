@@ -115,7 +115,8 @@ void SettingsDialog::setupAppearance(QVBoxLayout* body, QWidget* content)
     body->addWidget(makeSectionLabel(content, tr("Appearance"), true));
     body->addWidget(makeRow(content, tr("Theme"), {}, buildThemeSegment(content)));
     body->addWidget(makeSeparator(content));
-    body->addWidget(makeRow(content, tr("Entry text size"), {}, buildTextSizeRow(content)));
+    body->addWidget(
+        makeRow(content, tr("Text size"), tr("The entry and the result list"), buildTextSizeRow(content)));
 }
 
 QWidget* SettingsDialog::buildThemeSegment(QWidget* content)
