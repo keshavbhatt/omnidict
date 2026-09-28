@@ -1118,18 +1118,23 @@ class _Accumulator:
     relations: list[Relation] = field(default_factory=list)
 
     def add(self, parsed: _ParsedEntry) -> None:
-        base_ordinal = len(self.senses)
-        self.senses.extend(parsed.senses)
+        # A sense repeated word for word (es-ast lists "perro: perru" three times)
+        # is kept once; relations follow the sense they belong to.
+        ordinal_of: dict[int, int] = {}
+        for index, sense in enumerate(parsed.senses, start=1):
+            if sense in self.senses:
+                ordinal_of[index] = self.senses.index(sense) + 1
+            else:
+                self.senses.append(sense)
+                ordinal_of[index] = len(self.senses)
         for relation in parsed.relations:
             if relation.sense_ordinal is not None:
-                self.relations.append(
-                    Relation(
-                        type=relation.type,
-                        target=relation.target,
-                        sense_ordinal=relation.sense_ordinal + base_ordinal,
-                    )
+                relation = Relation(
+                    type=relation.type,
+                    target=relation.target,
+                    sense_ordinal=ordinal_of.get(relation.sense_ordinal, relation.sense_ordinal),
                 )
-            else:
+            if relation not in self.relations:
                 self.relations.append(relation)
         if parsed.pronunciation is not None and parsed.pronunciation not in self.pronunciations:
             self.pronunciations.append(parsed.pronunciation)
@@ -1186,15 +1191,36 @@ def iter_tei_entries(
 
 
 def convert_tei_entries(
-    entries: Iterable[Element], lang: str, stats: ConversionStats
+    entries: Iterable[Element],
+    lang: str,
+    stats: ConversionStats,
+    occurrences: Mapping[str, int] | None = None,
 ) -> Iterator[Entry]:
-    """Canonical entries from TEI `<entry>` elements of one dictionary, merging
-    consecutive elements that share a headword (PLAN 6.4, same rule as Kaikki)."""
+    """Canonical entries from TEI `<entry>` elements of one dictionary, one per
+    headword. With `occurrences` (how many `<entry>` elements each headword has,
+    from a first pass) the elements of a headword merge wherever they are in the
+    file: FreeDict often repeats a headword far apart (deu-eng: 116k headwords).
+    Only headwords still waiting for more elements are held in memory. Without it,
+    consecutive elements merge (the Kaikki rule)."""
+    pending: dict[str, _Accumulator] = {}
+    remaining = dict(occurrences) if occurrences is not None else {}
     current: _Accumulator | None = None
     for entry_el in entries:
         stats.records += 1
         parsed = parse_tei_entry(entry_el, stats)
         if parsed is None:
+            continue
+        if occurrences is not None:
+            accumulator = pending.setdefault(
+                parsed.headword, _Accumulator(headword=parsed.headword, lang=lang)
+            )
+            accumulator.add(parsed)
+            remaining[parsed.headword] = remaining.get(parsed.headword, 1) - 1
+            if remaining[parsed.headword] <= 0:
+                del pending[parsed.headword]
+                if (done := accumulator.entry()) is not None:
+                    stats.entries += 1
+                    yield done
             continue
         if current is None or current.headword != parsed.headword:
             if current is not None and (done := current.entry()) is not None:
@@ -1202,9 +1228,21 @@ def convert_tei_entries(
                 yield done
             current = _Accumulator(headword=parsed.headword, lang=lang)
         current.add(parsed)
-    if current is not None and (done := current.entry()) is not None:
-        stats.entries += 1
-        yield done
+    for accumulator in [*pending.values(), *([current] if current is not None else [])]:
+        if (done := accumulator.entry()) is not None:
+            stats.entries += 1
+            yield done
+
+
+def count_headwords(entries: Iterable[Element]) -> Counter[str]:
+    """How many usable `<entry>` elements each headword has (the first pass)."""
+    counts: Counter[str] = Counter()
+    scratch = ConversionStats()
+    for entry_el in entries:
+        parsed = parse_tei_entry(entry_el, scratch)
+        if parsed is not None:
+            counts[parsed.headword] += 1
+    return counts
 
 
 def convert_tei_file(
@@ -1227,7 +1265,11 @@ def convert_tei_file(
                 logger.warning("%s: included file %s is not in the archive", member.name, href)
                 return None
 
-        yield from convert_tei_entries(iter_tei_entries(fileobj, include), lang, stats)
+        occurrences = count_headwords(iter_tei_entries(fileobj, include))
+        fileobj = tar.extractfile(member)
+        if fileobj is None:
+            raise FreeDictError(f"{member.name}: has no content")
+        yield from convert_tei_entries(iter_tei_entries(fileobj, include), lang, stats, occurrences)
 
 
 def main_tei_member(members: Sequence[tarfile.TarInfo], name: str) -> tarfile.TarInfo | None:

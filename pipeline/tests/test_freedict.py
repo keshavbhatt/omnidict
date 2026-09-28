@@ -887,3 +887,26 @@ def test_detect_license_reads_an_explicit_choice_as_or() -> None:
 )
 def test_credits_keep_names_but_not_email_addresses(people: str, expected: str) -> None:
     assert freedict.without_emails(people) == expected
+
+
+def test_a_headword_repeated_far_apart_becomes_one_entry(tmp_path: Path) -> None:
+    # es-ast repeats "perro" with the same translation far apart; deu-eng repeats 116k headwords.
+    def entry(word: str, trans: str) -> str:
+        return (
+            f'<entry><form><orth>{word}</orth></form><sense><cit type="trans"><quote>{trans}'
+            "</quote></cit></sense></entry>"
+        )
+
+    tei = full_tei(
+        entry("perro", "perru")
+        + entry("gato", "gatu")
+        + entry("perro", "perru")
+        + entry("perro", "can")
+    )
+    path = tmp_path / "t.tar.xz"
+    path.write_bytes(make_tarball("spa-ast", tei))
+    stats = freedict.ConversionStats()
+    entries = {e.headword: e for e in freedict.convert_tei_file(path, _entry_for("spa-ast"), stats)}
+    assert sorted(entries) == ["gato", "perro"]
+    assert [s.definition for s in entries["perro"].senses] == ["perru", "can"]
+    assert stats.entries == 2
