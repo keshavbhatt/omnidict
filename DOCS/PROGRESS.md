@@ -67,9 +67,10 @@ Owner decisions: the 14 mocks approved; our own spell suggester (ADR-013); schem
   6 s, and the window searched them.
 - Work split across three agents in worktrees (sheets, backend, Dictionaries sheet), merged
   and reviewed here; every screen checked against its mock in screenshots.
-- Deviations from the mocks: the "from <form>" note on rows found through an inflected form
-  is not shown yet (the search does not return which form matched); the language filters are
-  plain drop-downs; the Installing ring does not spin.
+- Deviations from the mocks, since closed (2026-09-28): rows found through an inflected form
+  now show that form with "from <headword>" (`EntryPreview::matchedForm`); the language filters
+  are drawn as the mock's chips; the Installing ring turns. Owner, 2026-09-28: no dictionary
+  ships with the app (PLAN 9 question 5).
 - Tests: 253 pipeline, 17 C++ suites. Lint clean.
 
 ## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local

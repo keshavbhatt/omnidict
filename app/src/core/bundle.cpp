@@ -199,6 +199,29 @@ QList<EntryPreview> Bundle::previews(const QString& sql, const QList<QString>& t
     return rows;
 }
 
+void Bundle::fillMatchedForms(QList<EntryPreview>& rows, const QString& key, bool prefix) const
+{
+    // A row whose own headword does not match came in through one of its forms.
+    // (The check is in C++; the range below is for SQLite's bytewise order.)
+    const QString upperBound = prefix ? prefixUpperBound(key) : key + QChar(u'\x01');
+    auto statement = m_db.prepare(u"SELECT form FROM forms WHERE entry_id = ?1"
+                                  " AND form_norm >= ?2 AND form_norm < ?3 ORDER BY form_norm LIMIT 1"_s);
+    for (EntryPreview& row : rows) {
+        const QString headwordNorm = normalizeHeadword(row.headword);
+        const bool headwordMatches = prefix ? headwordNorm.startsWith(key) : headwordNorm == key;
+        if (!statement || headwordMatches) {
+            continue;
+        }
+        statement.value().reset();
+        statement.value().bind(1, row.id);
+        statement.value().bind(2, key);
+        statement.value().bind(3, upperBound);
+        if (statement.value().next()) {
+            row.matchedForm = statement.value().text(0);
+        }
+    }
+}
+
 QList<Suggestion> Bundle::suggest(const QString& query, int limit) const
 {
     constexpr int kFirstWithSuggestions = 2;
@@ -219,7 +242,9 @@ QList<EntryPreview> Bundle::lookupExact(const QString& query) const
                         "SELECT id FROM entries WHERE headword_norm = ?2"
                         " UNION SELECT entry_id FROM forms WHERE form_norm = ?2)"_s +
                         kPreviewOrder + u" LIMIT ?3"_s;
-    return previews(sql, {asTyped(query), key}, kNoLimit);
+    QList<EntryPreview> rows = previews(sql, {asTyped(query), key}, kNoLimit);
+    fillMatchedForms(rows, key, /*prefix=*/false);
+    return rows;
 }
 
 QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
@@ -235,7 +260,9 @@ QList<EntryPreview> Bundle::searchPrefix(const QString& query, int limit) const
                         u" ORDER BY (e.headword = ?1) DESC, (e.headword_norm = ?2) DESC,"
                         " (e.headword_norm >= ?2 AND e.headword_norm < ?3) DESC, e.sort_key, e.id"
                         " LIMIT ?4"_s;
-    return previews(sql, {asTyped(query), key, prefixUpperBound(key)}, limit);
+    QList<EntryPreview> rows = previews(sql, {asTyped(query), key, prefixUpperBound(key)}, limit);
+    fillMatchedForms(rows, key, /*prefix=*/true);
+    return rows;
 }
 
 QList<EntryPreview> Bundle::searchPattern(const QString& pattern, int limit) const

@@ -117,20 +117,12 @@ void paintHeading(QPainter* painter, const QStyleOptionViewItem& option, const Q
     }
 }
 
-void paintEntry(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
+/// The right-hand side of an entry row: the star, then a short muted label
+/// left of it. Returns what is left of `content` for the headword and preview.
+QRect paintTrailing(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index,
+                    QRect content)
 {
     const Tokens& t = Tokens::current();
-    const QRect row = option.rect.adjusted(kRowMarginX, kRowGap / 2, -kRowMarginX, -kRowGap / 2);
-    const bool selected = (option.state & QStyle::State_Selected) != 0;
-    const bool hovered = (option.state & QStyle::State_MouseOver) != 0;
-    if (selected || hovered) {
-        QPainterPath path;
-        path.addRoundedRect(QRectF(row), kRadius, kRadius);
-        painter->fillPath(path, selected ? t.accentSoft : t.hover);
-    }
-    QRect content = row.adjusted(kRowPadX, kRowPadY, -kRowPadX, -kRowPadY);
-
-    // Right-hand side: the star, then a short muted label left of it.
     if (index.data(Model::FavoriteRole).toBool()) {
         const qreal dpr = painter->device() != nullptr ? painter->device()->devicePixelRatioF() : 1.0;
         const QPixmap star = icons::pixmap(u"star-filled"_s, t.warm, kStarSize, dpr);
@@ -152,15 +144,42 @@ void paintEntry(QPainter* painter, const QStyleOptionViewItem& option, const QMo
                           Qt::AlignRight | Qt::AlignVCenter, metrics.elidedText(side, Qt::ElideRight, width));
         content.setRight(content.right() - width - kSideGap);
     }
+    return content;
+}
+
+void paintEntry(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
+{
+    const Tokens& t = Tokens::current();
+    const QRect row = option.rect.adjusted(kRowMarginX, kRowGap / 2, -kRowMarginX, -kRowGap / 2);
+    const bool selected = (option.state & QStyle::State_Selected) != 0;
+    const bool hovered = (option.state & QStyle::State_MouseOver) != 0;
+    if (selected || hovered) {
+        QPainterPath path;
+        path.addRoundedRect(QRectF(row), kRadius, kRadius);
+        painter->fillPath(path, selected ? t.accentSoft : t.hover);
+    }
+    const QRect content =
+        paintTrailing(painter, option, index, row.adjusted(kRowPadX, kRowPadY, -kRowPadX, -kRowPadY));
 
     const QFont hwFont = headwordFont(option.font);
     const QFontMetrics hwMetrics(hwFont);
     const QRect top(content.left(), content.top(), content.width(), hwMetrics.height());
     painter->setFont(hwFont);
     painter->setPen(selected ? t.accent : t.text);
-    painter->drawText(
-        top, Qt::AlignLeft | Qt::AlignVCenter,
-        hwMetrics.elidedText(index.data(Qt::DisplayRole).toString(), Qt::ElideRight, top.width()));
+    const QString shown =
+        hwMetrics.elidedText(index.data(Qt::DisplayRole).toString(), Qt::ElideRight, top.width());
+    painter->drawText(top, Qt::AlignLeft | Qt::AlignVCenter, shown);
+    // A form found in place of its headword: "ran from run" (mocks/main.html .via).
+    const QString via = index.data(Model::DetailRole).toString();
+    const int viaLeft = top.left() + hwMetrics.horizontalAdvance(shown) + (kSideGap / 2);
+    if (!via.isEmpty() && viaLeft < top.right()) {
+        const QFont viaFont = pixelFont(option.font, kSidePixelSize + 1);
+        painter->setFont(viaFont);
+        painter->setPen(t.muted);
+        const QRect viaRect(viaLeft, top.top(), top.right() - viaLeft, top.height());
+        painter->drawText(viaRect, Qt::AlignLeft | Qt::AlignVCenter,
+                          QFontMetrics(viaFont).elidedText(via, Qt::ElideRight, viaRect.width()));
+    }
 
     const QFont previewFont = pixelFont(option.font, kPreviewPixelSize);
     const QFontMetrics previewMetrics(previewFont);

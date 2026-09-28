@@ -58,6 +58,9 @@ public:
 private:
     Bundle(SqliteDb db, BundleMeta meta, QString path);
 
+    /// Sets matchedForm on the rows whose headword does not equal (or, with
+    /// `prefix`, start with) `key`: they were found through a form.
+    void fillMatchedForms(QList<EntryPreview>& rows, const QString& key, bool prefix) const;
     [[nodiscard]] QList<EntryPreview> previews(const QString& sql, const QList<QString>& texts,
                                                int limit) const;
 

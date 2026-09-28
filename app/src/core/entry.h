@@ -32,6 +32,9 @@ struct EntryPreview
     QString headword;
     QString preview;   ///< first sense, plain text
     int frequency = 0; ///< 1..5, 0 when the source has no frequency band
+    /// When the query matched an inflected or variant form rather than the
+    /// headword ("ran" for "run"), that form; empty otherwise.
+    QString matchedForm{};
 
     [[nodiscard]] bool operator==(const EntryPreview&) const = default;
 };

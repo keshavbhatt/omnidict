@@ -198,6 +198,8 @@ _CLIENT_QUERIES = (
     "SELECT form, tag FROM forms WHERE entry_id = 1 ORDER BY rowid",
     "SELECT type, target FROM relations WHERE entry_id = 1 ORDER BY rowid",
     "SELECT entry_id FROM fts_map WHERE rowid = 1",
+    "SELECT form FROM forms WHERE entry_id = 1 AND form_norm >= 'x' AND form_norm < 'y'"
+    " ORDER BY form_norm LIMIT 1",
 )
 
 

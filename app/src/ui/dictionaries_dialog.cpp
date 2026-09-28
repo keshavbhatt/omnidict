@@ -176,6 +176,21 @@ public:
 
     void setPercent(int percent) { m_percent = qBound(0, percent, 100); }
 
+    /// While installing, the amount of work is unknown: a quarter arc turns
+    /// instead of filling.
+    void setBusy()
+    {
+        constexpr int kFrameMs = 16;
+        constexpr int kDegreesPerFrame = 6;
+        auto* timer = new QTimer(this);
+        connect(timer, &QTimer::timeout, this, [this] {
+            m_angle = (m_angle + kDegreesPerFrame) % 360;
+            update();
+        });
+        timer->start(kFrameMs);
+        m_busy = true;
+    }
+
 protected:
     void paintEvent(QPaintEvent* /*event*/) override
     {
@@ -188,11 +203,14 @@ protected:
         basePen.setWidthF(3.0);
         painter.setPen(basePen);
         painter.drawEllipse(bounds);
-        if (m_percent > 0) {
-            QPen arcPen(t.accent);
-            arcPen.setWidthF(3.0);
-            arcPen.setCapStyle(Qt::RoundCap);
-            painter.setPen(arcPen);
+        QPen arcPen(t.accent);
+        arcPen.setWidthF(3.0);
+        arcPen.setCapStyle(Qt::RoundCap);
+        painter.setPen(arcPen);
+        if (m_busy) {
+            constexpr int kQuarter = 90 * 16;
+            painter.drawArc(bounds, (90 - m_angle) * 16, -kQuarter);
+        } else if (m_percent > 0) {
             const int span = m_percent * 360 * 16 / 100;
             painter.drawArc(bounds, 90 * 16, -span);
         }
@@ -200,6 +218,8 @@ protected:
 
 private:
     int m_percent = 0;
+    bool m_busy = false;
+    int m_angle = 0; ///< degrees turned clockwise from the top, while busy
 };
 
 } // namespace
@@ -678,7 +698,7 @@ void DictionariesDialog::appendDownloadState(QHBoxLayout* layout, QWidget* row,
     }
     case services::DownloadStatus::Installing: {
         auto* ring = new ProgressRing(row);
-        ring->setPercent(100);
+        ring->setBusy();
         layout->addWidget(ring);
         auto* label = new QLabel(tr("Installing..."), row);
         label->setProperty("muted", true);

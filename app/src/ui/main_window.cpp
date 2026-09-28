@@ -611,7 +611,8 @@ void MainWindow::onCurrentResultChanged(const QModelIndex& current)
     if (entryId == 0) {
         // A saved entry: found again by headword, since entry ids change between versions.
         QMetaObject::invokeMethod(m_lookup, &services::LookupService::resolveHeadword, Qt::QueuedConnection,
-                                  m_entryRequest, current.data(Qt::DisplayRole).toString(), dictId);
+                                  m_entryRequest, current.data(models::ResultsModel::HeadwordRole).toString(),
+                                  dictId);
         return;
     }
     QMetaObject::invokeMethod(m_lookup, &services::LookupService::loadEntry, Qt::QueuedConnection,

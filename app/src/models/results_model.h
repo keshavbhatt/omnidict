@@ -48,7 +48,8 @@ public:
         SideTextRole,   ///< short muted text at the right, such as the dictionary name
         ActionRole,     ///< Action of a heading
         ActionTextRole, ///< the heading's link text
-        DetailRole,     ///< muted text after a heading, such as "(Wiktionary)"
+        DetailRole,     ///< muted text after a heading ("(Wiktionary)") or an entry ("from run")
+        HeadwordRole,   ///< the entry's headword; differs from the display text for a form ("ran")
     };
 
     /// Rows of "Also found in definitions" shown before "Show all".
@@ -95,6 +96,7 @@ private:
         Action action = Action::None;
         QString actionText{};
         QString detail{};
+        QString headword{}; ///< the entry's headword when the row shows one of its forms instead
     };
 
     void rebuild();
@@ -103,6 +105,9 @@ private:
     void appendSuggestions();
     [[nodiscard]] QString nameOf(const QString& dictId) const;
     [[nodiscard]] bool isFavorite(const QString& dictId, const QString& headword) const;
+    /// An entry row: its form when the query matched one ("ran", from run), else its headword.
+    [[nodiscard]] Row entryRow(const QString& dictId, const core::EntryPreview& entry,
+                               const QString& preview) const;
 
     QList<Row> m_rows;
     QHash<QString, QString> m_names;

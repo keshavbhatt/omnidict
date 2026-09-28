@@ -118,6 +118,24 @@ private Q_SLOTS:
         QCOMPARE(headwords(bundle.lookupExact(u"mice"_s)), QStringList{u"mouse"_s});
     }
 
+    void aMatchThroughAFormSaysWhichForm()
+    {
+        const Bundle bundle = openFixture();
+        QCOMPARE(bundle.lookupExact(u"ran"_s).value(0).matchedForm, u"ran"_s);
+        QCOMPARE(bundle.lookupExact(u"Mice"_s).value(0).matchedForm,
+                 u"mice"_s); // as the dictionary spells it
+        QVERIFY(bundle.lookupExact(u"run"_s).value(0).matchedForm.isEmpty());
+        // café's alternative spelling is also its own normalized headword: no note.
+        QVERIFY(bundle.lookupExact(u"cafe"_s).value(0).matchedForm.isEmpty());
+
+        const QList<EntryPreview> rows = bundle.searchPrefix(u"runn"_s, 10);
+        QCOMPARE(headwords(rows), QStringList{u"run"_s});
+        QCOMPARE(rows.first().matchedForm, u"running"_s);
+        for (const EntryPreview& row : bundle.searchPrefix(u"book"_s, 10)) {
+            QVERIFY(row.matchedForm.isEmpty());
+        }
+    }
+
     void unknownWordFindsNothing()
     {
         const Bundle bundle = openFixture();

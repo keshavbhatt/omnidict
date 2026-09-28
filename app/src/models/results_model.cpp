@@ -47,8 +47,8 @@ void ResultsModel::setFavorite(const QString& dictId, const QString& headword, b
     }
     for (qsizetype i = 0; i < m_rows.size(); ++i) {
         Row& row = m_rows[i];
-        if (row.kind == RowKind::Entry && row.dictId == dictId && row.text == headword &&
-            row.favorite != favorite) {
+        if (row.kind == RowKind::Entry && row.dictId == dictId &&
+            (row.headword.isEmpty() ? row.text : row.headword) == headword && row.favorite != favorite) {
             row.favorite = favorite;
             const QModelIndex changed = index(static_cast<int>(i));
             Q_EMIT dataChanged(changed, changed, {FavoriteRole});
@@ -117,18 +117,31 @@ void ResultsModel::clear()
     endResetModel();
 }
 
+ResultsModel::Row ResultsModel::entryRow(const QString& dictId, const core::EntryPreview& entry,
+                                         const QString& preview) const
+{
+    Row row{.kind = RowKind::Entry,
+            .text = entry.headword,
+            .dictId = dictId,
+            .entryId = entry.id,
+            .preview = preview,
+            .favorite = isFavorite(dictId, entry.headword)};
+    if (!entry.matchedForm.isEmpty()) {
+        // mocks/main.html: the form that matched, then "from <headword>".
+        row.text = entry.matchedForm;
+        row.headword = entry.headword;
+        row.detail = tr("from %1").arg(entry.headword);
+    }
+    return row;
+}
+
 void ResultsModel::appendGroups(const QList<core::ResultGroup>& groups)
 {
     for (const core::ResultGroup& group : groups) {
         const auto [name, detail] = splitName(group.dictName);
         m_rows.append({.kind = RowKind::Dictionary, .text = name, .dictId = group.dictId, .detail = detail});
         for (const core::EntryPreview& entry : group.rows) {
-            m_rows.append({.kind = RowKind::Entry,
-                           .text = entry.headword,
-                           .dictId = group.dictId,
-                           .entryId = entry.id,
-                           .preview = entry.preview,
-                           .favorite = isFavorite(group.dictId, entry.headword)});
+            m_rows.append(entryRow(group.dictId, entry, entry.preview));
         }
     }
 }
@@ -174,12 +187,7 @@ void ResultsModel::appendDefinitions()
             if (collapse && shown == kCollapsedDefinitions) {
                 return;
             }
-            m_rows.append({.kind = RowKind::Entry,
-                           .text = entry.headword,
-                           .dictId = group.dictId,
-                           .entryId = entry.id,
-                           .preview = name + u": "_s + entry.preview,
-                           .favorite = isFavorite(group.dictId, entry.headword)});
+            m_rows.append(entryRow(group.dictId, entry, name + u": "_s + entry.preview));
             ++shown;
         }
     }
@@ -239,6 +247,8 @@ QVariant ResultsModel::data(const QModelIndex& index, int role) const
         return QVariant::fromValue(row.action);
     case ActionTextRole:
         return row.actionText;
+    case HeadwordRole:
+        return row.headword.isEmpty() ? row.text : row.headword;
     case DetailRole:
         return row.detail;
     default:
@@ -271,6 +281,7 @@ QHash<int, QByteArray> ResultsModel::roleNames() const
     names.insert(ActionRole, "action");
     names.insert(ActionTextRole, "actionText");
     names.insert(DetailRole, "detail");
+    names.insert(HeadwordRole, "headword");
     return names;
 }
 
