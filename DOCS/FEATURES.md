@@ -18,10 +18,10 @@ expects every ktechpit desktop app to have.
 | A6 | `package.py`: sqlite to `.odict` (zstd) plus `manifest.json` and sha256 | M1 | KEEP | done |
 | A7 | `catalog.py`: regenerate `catalog.json` from all manifests | M1 | KEEP | done |
 | A8 | Kaikki converter (Wiktionary via kaikki.org) | M1 | KEEP | done |
-| A9 | FreeDict converter | M4 | KEEP | planned |
-| A10 | WordNet converter | M4 | KEEP | planned |
-| A11 | CC-CEDICT converter | M4 | KEEP | planned |
-| A12 | JMdict converter | M4 | KEEP | planned |
+| A9 | FreeDict converter | M4 | KEEP | done: `converters/freedict.py`, 291 of 305 dictionaries eligible (free licence read from each TEI header, at least 1000 headwords), all built and packaged locally |
+| A10 | WordNet converter | M4 | KEEP | done: `converters/oewn.py` (Open English WordNet 2025, CC BY 4.0), `oewn-en` 128,009 entries |
+| A11 | CC-CEDICT converter | M4 | KEEP | done: `converters/cedict.py`, `cedict-zh-en` 121,362 entries, pinyin as forms |
+| A12 | JMdict converter | M4 | KEEP | done: `converters/jmdict.py`, `jmdict-ja-en` 218,840 entries, readings and romaji as forms |
 | A13 | KEngDic converter | M4 | KEEP | planned |
 | A14 | StarDict community import, opt-in "unofficial" tier after licence review | v2 | LATER | - |
 

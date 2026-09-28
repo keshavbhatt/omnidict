@@ -251,7 +251,14 @@
         "Abk.": "Abkürzung",
         "AU": "Abgasuntersuchung"
       },
-      "full_text": "water"
+      "full_text": "water",
+      "suggestions": {
+        "Fahrad": "fahrrad",
+        "Schuhle": "schule",
+        "Strase": "strasse",
+        "Bahnhoff": "bahnhof",
+        "Wohnnung": "wohnung"
+      }
     },
     "freedict-fr-en": {
       "headwords": [
@@ -277,7 +284,14 @@
         "pain"
       ],
       "forms": {},
-      "full_text": "dog"
+      "full_text": "dog",
+      "suggestions": {
+        "maisson": "maison",
+        "fromagge": "fromage",
+        "voitur": "voiture",
+        "boulangeri": "boulangerie",
+        "ordinateurr": "ordinateur"
+      }
     }
   }
 }

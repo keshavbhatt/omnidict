@@ -248,8 +248,11 @@ Converter: `pipeline/omnipipe/converters/freedict.py`, run as
   plain-text passes were added; see `detect_license` in `freedict.py`).
 - **Several licences.** A header naming more than one licence gets an SPDX `AND` expression
   of all of them (deu-eng: "GPL-3.0-only AND AGPL-3.0-only", each covering part of the
-  work). `OR` is never inferred: complying with every licence named is always safe, and GPL
-  boilerplate ("or (at your option) any later version") would make a choice look present.
+  work). `OR` is used only for an explicit capital "OR under the terms" (eng-ell: GPL-2.0 or
+  later OR CC BY-SA 3.0); anything else stays `AND`, which complies with every licence named,
+  while GPL boilerplate ("or (at your option) any later version") would fake a choice. Within
+  one licence family only the highest version is kept (deu-eng's GPLv2+ component is carried
+  under GPLv3).
 - **Copyleft obligations.** Most FreeDict dictionaries are GPL or CC BY-SA. Anyone who
   distributes a bundle built from a GPL dictionary must also make its corresponding source
   available: the FreeDict `.src.tar.xz` release (its URL is in the index and in
@@ -333,7 +336,7 @@ Converter: `pipeline/omnipipe/converters/freedict.py`, run as
 | freedict-de-cs | German-Czech | 19866 | CC-BY-SA-3.0 |
 | freedict-de-da | German-Danish | 12645 | CC-BY-SA-3.0 |
 | freedict-de-el | German-Greek | 10792 | CC-BY-SA-3.0 |
-| freedict-de-en | German-English | 517534 | GPL-3.0-only |
+| freedict-de-en | German-English | 517534 | GPL-3.0-only AND AGPL-3.0-only |
 | freedict-de-es | German-Spanish | 36744 | CC-BY-SA-3.0 |
 | freedict-de-fi | German-Finnish | 13028 | CC-BY-SA-3.0 |
 | freedict-de-fr | German-French | 59631 | CC-BY-SA-3.0 |
@@ -377,8 +380,8 @@ Converter: `pipeline/omnipipe/converters/freedict.py`, run as
 | freedict-en-ca | English-Catalan | 35163 | CC-BY-SA-3.0 |
 | freedict-en-cs | English-Czech | 150004 | GPL-2.0-or-later |
 | freedict-en-cy | English-Welsh | 12630 | GPL-2.0-or-later |
-| freedict-en-de | English-German | 460315 | GPL-3.0-only |
-| freedict-en-el | English-Greek | 20973 | GPL-2.0-or-later |
+| freedict-en-de | English-German | 460315 | GPL-3.0-only AND AGPL-3.0-only |
+| freedict-en-el | English-Greek | 20973 | GPL-2.0-or-later OR CC-BY-SA-3.0 |
 | freedict-en-es | English-Spanish | 64258 | CC-BY-SA-3.0 |
 | freedict-en-fi | English-Finnish | 75586 | CC-BY-SA-3.0 |
 | freedict-en-fr | English-French | 8799 | GPL-2.0-or-later |

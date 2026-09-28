@@ -386,6 +386,9 @@ _UNVERSIONED_FAMILY_PATTERNS: Sequence[tuple[re.Pattern[str], str]] = (
     (re.compile(r"gnu\.org/(licenses|copyleft)/fdl\.html"), "GFDL"),
 )
 _OR_LATER_RE = re.compile(r"or later|any later version|and later", re.IGNORECASE)
+# Only a capital "OR" before "under the terms" marks a choice between licences;
+# GPL boilerplate's lower-case "or (at your option)" does not.
+_EXPLICIT_CHOICE_RE = re.compile(r"\bOR under the terms")
 _VERSION_NUMBER_RE = re.compile(r"\bver(?:sion)?\.?\s*(\d)(?:\.\d+)?", re.IGNORECASE)
 # A Creative Commons licence stated as plain text, with no `<ref>` at all
 # (seen in a handful of older headers, e.g. "Creative Commons Attribution 3.0
@@ -430,7 +433,17 @@ def detect_license(
         # the AGPLv3 ... each applies to different parts"): an SPDX AND expression.
         # Always AND: that complies with every licence named, whereas reading a
         # choice into GPL boilerplate ("or (at your option)") could under-comply.
-        return " AND ".join(spdx for spdx, _ in found), found[0][1]
+        # Within one family only the highest version counts: deu-eng also mentions its
+        # GPLv2+ component, which the combined work carries under GPLv3.
+        best: dict[str, tuple[str, str]] = {}
+        for spdx, target in found:
+            spdx_family, _, spdx_version = spdx.partition("-")
+            if spdx_family not in best or spdx_version > best[spdx_family][0].partition("-")[2]:
+                best[spdx_family] = (spdx, target)
+        kept = [pair for pair in found if best[pair[0].partition("-")[0]] == pair]
+        # eng-ell spells out a choice: "GPL ... OR under the terms of CC BY-SA".
+        joiner = " OR " if _EXPLICIT_CHOICE_RE.search(availability_text) else " AND "
+        return joiner.join(spdx for spdx, _ in kept), kept[0][1]
     for target, text in refs:
         for pattern, family in _UNVERSIONED_FAMILY_PATTERNS:
             if pattern.search(target):
