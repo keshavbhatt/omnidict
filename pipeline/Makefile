@@ -42,7 +42,7 @@ BUILD_FLAGS_freedict-de-en := --no-vacuum
 BUILD_FLAGS_freedict-en-de := --no-vacuum
 
 .PHONY: sync test lint format fixture fetch build package catalog serve publish all clean \
-	require-dict
+	require-dict list-dicts
 
 sync:
 	uv sync
@@ -97,6 +97,22 @@ publish:
 bundle-%:
 	$(MAKE) build DICT=$*
 	$(MAKE) package DICT=$*
+
+# The rolling release (ADR-016, .github/workflows/dictionaries.yml): fetch, build and
+# package one dictionary with its release-asset URL, then drop the built database and
+# the downloaded source, so a CI runner's disk only ever holds one dictionary.
+RELEASE_URL ?=
+list-dicts:
+	@printf '%s\n' $(DICTS)
+
+ci-bundle-%:
+	@test -n "$(RELEASE_URL)" || { echo "RELEASE_URL is required" >&2; exit 1; }
+	uv run python -m omnipipe.converters.$(call converter,$*) --dict $* --out out $(BUILD_FLAGS_$*)
+	uv run python -m omnipipe.package --in out/$*/dict.sqlite --publish $(PUBLISH_DIR) \
+		--base-url $(RELEASE_URL) --flat-urls
+	rm -rf out/$*
+	@# Downloaded sources go too, but only on CI (GitHub sets CI=true): locally they are a cache.
+	$(if $(CI),find sources -type f \( -name '*.jsonl.gz' -o -name '*.tar.xz' -o -name '*.xml.gz' \) -delete)
 
 all: $(addprefix bundle-,$(DICTS))
 	$(MAKE) catalog

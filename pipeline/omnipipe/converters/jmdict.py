@@ -265,6 +265,9 @@ def dictionary_spec(version: str) -> DictSpec:
         license_url=_LICENSE_URL,
         attribution=_ATTRIBUTION,
         kind="bilingual",
+        source_lang_name="Japanese",
+        target_lang_name="English",
+        source_url=JMDICT_URL,
     )
 
 

@@ -12,7 +12,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 POS_TAGS: frozenset[str] = frozenset(
     {
@@ -347,6 +347,12 @@ class DictSpec:
     license_url: str
     attribution: str
     kind: str
+    # Optional (schema_version 3): English language names for codes a client may not
+    # know ("Old English" for `ang`), and where the upstream source can be downloaded,
+    # which the copyleft licences need offered (DOCS/schema.md).
+    source_lang_name: str = ""
+    target_lang_name: str = ""
+    source_url: str = ""
 
     _FIELDS = frozenset(
         {
@@ -360,6 +366,9 @@ class DictSpec:
             "license_url",
             "attribution",
             "kind",
+            "source_lang_name",
+            "target_lang_name",
+            "source_url",
         }
     )
 
@@ -393,10 +402,13 @@ class DictSpec:
             license_url=license_url,
             attribution=attribution,
             kind=kind,
+            source_lang_name=_optional_str(obj, "source_lang_name", "$") or "",
+            target_lang_name=_optional_str(obj, "target_lang_name", "$") or "",
+            source_url=_optional_str(obj, "source_url", "$") or "",
         )
 
     def to_json(self) -> dict[str, object]:
-        return {
+        out: dict[str, object] = {
             "dict_id": self.dict_id,
             "name": self.name,
             "source_lang": self.source_lang,
@@ -408,3 +420,11 @@ class DictSpec:
             "attribution": self.attribution,
             "kind": self.kind,
         }
+        for key, value in (
+            ("source_lang_name", self.source_lang_name),
+            ("target_lang_name", self.target_lang_name),
+            ("source_url", self.source_url),
+        ):
+            if value:
+                out[key] = value
+        return out

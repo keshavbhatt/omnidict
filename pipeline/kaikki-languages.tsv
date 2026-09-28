@@ -100,11 +100,14 @@ wikt-kmr-en	Northern Kurdish	kmr	8166
 wikt-oc-en	Occitan	oc	8161
 wikt-yo-en	Yoruba	yo	8101
 wikt-mak-en	Makasar	mak	7996
+wikt-gem-pro-en	Proto-Germanic	gem-pro	7768
 wikt-ady-en	West Circassian	ady	7733
 wikt-jv-en	Javanese	jv	7710
 wikt-zlw-opl-en	Old Polish	zlw-opl	7402
 wikt-se-en	Northern Sami	se	7350
+wikt-gmw-pro-en	Proto-West Germanic	gmw-pro	7343
 wikt-sco-en	Scots	sco	7236
+wikt-sla-pro-en	Proto-Slavic	sla-pro	7192
 wikt-haw-en	Hawaiian	haw	6491
 wikt-liv-en	Livonian	liv	6410
 wikt-aht-en	Ahtna	aht	6322
@@ -140,6 +143,7 @@ wikt-ia-en	Interlingua	ia	4360
 wikt-mg-en	Malagasy	mg	4316
 wikt-dum-en	Middle Dutch	dum	4311
 wikt-goh-en	Old High German	goh	4283
+wikt-urj-fin-pro-en	Proto-Finnic	urj-fin-pro	4244
 wikt-su-en	Sundanese	su	4238
 wikt-csb-en	Kashubian	csb	4162
 wikt-taa-en	Lower Tanana	taa	4116
@@ -192,6 +196,7 @@ wikt-mch-en	Ye'kwana	mch	2585
 wikt-shi-en	Tashelhit	shi	2566
 wikt-gmh-en	Middle High German	gmh	2559
 wikt-hil-en	Hiligaynon	hil	2550
+wikt-ine-pro-en	Proto-Indo-European	ine-pro	2550
 wikt-ain-en	Ainu	ain	2546
 wikt-stq-en	Saterland Frisian	stq	2524
 wikt-ht-en	Haitian Creole	ht	2521
@@ -223,6 +228,7 @@ wikt-udm-en	Udmurt	udm	2042
 wikt-mh-en	Marshallese	mh	2041
 wikt-txg-en	Tangut	txg	2035
 wikt-ilo-en	Ilocano	ilo	2027
+wikt-smi-pro-en	Proto-Samic	smi-pro	2022
 wikt-gmq-osw-en	Old Swedish	gmq-osw	2015
 wikt-cv-en	Chuvash	cv	2001
 wikt-roa-opt-en	Old Galician-Portuguese	roa-opt	1993
@@ -230,6 +236,7 @@ wikt-tly-en	Talysh	tly	1981
 wikt-sjd-en	Kildin Sami	sjd	1981
 wikt-wyi-en	Woiwurrung	wyi	1957
 wikt-arz-en	Egyptian Arabic	arz	1955
+wikt-cel-pro-en	Proto-Celtic	cel-pro	1932
 wikt-ak-en	Akan	ak	1921
 wikt-ki-en	Kikuyu	ki	1915
 wikt-hsb-en	Upper Sorbian	hsb	1915
@@ -264,6 +271,7 @@ wikt-jje-en	Jeju	jje	1516
 wikt-uby-en	Ubykh	uby	1480
 wikt-kok-en	Konkani	kok	1475
 wikt-mns-nor-en	Northern Mansi	mns-nor	1469
+wikt-trk-pro-en	Proto-Turkic	trk-pro	1458
 wikt-kea-en	Kabuverdianu	kea	1429
 wikt-myv-en	Erzya	myv	1426
 wikt-ist-en	Istriot	ist	1422

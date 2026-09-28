@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import sqlite3
@@ -18,7 +19,7 @@ from omnipipe.package import (
     read_meta,
     verify_package,
 )
-from omnipipe.schema import DictSpec
+from omnipipe.schema import SCHEMA_VERSION, DictSpec
 
 _BUILT_AT = datetime(2026, 9, 27, tzinfo=UTC)
 
@@ -76,7 +77,7 @@ def test_package_bundle_layout_and_manifest(fixtures_dir: Path, tmp_path: Path) 
     assert manifest["name"] == "Sample English"
     assert manifest["kind"] == "monolingual"
     assert manifest["version"] == "2026.09.1"
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == SCHEMA_VERSION
     assert manifest["entry_count"] == 14
     assert manifest["size_installed"] == sqlite_path.stat().st_size
     assert manifest["size_compressed"] == odict_path.stat().st_size
@@ -207,10 +208,56 @@ def test_read_meta_wrong_schema_version_raises(fixtures_dir: Path, tmp_path: Pat
     sqlite_path = _build(fixtures_dir, tmp_path / "build")
     conn = sqlite3.connect(sqlite_path)
     try:
-        conn.execute("UPDATE meta SET value = '3' WHERE key = 'schema_version'")
+        conn.execute(
+            "UPDATE meta SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION + 1),)
+        )
         conn.commit()
     finally:
         conn.close()
 
     with pytest.raises(PackageError, match="schema_version"):
         read_meta(sqlite_path)
+
+
+def test_optional_language_names_and_source_url_reach_the_manifest(
+    fixtures_dir: Path, tmp_path: Path
+) -> None:
+    spec = dataclasses.replace(
+        _load_spec(fixtures_dir),
+        source_lang_name="English",
+        target_lang_name="English",
+        source_url="https://example.org/sample-en.tar.xz",
+    )
+    entries = list(read_jsonl(fixtures_dir / "sample-en.jsonl"))
+    sqlite_path = build_bundle(entries, spec, tmp_path / "build", built_at=_BUILT_AT)
+    manifest = package_bundle(sqlite_path, tmp_path / "publish", "http://localhost:8000")
+    keys = list(manifest.keys())
+    assert keys[keys.index("target_lang") + 1 : keys.index("kind")] == [
+        "source_lang_name",
+        "target_lang_name",
+    ]
+    assert manifest["source_lang_name"] == "English"
+    source = manifest["source"]
+    assert isinstance(source, dict)
+    assert source["url"] == "https://example.org/sample-en.tar.xz"
+
+
+def test_dict_spec_round_trips_the_optional_fields() -> None:
+    obj: dict[str, object] = {
+        "dict_id": "wikt-ang-en",
+        "name": "Old English-English (Wiktionary)",
+        "source_lang": "ang",
+        "target_lang": "en",
+        "version": "2026.09.1",
+        "publisher": "Wiktionary contributors",
+        "license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "attribution": "Wiktionary",
+        "kind": "bilingual",
+        "source_lang_name": "Old English",
+        "target_lang_name": "English",
+    }
+    spec = DictSpec.from_json(obj)
+    assert spec.source_lang_name == "Old English"
+    assert spec.source_url == ""
+    assert spec.to_json() == obj  # empty optional fields are left out

@@ -18,6 +18,7 @@ import json
 import logging
 import re
 import sys
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -115,7 +116,9 @@ def _int_field(manifest: dict[str, object], key: str, manifest_path: Path) -> in
     return value
 
 
-def _check_odict_matches(manifest_path: Path, manifest: dict[str, object]) -> None:
+def _check_odict_matches(
+    manifest_path: Path, manifest: dict[str, object], *, require_bundle: bool = True
+) -> None:
     dict_id = str(manifest["dict_id"])
     version = str(manifest["version"])
     version_dir = manifest_path.parent
@@ -132,6 +135,8 @@ def _check_odict_matches(manifest_path: Path, manifest: dict[str, object]) -> No
             f"manifest dict_id {dict_id!r}"
         )
 
+    if not require_bundle:
+        return  # the bundle was checked when it was packaged, on another machine (CI)
     odict_path = version_dir / f"{dict_id}{ODICT_SUFFIX}"
     if not odict_path.is_file():
         raise CatalogError(f"{manifest_path}: missing bundle file {odict_path}")
@@ -145,10 +150,32 @@ def _check_odict_matches(manifest_path: Path, manifest: dict[str, object]) -> No
         )
 
 
+def _previous_entries(previous: Mapping[str, object] | None) -> list[dict[str, object]]:
+    """The manifests listed in an already published catalogue, each checked like one on disk."""
+    if previous is None:
+        return []
+    dictionaries = previous.get("dictionaries")
+    if not isinstance(dictionaries, list):
+        raise CatalogError("previous catalogue: 'dictionaries' is not a list")
+    entries: list[dict[str, object]] = []
+    for item in dictionaries:
+        if not isinstance(item, dict):
+            raise CatalogError("previous catalogue: an entry is not a JSON object")
+        missing = [key for key in _REQUIRED_MANIFEST_KEYS if key not in item]
+        if missing:
+            raise CatalogError(
+                f"previous catalogue: {item.get('dict_id')!r} lacks {', '.join(missing)}"
+            )
+        entries.append(item)
+    return entries
+
+
 def build_catalog(
     publish_root: Path,
     *,
     generated_at: datetime | None = None,
+    previous: Mapping[str, object] | None = None,
+    require_bundles: bool = True,
 ) -> dict[str, object]:
     """Rebuild `publish_root/catalog.json` from every manifest on disk.
 
@@ -156,22 +183,31 @@ def build_catalog(
     only the highest version per `dict_id` (by `version_key`), and writes
     the result sorted by `dict_id`. Raises `CatalogError` if zero manifests
     are found or any manifest fails validation.
+
+    `previous` is the catalogue already published: its entries stay unless a
+    manifest on disk has the same `dict_id` with an equal or higher version, so a
+    run that rebuilt only some dictionaries still lists all of them.
+    `require_bundles=False` trusts each manifest's size and checksum without the
+    `.odict` next to it, for a CI job that only collected manifests.
     """
     manifest_paths = sorted(publish_root.glob("dicts/*/*/manifest.json"))
-    if not manifest_paths:
+    if not manifest_paths and not previous:
         raise CatalogError(f"{publish_root}: no manifest.json files found under dicts/*/*/")
 
     best_by_id: dict[str, tuple[tuple[int, ...], dict[str, object]]] = {}
+    for manifest in _previous_entries(previous):
+        best_by_id[str(manifest["dict_id"])] = (version_key(str(manifest["version"])), manifest)
     for manifest_path in manifest_paths:
         manifest = _load_manifest(manifest_path)
-        _check_odict_matches(manifest_path, manifest)
+        _check_odict_matches(manifest_path, manifest, require_bundle=require_bundles)
 
         dict_id = str(manifest["dict_id"])
         version = str(manifest["version"])
         key = version_key(version)
 
         current = best_by_id.get(dict_id)
-        if current is None or key > current[0]:
+        # >=: a manifest on disk replaces a previous catalogue entry of the same version.
+        if current is None or key >= current[0]:
             if current is not None:
                 logger.warning(
                     "catalog: skipping older version %s of %s (keeping %s)",
@@ -205,6 +241,17 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="python -m omnipipe.catalog")
     parser.add_argument("--publish", dest="publish_root", required=True, type=Path)
     parser.add_argument("--generated-at", dest="generated_at", default=None)
+    parser.add_argument(
+        "--previous",
+        type=Path,
+        default=None,
+        help="the catalogue already published: its entries stay unless rebuilt (rolling release)",
+    )
+    parser.add_argument(
+        "--manifests-only",
+        action="store_true",
+        help="trust each manifest without its .odict on disk (the bundles were uploaded by CI)",
+    )
     return parser.parse_args(argv)
 
 
@@ -219,8 +266,18 @@ def main(argv: list[str] | None = None) -> int:
             if args.generated_at is not None
             else None
         )
-        catalog = build_catalog(args.publish_root, generated_at=generated_at)
-    except (CatalogError, ValueError) as exc:
+        previous = (
+            json.loads(args.previous.read_text(encoding="utf-8"))
+            if args.previous is not None
+            else None
+        )
+        catalog = build_catalog(
+            args.publish_root,
+            generated_at=generated_at,
+            previous=previous,
+            require_bundles=not args.manifests_only,
+        )
+    except (CatalogError, ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 

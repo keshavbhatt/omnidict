@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from omnipipe.build import BuildError, build_bundle, read_jsonl
-from omnipipe.schema import DictSpec, Entry, SchemaError
+from omnipipe.schema import SCHEMA_VERSION, DictSpec, Entry, SchemaError
 
 _BUILT_AT = datetime(2026, 9, 27, tzinfo=UTC)
 
@@ -73,7 +73,7 @@ def test_build_sample_fixture(fixtures_dir: Path, tmp_path: Path) -> None:
         }
         assert required_keys <= meta.keys()
         assert meta["entry_count"] == "14"
-        assert meta["schema_version"] == "2"
+        assert meta["schema_version"] == str(SCHEMA_VERSION)
 
         tables = {
             row[0]

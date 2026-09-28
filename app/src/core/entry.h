@@ -23,6 +23,10 @@ struct BundleMeta
     QString attribution;
     qint64 entryCount = 0;
     QString builtAt; ///< UTC, ISO 8601
+    // Optional since schema_version 3 (DOCS/schema.md); empty when absent.
+    QString sourceLangName; ///< English name, for codes a locale database may not know
+    QString targetLangName;
+    QString sourceUrl; ///< where the upstream source can be downloaded
 };
 
 /// One row of a result list: enough to paint it without loading the entry.

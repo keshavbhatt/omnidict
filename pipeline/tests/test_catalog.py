@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 from omnipipe.build import build_bundle, read_jsonl
-from omnipipe.catalog import CatalogError, build_catalog, version_key
-from omnipipe.package import package_bundle
+from omnipipe.catalog import _REQUIRED_MANIFEST_KEYS, CatalogError, build_catalog, version_key
+from omnipipe.package import package_bundle, release_asset_name
 from omnipipe.schema import DictSpec
 
 _BUILT_AT = datetime(2026, 9, 27, tzinfo=UTC)
@@ -127,3 +127,55 @@ def test_version_key_ordering() -> None:
 def test_version_key_rejects_non_numeric_parts() -> None:
     with pytest.raises(CatalogError):
         version_key("2026.x.1")
+
+
+def test_flat_urls_name_the_release_asset(fixtures_dir: Path, tmp_path: Path) -> None:
+    sqlite_path = _build(fixtures_dir, tmp_path / "build")
+    base = "https://github.com/o/r/releases/download/dictionaries"
+    manifest = package_bundle(sqlite_path, tmp_path / "publish", base, flat_urls=True)
+    assert manifest["url"] == f"{base}/sample-en-2026.09.1.odict"
+    assert release_asset_name("sample-en", "2026.09.1") == "sample-en-2026.09.1.odict"
+
+
+def test_previous_catalogue_entries_stay_unless_rebuilt(fixtures_dir: Path, tmp_path: Path) -> None:
+    publish_root = tmp_path / "publish"
+    sqlite_path = _build(fixtures_dir, tmp_path / "build")
+    rebuilt = package_bundle(sqlite_path, publish_root, "http://localhost:8000")
+    other = {**rebuilt, "dict_id": "other-en", "version": "2026.01.1"}
+    stale = {**rebuilt, "sha256": "old", "version": "2026.09.1"}
+    previous = {"catalog_version": 1, "dictionaries": [other, stale]}
+
+    catalog = build_catalog(publish_root, previous=previous)
+
+    dictionaries = catalog["dictionaries"]
+    assert isinstance(dictionaries, list)
+    assert [d["dict_id"] for d in dictionaries] == ["other-en", "sample-en"]
+    assert dictionaries[1]["sha256"] == rebuilt["sha256"]  # same version: the new build wins
+
+
+def test_manifests_only_trusts_a_manifest_without_its_bundle(
+    fixtures_dir: Path, tmp_path: Path
+) -> None:
+    publish_root = tmp_path / "publish"
+    sqlite_path = _build(fixtures_dir, tmp_path / "build")
+    package_bundle(sqlite_path, publish_root, "http://localhost:8000")
+    for odict in publish_root.glob("dicts/*/*/*.odict"):
+        odict.unlink()  # uploaded and deleted, as the CI job does
+
+    with pytest.raises(CatalogError, match="missing bundle file"):
+        build_catalog(publish_root)
+    catalog = build_catalog(publish_root, require_bundles=False)
+    dictionaries = catalog["dictionaries"]
+    assert isinstance(dictionaries, list)
+    assert len(dictionaries) == 1
+
+
+def test_a_previous_catalogue_alone_is_enough(tmp_path: Path) -> None:
+    entry: dict[str, object] = dict.fromkeys(_REQUIRED_MANIFEST_KEYS, "x")
+    entry.update({"dict_id": "only-en", "version": "1"})
+    catalog = build_catalog(tmp_path, previous={"dictionaries": [entry]})
+    dictionaries = catalog["dictionaries"]
+    assert isinstance(dictionaries, list)
+    assert dictionaries[0]["dict_id"] == "only-en"
+    with pytest.raises(CatalogError, match="lacks"):
+        build_catalog(tmp_path, previous={"dictionaries": [{"dict_id": "bad"}]})

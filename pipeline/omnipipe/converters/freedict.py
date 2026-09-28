@@ -742,6 +742,10 @@ def make_spec(entry: DatabaseEntry, header: HeaderInfo) -> DictSpec:
         license_url=header.license_url,
         attribution=attribution,
         kind="bilingual",
+        source_lang_name=lang_name(entry.src_lang3),
+        target_lang_name=lang_name(entry.tgt_lang3),
+        # The TEI source release: what the GPL dictionaries must offer (DOCS/sources.md).
+        source_url=entry.src_url,
     )
 
 

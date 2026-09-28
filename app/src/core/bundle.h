@@ -21,7 +21,7 @@ class Bundle
 {
 public:
     /// The highest `meta.schema_version` this build reads.
-    static constexpr int kSupportedSchemaVersion = 2;
+    static constexpr int kSupportedSchemaVersion = 3;
 
     /// Opens the bundle and checks that it is one this build can read:
     /// required metadata present, schema version not newer than supported.

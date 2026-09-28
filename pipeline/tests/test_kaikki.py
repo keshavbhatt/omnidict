@@ -448,10 +448,8 @@ def test_parse_index_reads_names_and_sense_counts() -> None:
 
 def test_eligible_languages_apply_the_cut_off_and_the_exclusions() -> None:
     parsed = kaikki.parse_index(INDEX_PAGE)
-    kept = kaikki.eligible_languages(parsed, min_senses=1000, include_reconstructed=False)
-    assert [k.language for k in kept] == ["Lipo", "Old Lipo"]
-    with_proto = kaikki.eligible_languages(parsed, min_senses=1000, include_reconstructed=True)
-    assert [k.language for k in with_proto] == ["Lipo", "Old Lipo", "Proto-Lipo"]
+    kept = kaikki.eligible_languages(parsed, min_senses=1000)
+    assert [k.language for k in kept] == ["Lipo", "Old Lipo", "Proto-Lipo"]
 
 
 def test_dump_urls_drop_spaces_and_punctuation_from_the_file_name() -> None:
@@ -471,6 +469,9 @@ def test_dictionary_ids_and_names_follow_the_language() -> None:
         "English (Wiktionary)",
         "monolingual",
     )
+    spec = kaikki.dictionary_for("Old English", "ang").spec("2026.09.1")
+    assert (spec.source_lang_name, spec.target_lang_name) == ("Old English", "English")
+    assert spec.source_url == kaikki.dump_url("Old English")
     old = kaikki.dictionary_for("Old Polish", "zlw-opl")
     assert (old.dict_id, old.name, old.kind) == (
         "wikt-zlw-opl-en",
@@ -496,7 +497,7 @@ def test_the_checked_in_languages_file_keeps_the_owner_decisions() -> None:
     assert "Old English" in languages
     assert "Translingual" not in languages
     assert not {"Mandarin", "Cantonese", "Hokkien"} & languages
-    assert not any(language.startswith("Proto-") for language in languages)
+    assert "Proto-Germanic" in languages  # reconstructed languages are in (owner, 2026-09-28)
     assert len(ids) == len(kaikki.DICTIONARIES)
 
 
@@ -516,3 +517,10 @@ def test_first_record_code_reads_only_the_start_of_the_dump(
     assert ranges == ["bytes=0-131071"]
     with pytest.raises(KaikkiError, match="not a Lipo word"):
         kaikki.first_record_code("Lipo")
+
+
+def test_a_leading_asterisk_is_dropped_from_forms() -> None:
+    [entry] = convert(
+        [record("aba", "adv", [sense("away")], forms=[{"form": "*afa"}, {"form": "*aba"}])]
+    )
+    assert [f.form for f in entry.forms] == ["afa"]  # "*aba" is the headword itself

@@ -209,6 +209,9 @@ class KaikkiDict:
             license_url=_LICENSE_URL,
             attribution=_ATTRIBUTION,
             kind=self.kind,
+            source_lang_name=self.language,
+            target_lang_name="English",
+            source_url=dump_url(self.language),
         )
 
 
@@ -218,8 +221,9 @@ class KaikkiDict:
 LANGUAGES_FILE = Path(__file__).resolve().parents[2] / "kaikki-languages.tsv"
 _LANGUAGES_HEADER = ("dict_id", "language", "lang_code", "senses")
 
-# Owner decision 2026-09-28: every language with at least this many senses, historical
-# languages included, Translingual (symbols and scientific names) left out.
+# Owner decisions 2026-09-28: every language with at least this many senses, historical
+# and reconstructed (Proto-) languages included, Translingual (symbols and scientific
+# names) left out.
 MIN_SENSES = 1000
 _EXCLUDED_LANGUAGES = frozenset(
     {
@@ -393,15 +397,13 @@ def parse_index(page: str) -> list[IndexedLanguage]:
 
 
 def eligible_languages(
-    indexed: Iterable[IndexedLanguage], *, min_senses: int, include_reconstructed: bool
+    indexed: Iterable[IndexedLanguage], *, min_senses: int
 ) -> list[IndexedLanguage]:
-    """The languages to build: big enough, not excluded, reconstructed ones on request."""
+    """The languages to build: big enough and not excluded (reconstructed ones included)."""
     return [
         entry
         for entry in indexed
-        if entry.senses >= min_senses
-        and entry.language not in _EXCLUDED_LANGUAGES
-        and (include_reconstructed or not entry.language.startswith("Proto-"))
+        if entry.senses >= min_senses and entry.language not in _EXCLUDED_LANGUAGES
     ]
 
 
@@ -435,14 +437,12 @@ def first_record_code(language: str, *, timeout: float = 60.0) -> str:
 
 
 def discover(
-    *, min_senses: int = MIN_SENSES, include_reconstructed: bool = False, timeout: float = 60.0
+    *, min_senses: int = MIN_SENSES, timeout: float = 60.0
 ) -> list[tuple[KaikkiDict, int]]:
     """Every eligible language on kaikki.org as a dictionary, with its sense count."""
     page = _get(f"{KAIKKI_BASE_URL}/", timeout=timeout).decode("utf-8")
     found: list[tuple[KaikkiDict, int]] = []
-    for entry in eligible_languages(
-        parse_index(page), min_senses=min_senses, include_reconstructed=include_reconstructed
-    ):
+    for entry in eligible_languages(parse_index(page), min_senses=min_senses):
         code = first_record_code(entry.language, timeout=timeout)
         found.append((dictionary_for(entry.language, code), entry.senses))
         logger.info("%s: %s, %d senses", entry.language, code, entry.senses)
@@ -669,7 +669,9 @@ def _pronunciations(record: Json) -> list[Pronunciation]:
 def _forms(record: Json, headword: str) -> list[Form]:
     forms: list[Form] = []
     for item in _objects(record, "forms"):
-        text = _str(item, "form").strip()
+        # A leading asterisk marks a reconstructed form ("*aba"); it is also the search
+        # wildcard, so it is not part of what a reader types.
+        text = _str(item, "form").strip().lstrip("*")
         tags = _strings(item, "tags")
         if (
             not text
@@ -879,11 +881,6 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help=f"rewrite {LANGUAGES_FILE.name} from kaikki.org's current language index",
     )
     parser.add_argument("--min-senses", type=int, default=MIN_SENSES, help="with --discover")
-    parser.add_argument(
-        "--include-reconstructed",
-        action="store_true",
-        help="with --discover, keep reconstructed (Proto-) languages",
-    )
     return parser.parse_args(argv)
 
 
@@ -893,9 +890,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     if args.discover:
         try:
-            found = discover(
-                min_senses=args.min_senses, include_reconstructed=args.include_reconstructed
-            )
+            found = discover(min_senses=args.min_senses)
         except KaikkiError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1

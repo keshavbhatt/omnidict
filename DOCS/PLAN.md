@@ -343,9 +343,11 @@ The same normalization function must exist in Python (`pipeline/omnipipe/normali
   "name": "Hindi to English (Wiktionary)",
   "source_lang": "hi",
   "target_lang": "en",
+  "source_lang_name": "Hindi",
+  "target_lang_name": "English",
   "kind": "bilingual",
   "version": "2026.09.1",
-  "schema_version": 2,
+  "schema_version": 3,
   "publisher": "Wiktionary contributors",
   "license": "CC-BY-SA-4.0",
   "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -356,9 +358,12 @@ The same normalization function must exist in Python (`pipeline/omnipipe/normali
   "sha256": "...",
   "url": "https://cdn.example.com/dicts/wikt-hi-en/2026.09.1/wikt-hi-en.odict",
   "built_at": "2026-09-27T00:00:00Z",
-  "source": {"converter": "kaikki", "dump_date": "2026-09-20"}
+  "source": {"converter": "kaikki", "dump_date": "2026-09-20",
+             "url": "https://kaikki.org/dictionary/Hindi/kaikki.org-dictionary-Hindi.jsonl.gz"}
 }
 ```
+
+`source_lang_name`, `target_lang_name` and `source.url` are optional (schema 3, `DOCS/schema.md`).
 
 `dict_id` naming: `<source>-<src_lang>-<tgt_lang>`; monolingual uses `<source>-<lang>`.
 

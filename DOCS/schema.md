@@ -4,7 +4,7 @@ Generated from `DOCS/PLAN.md` section 4. This is the reference used by both `pip
 and `app/src/core`; if the two disagree, this file and `PLAN.md` are the tie-breaker, and
 whichever side is wrong gets fixed.
 
-`meta.schema_version` is currently **2**. Any change to the SQL schema below or to the
+`meta.schema_version` is currently **3**. Any change to the SQL schema below or to the
 manifest fields (`DOCS/PLAN.md` section 5.1) bumps `schema_version` and updates this file in
 the same commit. The client refuses to open a bundle with a higher major `schema_version` than
 it understands.
@@ -106,6 +106,12 @@ not change `schema_version`):
 | `icu_version`, `unicode_version` | the ICU and Unicode versions the pipeline normalized and collated with |
 | `source_converter` | the converter that produced the entries, e.g. `kaikki` |
 | `source_dump_date` | date of the source dump, `YYYY-MM-DD`; becomes `manifest.source.dump_date` |
+| `source_lang_name`, `target_lang_name` | (schema 3) the languages' English names, e.g. `Old English` for `ang`; become the manifest fields of the same names. Clients use them where their own locale data has no name for the code |
+| `source_url` | (schema 3) where the upstream source the bundle was built from can be downloaded (the FreeDict `.src.tar.xz`, Kengdic's file at the pinned commit, the Kaikki dump, ...); becomes `manifest.source.url`. It is how the copyleft dictionaries offer their source (ADR-016) |
+
+The manifest carries `source_lang_name` and `target_lang_name` right after `target_lang`,
+each only when known, and `source` gains `url` next to `converter` and `dump_date`. A client
+reads all three as optional, so a schema 2 bundle or catalogue entry still opens.
 
 ## Canonical JSONL record (converter output, `build.py` input)
 
@@ -216,8 +222,9 @@ edits are ranked by distance, length difference, shared trigrams and code point 
 |---|---|
 | 1 | First schema (PLAN 4.1). |
 | 2 | Indexes on the child tables' parent ids (ADR-012) and the `suggest` table (ADR-013). |
+| 3 | Optional `source_lang_name`, `target_lang_name` and `source_url` (meta and manifest), 2026-09-28. No DDL change; schema 2 bundles still open. |
 
-`schema_version` is **2**. Any change to the SQL DDL above or to the manifest fields
+`schema_version` is **3**. Any change to the SQL DDL above or to the manifest fields
 (`DOCS/PLAN.md` section 5.1) is a schema change: it bumps `schema_version` and updates this
 file, in the same commit that makes the change. The client refuses to open a bundle whose
 `meta.schema_version` is higher than the version it was built to understand.

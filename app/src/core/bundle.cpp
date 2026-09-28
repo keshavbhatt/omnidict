@@ -99,6 +99,9 @@ Result<BundleMeta> parseMeta(const QHash<QString, QString>& values)
     meta.attribution = values.value(u"attribution"_s);
     meta.entryCount = values.value(u"entry_count"_s).toLongLong();
     meta.builtAt = values.value(u"built_at"_s);
+    meta.sourceLangName = values.value(u"source_lang_name"_s);
+    meta.targetLangName = values.value(u"target_lang_name"_s);
+    meta.sourceUrl = values.value(u"source_url"_s);
     return meta;
 }
 

@@ -249,6 +249,8 @@ def test_converter_contract_over_a_small_file(tmp_path: Path) -> None:
     assert spec.dict_id == "kengdic-ko-en"
     assert spec.version == "2022.07.1"
     assert spec.license == "MPL-2.0 OR LGPL-2.0-or-later"
+    assert spec.source_url == kengdic.raw_url("abc")  # the exact file that was built
+    assert (spec.source_lang_name, spec.target_lang_name) == ("Korean", "English")
     entries = list(converter.iter_records(spec))
     assert [e.headword for e in entries] == ["사과", "가다", "초월"]
     assert converter.stats.no_gloss == 1

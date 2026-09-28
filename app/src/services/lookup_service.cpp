@@ -31,7 +31,8 @@ void LookupService::openLibrary(const QStringList& roots)
                              .publisher = meta.publisher,
                              .sourceLang = meta.sourceLang,
                              .targetLang = meta.targetLang,
-                             .path = bundle.path()});
+                             .path = bundle.path(),
+                             .sourceUrl = meta.sourceUrl});
     }
     qCInfo(lcLookup) << "opened" << dictionaries.size() << "dictionaries from" << roots;
     Q_EMIT libraryOpened(dictionaries, m_library->problems());

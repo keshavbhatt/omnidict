@@ -32,7 +32,8 @@ struct DictionaryInfo
     QString publisher{};
     QString sourceLang{};
     QString targetLang{};
-    QString path{}; ///< the dict.sqlite file
+    QString path{};      ///< the dict.sqlite file
+    QString sourceUrl{}; ///< where the upstream source can be downloaded; empty when unknown
 };
 
 /// All dictionary access, on the thread the service is moved to (ADR-004):

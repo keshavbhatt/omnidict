@@ -196,6 +196,9 @@ def spec_for(version: str) -> DictSpec:
         license_url=_LICENSE_URL,
         attribution=_ATTRIBUTION,
         kind="monolingual",
+        source_lang_name="English",
+        target_lang_name="English",
+        source_url=OEWN_XML_URL,
     )
 
 

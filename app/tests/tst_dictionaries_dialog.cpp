@@ -555,6 +555,31 @@ private Q_SLOTS:
         QCOMPARE(tabs->currentIndex(), 1);
     }
 
+    void unknownLanguageCodesUseTheCatalogueName()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        QJsonObject oldEnglish =
+            manifest(u"wikt-ang-en"_s, u"Old English-English (Wiktionary)"_s, u"1"_s, u"ang"_s, u"en"_s,
+                     u"Wiktionary"_s, u"http://example.invalid/ang"_s, body);
+        oldEnglish.insert(u"source_lang_name"_s, u"Old English"_s);
+        oldEnglish.insert(u"target_lang_name"_s, u"English"_s);
+        const QJsonObject noName = manifest(u"wikt-xx-en"_s, u"Unnamed"_s, u"1"_s, u"qqq"_s, u"en"_s,
+                                            u"Wiktionary"_s, u"http://example.invalid/qqq"_s, body);
+        server.addRoute(u"/catalog.json"_s, catalogJson(QJsonArray{oldEnglish, noName}));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"names"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        QVERIFY(catalogChanged.wait(5000));
+
+        auto* from = dialog.findChild<QComboBox*>(u"fromLanguage"_s);
+        QCOMPARE(from->itemText(from->findData(u"ang"_s)), u"Old English"_s);
+        QCOMPARE(from->itemText(from->findData(u"qqq"_s)), u"Qqq"_s); // no name anywhere: the code
+    }
+
     void downloadingKeepsTheListInPlace()
     {
         // Forty rows; the reader scrolls to the last and downloads it. The list must

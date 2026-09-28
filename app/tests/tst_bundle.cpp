@@ -72,7 +72,7 @@ private Q_SLOTS:
         const Bundle bundle = openFixture();
         QCOMPARE(bundle.meta().dictId, u"sample-en"_s);
         QCOMPARE(bundle.meta().sourceLang, u"en"_s);
-        QCOMPARE(bundle.meta().schemaVersion, 2);
+        QCOMPARE(bundle.meta().schemaVersion, Bundle::kSupportedSchemaVersion);
         QCOMPARE(bundle.meta().entryCount, 14);
         QVERIFY(!bundle.meta().attribution.isEmpty());
         QVERIFY(!bundle.meta().license.isEmpty());
@@ -253,11 +253,31 @@ private Q_SLOTS:
     {
         const QTemporaryDir dir;
         const QString path =
-            alteredCopy(dir, u"newer.sqlite"_s, "UPDATE meta SET value = '3' WHERE key = 'schema_version'");
+            alteredCopy(dir, u"newer.sqlite"_s, "UPDATE meta SET value = '4' WHERE key = 'schema_version'");
         QVERIFY(!path.isEmpty());
         const auto bundle = Bundle::open(path);
         QVERIFY(!bundle);
         QVERIFY2(bundle.error().contains(u"newer"_s), qPrintable(bundle.error()));
+    }
+
+    void opensAnOlderSchemaAndReadsTheOptionalFields()
+    {
+        const QTemporaryDir dir;
+        // schema_version 2 had none of the optional fields; the bundle still opens.
+        const QString older =
+            alteredCopy(dir, u"older.sqlite"_s, "UPDATE meta SET value = '2' WHERE key = 'schema_version'");
+        const auto oldBundle = Bundle::open(older);
+        QVERIFY2(oldBundle, oldBundle ? "" : qPrintable(oldBundle.error()));
+        QVERIFY(oldBundle.value().meta().sourceUrl.isEmpty());
+
+        const QString named =
+            alteredCopy(dir, u"named.sqlite"_s,
+                        "INSERT INTO meta (key, value) VALUES "
+                        "('source_lang_name', 'English'), ('source_url', 'https://example.org/src')");
+        const auto bundle = Bundle::open(named);
+        QVERIFY(bundle);
+        QCOMPARE(bundle.value().meta().sourceLangName, u"English"_s);
+        QCOMPARE(bundle.value().meta().sourceUrl, u"https://example.org/src"_s);
     }
 
     void refusesABundleWithMetadataMissing()

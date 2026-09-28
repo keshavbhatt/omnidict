@@ -131,7 +131,15 @@ def _source_of(meta: Mapping[str, str]) -> dict[str, str]:
         source["converter"] = meta["source_converter"]
     if "source_dump_date" in meta:
         source["dump_date"] = meta["source_dump_date"]
+    if "source_url" in meta:
+        source["url"] = meta["source_url"]
     return source
+
+
+def release_asset_name(dict_id: str, version: str) -> str:
+    """The file name a bundle has as a GitHub release asset: a release has no
+    folders, so the version goes into the name (ADR-016)."""
+    return f"{dict_id}-{version}{ODICT_SUFFIX}"
 
 
 def package_bundle(
@@ -140,13 +148,16 @@ def package_bundle(
     base_url: str,
     *,
     level: int = 19,
+    flat_urls: bool = False,
 ) -> dict[str, object]:
     """Compress `sqlite_path` into `publish_root` and write its manifest.
 
     Output layout: `publish_root/dicts/<dict_id>/<version>/<dict_id>.odict`
     and a `manifest.json` next to it (PLAN.md 5.1). Compression is streaming
     zstd with checksums and the decompressed size embedded in the frame, so
-    real (hundreds-of-MB) bundles never need to be held in memory. Packaging
+    real (hundreds-of-MB) bundles never need to be held in memory. With
+    `flat_urls`, the manifest's `url` is `<base_url>/<dict_id>-<version>.odict`,
+    the bundle's name as a release asset, instead of the folder layout. Packaging
     the same `dict.sqlite` twice produces a byte-identical `.odict` and
     manifest: zstd's output at a fixed level is deterministic even with
     multiple compression threads (`threads=-1`), which the test suite
@@ -177,7 +188,11 @@ def package_bundle(
     size_installed = sqlite_path.stat().st_size
     size_compressed = odict_path.stat().st_size
     sha256 = _sha256_file(odict_path)
-    url = f"{base_url.rstrip('/')}/dicts/{dict_id}/{version}/{dict_id}{ODICT_SUFFIX}"
+    url = (
+        f"{base_url.rstrip('/')}/{release_asset_name(dict_id, version)}"
+        if flat_urls
+        else f"{base_url.rstrip('/')}/dicts/{dict_id}/{version}/{dict_id}{ODICT_SUFFIX}"
+    )
 
     # Key order matches PLAN.md 5.1 exactly; the manifest is read by humans too.
     manifest: dict[str, object] = {
@@ -185,6 +200,8 @@ def package_bundle(
         "name": meta["name"],
         "source_lang": meta["source_lang"],
         "target_lang": meta["target_lang"],
+        # Optional since schema_version 3 (DOCS/schema.md).
+        **{key: meta[key] for key in ("source_lang_name", "target_lang_name") if key in meta},
         "kind": _kind_of(meta),
         "version": version,
         "schema_version": int(meta["schema_version"]),
@@ -293,6 +310,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--publish", dest="publish_root", required=True, type=Path)
     parser.add_argument("--base-url", dest="base_url", default="http://localhost:8000")
     parser.add_argument("--level", dest="level", type=int, default=19)
+    parser.add_argument(
+        "--flat-urls",
+        action="store_true",
+        help="point the manifest at <base-url>/<dict_id>-<version>.odict (a release asset)",
+    )
     return parser.parse_args(argv)
 
 
@@ -302,7 +324,13 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
 
     try:
-        manifest = package_bundle(args.in_path, args.publish_root, args.base_url, level=args.level)
+        manifest = package_bundle(
+            args.in_path,
+            args.publish_root,
+            args.base_url,
+            level=args.level,
+            flat_urls=args.flat_urls,
+        )
     except PackageError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

@@ -182,7 +182,8 @@ def bundle_version(commit_date: date, build: int = 1) -> str:
     return f"{commit_date.year}.{commit_date.month:02d}.{build}"
 
 
-def spec_for(version: str) -> DictSpec:
+def spec_for(version: str, commit: str = "") -> DictSpec:
+    """The dictionary's spec; `commit` pins the source link to the file that was built."""
     return DictSpec(
         dict_id=_DICT_ID,
         name=_NAME,
@@ -194,6 +195,9 @@ def spec_for(version: str) -> DictSpec:
         license_url=_LICENSE_URL,
         attribution=_ATTRIBUTION,
         kind="bilingual",
+        source_lang_name="Korean",
+        target_lang_name="English",
+        source_url=raw_url(commit) if commit else f"https://github.com/{REPOSITORY}",
     )
 
 
@@ -322,7 +326,8 @@ class KengdicConverter(Converter):
         dump = dump_path(self.cache_dir)
         if not dump.exists():
             return []
-        return [spec_for(bundle_version(read_dump_info(dump).commit_date))]
+        info = read_dump_info(dump)
+        return [spec_for(bundle_version(info.commit_date), info.commit)]
 
     def iter_records(self, spec: DictSpec) -> Iterator[Entry]:
         if spec.dict_id != _DICT_ID:
@@ -371,7 +376,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.fetch_only:
             return 0
         info = read_dump_info(dump)
-        spec = spec_for(bundle_version(info.commit_date, args.build_number))
+        spec = spec_for(bundle_version(info.commit_date, args.build_number), info.commit)
         converter = KengdicConverter(args.cache)
         entries: Iterable[Entry] = converter.iter_records(spec)
         if args.limit is not None:

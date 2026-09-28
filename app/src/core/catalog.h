@@ -33,6 +33,10 @@ struct CatalogEntry
     QString builtAt; ///< UTC, ISO 8601
     /// `source.converter` ("kaikki", "freedict", ...); optional, empty when absent.
     QString sourceConverter;
+    // Optional since schema_version 3 (DOCS/schema.md); empty when absent.
+    QString sourceLangName; ///< English name, for codes a locale database may not know
+    QString targetLangName;
+    QString sourceUrl; ///< `source.url`: where the upstream source can be downloaded
 
     [[nodiscard]] bool operator==(const CatalogEntry&) const = default;
 };

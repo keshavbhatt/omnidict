@@ -80,9 +80,10 @@ void applyRowBorder(QWidget* row, bool isLast)
     row->setProperty("dictionaryRow", !isLast);
 }
 
-/// The native language name for a BCP-47 code, capitalised; the code itself,
-/// also capitalised, when Qt does not recognise it.
-QString languageLabel(const QString& code)
+/// The native language name for a BCP-47 code, capitalised; when Qt does not
+/// know the code (Old English, Proto-Germanic, ...), the English name the
+/// catalogue gives, else the code itself.
+QString languageLabel(const QString& code, const QString& catalogueName)
 {
     // For these, Qt names the language after the country or script its bare code
     // defaults to ("American English", "español de España", "简体中文"); a filter
@@ -94,7 +95,7 @@ QString languageLabel(const QString& code)
     };
     QString name = plainNames.value(code, QLocale(code).nativeLanguageName());
     if (name.isEmpty()) {
-        name = code;
+        name = catalogueName.isEmpty() ? code : catalogueName;
     }
     if (!name.isEmpty()) {
         name[0] = name.at(0).toUpper();
@@ -198,7 +199,7 @@ std::optional<QString> effectiveVersion(const QList<services::DictionaryInfo>& i
     return std::nullopt;
 }
 
-void populateLanguageCombo(QComboBox* combo, const QSet<QString>& codes, const QString& anyLabel)
+void populateLanguageCombo(QComboBox* combo, const QHash<QString, QString>& codes, const QString& anyLabel)
 {
     const QSignalBlocker blocker(combo);
     // A few hundred languages: a short scrolling list, not a popup the height of
@@ -206,14 +207,16 @@ void populateLanguageCombo(QComboBox* combo, const QSet<QString>& codes, const Q
     combo->setMaxVisibleItems(kLanguageComboVisibleItems);
     combo->clear();
     combo->addItem(anyLabel, QString());
-    QStringList sorted(codes.begin(), codes.end());
-    std::ranges::sort(sorted, [](const QString& a, const QString& b) {
-        return languageLabel(a).localeAwareCompare(languageLabel(b)) < 0;
-    });
-    for (const QString& code : sorted) {
-        if (!code.isEmpty()) {
-            combo->addItem(languageLabel(code), code);
+    QList<std::pair<QString, QString>> items; // (label, code)
+    for (auto it = codes.cbegin(); it != codes.cend(); ++it) {
+        if (!it.key().isEmpty()) {
+            items.append({languageLabel(it.key(), it.value()), it.key()});
         }
+    }
+    std::ranges::sort(items,
+                      [](const auto& a, const auto& b) { return a.first.localeAwareCompare(b.first) < 0; });
+    for (const auto& [label, code] : items) {
+        combo->addItem(label, code);
     }
 }
 
@@ -1129,11 +1132,16 @@ void DictionariesDialog::refreshFilters()
     const QString previousFrom = m_fromCombo->currentData().toString();
     const QString previousTo = m_toCombo->currentData().toString();
     const QString previousProvider = m_providerCombo->currentData().toString();
-    QSet<QString> sources;
-    QSet<QString> targets;
+    // code -> the catalogue's English name for it (empty for older bundles)
+    QHash<QString, QString> sources;
+    QHash<QString, QString> targets;
     for (const core::CatalogEntry& entry : m_manager.catalog().dictionaries) {
-        sources.insert(entry.sourceLang);
-        targets.insert(entry.targetLang);
+        if (sources.value(entry.sourceLang).isEmpty()) {
+            sources.insert(entry.sourceLang, entry.sourceLangName);
+        }
+        if (targets.value(entry.targetLang).isEmpty()) {
+            targets.insert(entry.targetLang, entry.targetLangName);
+        }
     }
     const QString anyLanguage = tr("Any language");
     populateLanguageCombo(m_fromCombo, sources, anyLanguage);

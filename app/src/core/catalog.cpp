@@ -125,7 +125,11 @@ Result<CatalogEntry> parseEntry(const QJsonObject& object, const QString& label)
     entry.schemaVersion = static_cast<int>(schemaVersion.take());
 
     // Optional (PLAN.md 5.1 `source`): a missing or malformed object leaves it empty.
-    entry.sourceConverter = object.value(u"source"_s).toObject().value(u"converter"_s).toString();
+    const QJsonObject source = object.value(u"source"_s).toObject();
+    entry.sourceConverter = source.value(u"converter"_s).toString();
+    entry.sourceUrl = source.value(u"url"_s).toString();
+    entry.sourceLangName = object.value(u"source_lang_name"_s).toString();
+    entry.targetLangName = object.value(u"target_lang_name"_s).toString();
 
     return entry;
 }

@@ -217,6 +217,9 @@ def spec_for(version: str) -> DictSpec:
         license_url=_LICENSE_URL,
         attribution=_ATTRIBUTION,
         kind="bilingual",
+        source_lang_name="Chinese",
+        target_lang_name="English",
+        source_url=CEDICT_URL,
     )
 
 

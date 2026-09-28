@@ -47,6 +47,9 @@ _RESERVED_META_KEYS = frozenset(
         "kind",
         "icu_version",
         "unicode_version",
+        "source_lang_name",
+        "target_lang_name",
+        "source_url",
     }
 )
 
@@ -268,6 +271,16 @@ def build_bundle(
             ("kind", spec.kind),
             ("icu_version", icu_version()),
             ("unicode_version", unicode_version()),
+            # Optional since schema_version 3: written only when the converter knows them.
+            *[
+                (key, value)
+                for key, value in (
+                    ("source_lang_name", spec.source_lang_name),
+                    ("target_lang_name", spec.target_lang_name),
+                    ("source_url", spec.source_url),
+                )
+                if value
+            ],
             *sorted(extra.items()),
         ]
         conn.executemany("INSERT INTO meta (key, value) VALUES (?, ?)", meta_rows)
