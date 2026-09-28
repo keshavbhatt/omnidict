@@ -374,6 +374,15 @@ void DictionaryManager::onDownloadFinished(const QString& dictId)
     if (download->status.received != download->entry.sizeCompressed) {
         qCWarning(lcDownloads) << dictId << "received" << download->status.received << "of"
                                << download->entry.sizeCompressed << "bytes";
+        // All the server announced arrived, yet the size is not the catalogue's: the
+        // file on the server changed (a newer build) since the catalogue was read.
+        bool announced = false;
+        const qint64 length = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(&announced);
+        if (announced && download->resumeOffset + length == download->status.received) {
+            failDownload(dictId, tr("The file on the server has changed; check for updates, then try again"),
+                         /*keepPartial=*/false);
+            return;
+        }
         failDownload(dictId, tr("The download ended early; try again"), /*keepPartial=*/true);
         return;
     }

@@ -352,6 +352,26 @@ private Q_SLOTS:
         QVERIFY(it->error.contains(u"404"_s));
     }
 
+    void aServerFileNewerThanTheCatalogueSaysSo()
+    {
+        // The catalogue was read before the server's file was rebuilt: the whole file
+        // arrives, but its size is not the catalogue's.
+        TestHttpServer server;
+        TestHttpServer::Route route;
+        route.body = m_compressedFixture.left(m_compressedFixture.size() / 2);
+        server.addRoute(u"/changed.odict"_s, route);
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        manager.install(makeEntry(u"dict-changed"_s, u"1"_s, server.urlFor(u"/changed.odict"_s),
+                                  m_compressedFixture, m_installedSize));
+        QVERIFY(QTest::qWaitFor(
+            [&] { return stateOf(manager.downloads(), u"dict-changed"_s) == DownloadStatus::Failed; }, 5000));
+        const auto downloads = manager.downloads();
+        QVERIFY(downloads.first().error.contains(u"has changed"_s));
+        QVERIFY(!QFile::exists(QDir(cacheDir.path()).filePath(u"downloads/dict-changed-1.odict.part"_s)));
+    }
+
     void installedFiresAndFileInPlaceViaRangeResume()
     {
         TestHttpServer::Route route;
