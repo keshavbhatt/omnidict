@@ -51,6 +51,21 @@ using ZstdDStreamPtr = std::unique_ptr<ZSTD_DStream, ZstdDStreamCloser>;
     return std::pair{size, QString::fromLatin1(hash.result().toHex())};
 }
 
+/// Writes all of `data`: a write may take only part of it (a quota or a nearly
+/// full disk does this), and the error shows on the next call.
+bool writeFully(QFile& file, const char* data, qint64 size)
+{
+    qint64 done = 0;
+    while (done < size) {
+        const qint64 written = file.write(data + done, size - done);
+        if (written <= 0) {
+            return false;
+        }
+        done += written;
+    }
+    return true;
+}
+
 /// Streams `inputPath` (zstd-compressed) into `outputPath`, which is created
 /// or truncated. Returns the decompressed byte count.
 [[nodiscard]] Result<qint64> decompressFile(const QString& inputPath, const QString& outputPath)
@@ -60,7 +75,8 @@ using ZstdDStreamPtr = std::unique_ptr<ZSTD_DStream, ZstdDStreamCloser>;
         return Error{u"cannot open %1: %2"_s.arg(inputPath, input.errorString())};
     }
     QFile output(outputPath);
-    if (!output.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    // Unbuffered: a failed write is seen at once, with the system's reason.
+    if (!output.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Unbuffered)) {
         return Error{u"cannot create %1: %2"_s.arg(outputPath, output.errorString())};
     }
 
@@ -94,7 +110,7 @@ using ZstdDStreamPtr = std::unique_ptr<ZSTD_DStream, ZstdDStreamCloser>;
             }
             if (outDesc.pos > 0) {
                 const auto toWrite = static_cast<qint64>(outDesc.pos);
-                if (output.write(outBuffer.constData(), toWrite) != toWrite) {
+                if (!writeFully(output, outBuffer.constData(), toWrite)) {
                     return Error{u"cannot write %1: %2"_s.arg(outputPath, output.errorString())};
                 }
                 totalOut += toWrite;

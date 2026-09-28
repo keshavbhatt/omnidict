@@ -417,13 +417,8 @@ QScrollArea* DictionariesDialog::buildAvailableScroll(QWidget* content)
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    // A vertical scrollbar that only appears "as needed" reserves its width a
-    // layout pass late (visible in the offscreen QPA plugin used for
-    // headless screenshots and tests): the content briefly gets the wider,
-    // scrollbar-less width, and a row's rightmost control is then clipped by
-    // its own row widget. Reserving the scrollbar's space unconditionally
-    // avoids that resize race.
-    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    // The scrollbar shows only when the rows do not fit (Qt's default).
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_availableList = new QWidget(scroll);
     m_availableList->setObjectName(u"availableList"_s);
     auto* listLayout = new QVBoxLayout(m_availableList);

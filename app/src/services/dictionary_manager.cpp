@@ -410,6 +410,9 @@ void DictionaryManager::onInstallFinished(const QString& dictId, const core::Res
             message = tr("The file did not match the catalogue (size)");
         } else if (detail.contains(u"dict_id mismatch"_s) || detail.contains(u"version mismatch"_s)) {
             message = tr("The downloaded file did not match the catalogue entry");
+        } else if (detail.contains(u"cannot write"_s) || detail.contains(u"cannot create"_s)) {
+            // The system's reason ends the detail; the path stays in the log.
+            message = tr("The dictionary could not be unpacked: %1").arg(detail.section(u": "_s, -1));
         } else {
             message = tr("The dictionary could not be installed (%1)").arg(detail);
         }
