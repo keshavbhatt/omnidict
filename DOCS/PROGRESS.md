@@ -28,8 +28,14 @@ Newest first. One entry per working session.
   address and is ignored when the address changes, so a switch never shows a stale list.
 - Store screenshot of the catalogue regenerated against the real catalogue; the sheet grab
   hook waits for a catalogue still being read.
-- Measured: rebuilding the Available list of 623 rows takes about 140 ms, once per filter
-  keystroke; worth a short typing delay if it feels slow on older machines.
+- The Dictionaries sheet opened slowly (owner): 631 ms, of which 476 went to native language
+  names in the filters. They are English names now, from the catalogue ("Dhivehi", not boxes);
+  the Available rows are built only when that tab shows, and the name filter waits for a pause
+  in typing. The sheet opens in 21 ms; the Available tab builds its 623 rows in about 130 ms.
+- A download with the right size and the wrong checksum is treated as a replaced file ("updated
+  on the server", catalogue re-read), as a rolling-release rebuild can keep the size.
+- Dhivehi (Thaana) shows boxes: the only Thaana font here, Noto Sans Thaana, has no GSUB table
+  and Qt will not shape the script without one (DOCS/LESSONS.md). Not an Omnidict bug.
 
 ## 2026-09-28 - M5 packaging
 

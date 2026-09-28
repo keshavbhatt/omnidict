@@ -54,6 +54,8 @@ constexpr int kSheetWidth = 760;
 constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
 constexpr int kLanguageComboVisibleItems = 12;
+constexpr int kAvailableTab = 1;
+constexpr int kFilterTypingPauseMs = 150;
 constexpr int kActionSpacing = 6;
 constexpr int kConfirmWidth = 380;
 /// A drop-down's width beyond its text: the sheet's 12 px left and 4 px right
@@ -80,22 +82,22 @@ void applyRowBorder(QWidget* row, bool isLast)
     row->setProperty("dictionaryRow", !isLast);
 }
 
-/// The native language name for a BCP-47 code, capitalised; when Qt does not
-/// know the code (Old English, Proto-Germanic, ...), the English name the
-/// catalogue gives, else the code itself.
+/// A language's English name, as the dictionary names in the list spell it ("Dhivehi"
+/// in "Dhivehi-English"): the catalogue's name (schema 3), else Qt's English name for
+/// the code, else the code itself, capitalised. Native names were dropped: a script with
+/// no installed font (Thaana, ...) showed empty boxes, and looking for a font that has
+/// it cost the sheet half a second on every opening.
 QString languageLabel(const QString& code, const QString& catalogueName)
 {
-    // For these, Qt names the language after the country or script its bare code
-    // defaults to ("American English", "español de España", "简体中文"); a filter
-    // over languages wants the language alone.
-    static const QHash<QString, QString> plainNames{
-        {u"en"_s, u"English"_s},
-        {u"es"_s, u"español"_s},
-        {u"zh"_s, u"中文"_s},
-    };
-    QString name = plainNames.value(code, QLocale(code).nativeLanguageName());
+    QString name = catalogueName;
     if (name.isEmpty()) {
-        name = catalogueName.isEmpty() ? code : catalogueName;
+        const QLocale::Language language = QLocale(code).language();
+        if (language != QLocale::C && language != QLocale::AnyLanguage) {
+            name = QLocale::languageToString(language);
+        }
+    }
+    if (name.isEmpty()) {
+        name = code;
     }
     if (!name.isEmpty()) {
         name[0] = name.at(0).toUpper();
@@ -380,6 +382,11 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     m_tabs->addTab(buildInstalledTab(), tr("Installed"));
     m_tabs->addTab(buildAvailableTab(), tr("Available"));
     root->addWidget(m_tabs, 1);
+    connect(m_tabs, &QTabWidget::currentChanged, this, [this](int index) {
+        if (index == kAvailableTab && m_availableRowsStale) {
+            rebuildAvailableRows();
+        }
+    });
 
     connect(&m_manager, &services::DictionaryManager::catalogChanged, this, [this] {
         m_catalogFailure.clear();
@@ -439,7 +446,7 @@ void DictionariesDialog::setInstalled(const QList<services::DictionaryInfo>& ins
 
 void DictionariesDialog::showAvailable()
 {
-    m_tabs->setCurrentIndex(1);
+    m_tabs->setCurrentIndex(kAvailableTab);
 }
 
 bool DictionariesDialog::eventFilter(QObject* watched, QEvent* event)
@@ -573,7 +580,12 @@ QHBoxLayout* DictionariesDialog::buildAvailableFilterRow(QWidget* content)
     m_filterField = new QLineEdit(content);
     m_filterField->setObjectName(u"availableFilter"_s);
     m_filterField->setPlaceholderText(tr("Filter by name"));
-    connect(m_filterField, &QLineEdit::textChanged, this, [this] { rebuildAvailableRows(); });
+    // One rebuild when typing pauses, not one per keystroke (hundreds of rows each time).
+    auto* typingPause = new QTimer(this);
+    typingPause->setSingleShot(true);
+    typingPause->setInterval(kFilterTypingPauseMs);
+    connect(typingPause, &QTimer::timeout, this, [this] { rebuildAvailableRows(); });
+    connect(m_filterField, &QLineEdit::textChanged, typingPause, qOverload<>(&QTimer::start));
     m_filterField->setMinimumWidth(kFilterFieldMinWidth);
     filterRow->addWidget(m_filterField, 1);
     m_fromCombo = addFilterCombo(filterRow, content, tr("From"), u"fromLanguage"_s);
@@ -1078,6 +1090,29 @@ void DictionariesDialog::updateAvailableRow(const QString& dictId)
 
 void DictionariesDialog::rebuildAvailableRows()
 {
+    QList<core::CatalogEntry> entries = m_manager.catalog().dictionaries;
+    std::ranges::sort(entries, [](const core::CatalogEntry& a, const core::CatalogEntry& b) {
+        return a.name.localeAwareCompare(b.name) < 0;
+    });
+    QList<core::CatalogEntry> shown;
+    for (const core::CatalogEntry& entry : entries) {
+        if (matchesFilters(entry)) {
+            shown << entry;
+        }
+    }
+    // mocks/dictionaries-available.html note 6: the catalogue's size, and how much a filter shows.
+    m_shownCount = shown.size();
+    m_tabs->setTabText(kAvailableTab,
+                       entries.isEmpty() ? tr("Available") : tr("Available (%1)").arg(entries.size()));
+    updateAvailableFooter();
+
+    // Hundreds of row widgets take a noticeable moment: they are built only while the
+    // Available tab is showing, and on switching to it when something changed meanwhile.
+    m_availableRowsStale = m_tabs->currentIndex() != kAvailableTab;
+    if (m_availableRowsStale) {
+        return;
+    }
+
     // Keep the reader's place: rebuilding (a filter, a new catalogue) must not jump to the top.
     QScrollBar* scrollBar = m_availableScroll->verticalScrollBar();
     const int position = scrollBar->value();
@@ -1090,27 +1125,11 @@ void DictionariesDialog::rebuildAvailableRows()
         delete item->widget();
         delete item;
     }
-
-    QList<core::CatalogEntry> entries = m_manager.catalog().dictionaries;
-    std::ranges::sort(entries, [](const core::CatalogEntry& a, const core::CatalogEntry& b) {
-        return a.name.localeAwareCompare(b.name) < 0;
-    });
-    QList<core::CatalogEntry> shown;
-    for (const core::CatalogEntry& entry : entries) {
-        if (matchesFilters(entry)) {
-            shown << entry;
-        }
-    }
-
     m_actionWidth = measureActionWidth();
     for (qsizetype i = 0; i < shown.size(); ++i) {
         listLayout->insertWidget(static_cast<int>(i), buildAvailableRow(shown.at(i), i == shown.size() - 1));
     }
     m_availableList->setUpdatesEnabled(true);
-    // mocks/dictionaries-available.html note 6: the catalogue's size, and how much a filter shows.
-    m_shownCount = shown.size();
-    m_tabs->setTabText(1, entries.isEmpty() ? tr("Available") : tr("Available (%1)").arg(entries.size()));
-    updateAvailableFooter();
     // The new rows are laid out on the next pass; restore the place after it.
     QTimer::singleShot(0, this, [scrollBar, position] { scrollBar->setValue(position); });
 }

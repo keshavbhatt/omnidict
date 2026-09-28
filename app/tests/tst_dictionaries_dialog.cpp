@@ -18,6 +18,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QPushButton>
@@ -472,7 +473,7 @@ private Q_SLOTS:
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_fr-en"_s) != nullptr);
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_de-en"_s) == nullptr);
 
-        // English is "English", not the "American English" Qt gives the bare code.
+        // English names, as in the dictionary names: "English", not "American English".
         auto* toCombo = dialog.findChild<QComboBox*>(u"toLanguage"_s);
         QVERIFY(toCombo != nullptr);
         QCOMPARE(toCombo->itemText(toCombo->findData(u"en"_s)), u"English"_s);
@@ -500,6 +501,22 @@ private Q_SLOTS:
         QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
         DictionariesDialog dialog(manager, settings, {}, dictDir.path());
         QVERIFY(catalogChanged.wait(5000));
+
+        // Rows are built only when the Available tab shows; its count is there before.
+        auto* tabsBefore = dialog.findChild<QTabWidget*>(u"dictionariesTabs"_s);
+        QCOMPARE(tabsBefore->tabText(1), u"Available (3)"_s);
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) == nullptr);
+        dialog.showAvailable();
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) != nullptr);
+
+        // Typing in the name filter rebuilds once the typing pauses, not per keystroke.
+        auto* filter = dialog.findChild<QLineEdit*>(u"availableFilter"_s);
+        QTest::keyClicks(filter, u"Germ"_s);
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) != nullptr); // not yet
+        QTRY_VERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) == nullptr);
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_freedict-de-en"_s) != nullptr);
+        filter->clear();
+        QTRY_VERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) != nullptr);
 
         auto* tabs = dialog.findChild<QTabWidget*>(u"dictionariesTabs"_s);
         QCOMPARE(tabs->tabText(1), u"Available (3)"_s);

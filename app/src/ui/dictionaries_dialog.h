@@ -136,8 +136,10 @@ private:
     QComboBox* m_fromCombo = nullptr;
     QComboBox* m_toCombo = nullptr;
     QComboBox* m_providerCombo = nullptr;
-    qsizetype m_shownCount = 0;         ///< rows shown after the filters, for the footer
-    int m_actionWidth = 0;              ///< the Available rows' action column, measured on each rebuild
+    qsizetype m_shownCount = 0; ///< rows shown after the filters, for the footer
+    int m_actionWidth = 0;
+    bool m_availableRowsStale = true;   ///< rows to build when the Available tab is next shown ///< the
+                                        ///< Available rows' action column, measured on each rebuild
     QWidget* m_availableList = nullptr; ///< a QVBoxLayout of rows, plus a trailing stretch
     QScrollArea* m_availableScroll = nullptr;
     QHash<QString, QWidget*> m_availableStates;            ///< each row's right-hand side, by dictionary id
