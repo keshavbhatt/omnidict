@@ -1,0 +1,38 @@
+# Flatpak manifest, the base for the Flathub repository (packaging/README.md). Built by
+# Flathub's CI only, never on a developer machine. SQLite (with FTS5), zstd and ICU come from
+# the runtime (checked against freedesktop 25.08, which KDE 6.11 is built on).
+app-id: com.ktechpit.omnidict
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+command: omnidict
+finish-args:
+  # the dictionary catalogue and downloads, nothing else
+  - --share=network
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/man
+  - /share/doc
+
+modules:
+  - name: omnidict
+    buildsystem: cmake-ninja
+    subdir: app
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DOMNIDICT_BUILD_TESTS=OFF
+    sources:
+      # The Flathub copy replaces this with the release tag:
+      #   - type: git
+      #     url: https://github.com/keshavbhatt/omnidict.git
+      #     tag: v<version>
+      #     commit: <sha>
+      - type: dir
+        path: ../..

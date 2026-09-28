@@ -1,0 +1,105 @@
+name: omnidict
+adopt-info: omnidict
+grade: stable
+confinement: strict
+base: core24
+compression: lzo
+
+title: Omnidict - offline dictionary
+summary: Offline dictionary for any language, with 600+ free dictionaries
+description: |
+  Omnidict is a fast offline dictionary for the Linux desktop. Choose from more than six
+  hundred free dictionaries in hundreds of languages, download the ones you need once, and look
+  words up instantly, without an internet connection.
+
+  **A dictionary for every language**
+
+  * English dictionary and thesaurus: English Wiktionary definitions, and English WordNet with
+    synonyms, antonyms and related words.
+  * Wiktionary for over three hundred languages: Spanish, French, German, Italian, Portuguese,
+    Russian, Hindi, Arabic, Japanese, Chinese, Korean, Turkish and many more, each explained in
+    English.
+  * Historical languages too: Latin, Ancient Greek, Old English, Sanskrit and Old Norse.
+  * Hundreds of bilingual FreeDict dictionaries, such as German-English, English-French and
+    Spanish-Portuguese.
+  * JMdict Japanese dictionary, CC-CEDICT Chinese dictionary and Kengdic Korean dictionary.
+  * Filter the catalogue by language and provider, and see each dictionary's size and number
+    of entries before you download.
+
+  **Look words up quickly**
+
+  * Word lookup as you type, results grouped by dictionary with the best match first.
+  * Accents are optional, and an inflected form finds its entry: _ran_ finds _run_.
+  * "Did you mean" spelling suggestions for misspelled words, in every script.
+  * Wildcards: `?` for one letter, `*` for any run of letters.
+  * Full text search finds words used inside definitions.
+  * Links between entries, with Back and Forward as in a browser.
+
+  **Made for learning and everyday use**
+
+  * Favourites and recent lookups to build your vocabulary.
+  * Reorder dictionaries, switch them off, update or remove them.
+  * Light and dark themes that follow the desktop, and an adjustable text size.
+  * Keyboard shortcuts for everything.
+  * Private: no tracking, nothing is sent anywhere; the only network use is downloading
+    dictionaries.
+
+  Bugs and requests: https://github.com/keshavbhatt/omnidict/issues
+website: https://github.com/keshavbhatt/omnidict
+issues: https://github.com/keshavbhatt/omnidict/issues
+source-code: https://github.com/keshavbhatt/omnidict
+license: GPL-3.0-or-later
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  omnidict:
+    command: usr/bin/omnidict
+    desktop: usr/share/applications/com.ktechpit.omnidict.desktop
+    common-id: com.ktechpit.omnidict
+    extensions:
+      - kde-neon-6
+    plugs:
+      - desktop
+      - desktop-legacy
+      - opengl
+      - x11
+      - wayland
+      - unity7
+      - network # the dictionary catalogue and downloads, nothing else
+
+parts:
+  omnidict:
+    plugin: cmake
+    source: .
+    source-subdir: app
+    parse-info:
+      - usr/share/metainfo/com.ktechpit.omnidict.metainfo.xml
+    build-snaps:
+      - cmake/latest/stable
+    build-packages:
+      # Headers the SDK snap also carries (ADR-015); the libraries themselves come from
+      # the core24 base (SQLite, zstd) and the kf6-core24 runtime (ICU) at run time.
+      - libsqlite3-dev
+      - libzstd-dev
+      - libicu-dev
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DOMNIDICT_BUILD_TESTS=OFF
+    override-build: |
+      craftctl default
+      # The version comes from the CMake project, the one source of truth.
+      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${CRAFT_PART_BUILD}/CMakeCache.txt" | cut -d= -f2)
+      craftctl set version="${VER}"
+      # Store icon
+      mkdir -p "${CRAFT_PART_INSTALL}/meta/gui"
+      cp "${CRAFT_PART_INSTALL}/usr/share/icons/hicolor/512x512/apps/com.ktechpit.omnidict.png" \
+         "${CRAFT_PART_INSTALL}/meta/gui/icon.png"
+    prime:
+      - -usr/include
+      - -usr/lib/*/cmake
+      - -usr/share/man
+      - -usr/share/doc
