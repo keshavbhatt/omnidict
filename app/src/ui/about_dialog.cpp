@@ -29,8 +29,8 @@ namespace {
 
 constexpr int kIconSize = 88;
 const QString kWebsiteUrl = u"https://ktechpit.com"_s;
-const QString kDonateUrl = u"https://ktechpit.com/donate"_s;
-const QString kMoreAppsUrl = u"https://snapcraft.io/publisher/keshavnrj"_s;
+const QString kDonateUrl = u"https://www.paypal.com/paypalme/keshavnrj/10"_s;
+const QString kMoreAppsUrl = u"https://ktechpit.com/USS/public/products.php"_s;
 const QString kContactUrl = u"mailto:connect@ktechpit.com"_s;
 
 struct OpenSourceNotice
