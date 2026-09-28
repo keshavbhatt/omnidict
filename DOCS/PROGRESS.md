@@ -36,9 +36,12 @@ Newest first. One entry per working session.
   screen-high popup (`combobox-popup: 0`); "English", "español" and "中文" replace Qt's
   territory names ("American English", "español de España", "简体中文"); the About footer
   spans the sheet like the other sheets.
-- Proposed mocks, awaiting approval: Available tab with a catalogue count, a Provider filter
-  and an entries column (`dictionaries-available.html`); an empty Installed tab with a Browse
-  dictionaries button (`dictionaries-empty.html`).
+- Mocks approved and built (owner, 2026-09-28): the Available tab counts the catalogue
+  ("Available (308)", "Showing 24 of 308 dictionaries."), filters by provider (from the
+  catalogue's `source.converter`, now parsed by `core::Catalog`; `core::providerName` maps it
+  to Wiktionary, FreeDict, ...), and shows entries, size and action in aligned columns; an
+  empty Installed tab shows "No dictionaries yet" with Browse dictionaries, which opens the
+  Available tab. Verified headlessly against the local 308-dictionary catalogue.
 - Found: Qt cannot name 153 of the 320 Wiktionary language codes, so the language filter
   would show bare codes; open question for the owner.
 

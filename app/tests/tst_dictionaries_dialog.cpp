@@ -22,7 +22,9 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSignalSpy>
+#include <QStackedWidget>
 #include <QStandardPaths>
+#include <QTabWidget>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
@@ -131,9 +133,10 @@ private:
 
 QJsonObject manifest(const QString& dictId, const QString& name, const QString& version,
                      const QString& sourceLang, const QString& targetLang, const QString& publisher,
-                     const QString& url, const QByteArray& compressedBody, qint64 sizeInstalled = 0)
+                     const QString& url, const QByteArray& compressedBody, qint64 sizeInstalled = 0,
+                     const QString& converter = {}, qint64 entryCount = 1)
 {
-    return QJsonObject{
+    QJsonObject object{
         {u"dict_id"_s, dictId},
         {u"name"_s, name},
         {u"source_lang"_s, sourceLang},
@@ -145,7 +148,7 @@ QJsonObject manifest(const QString& dictId, const QString& name, const QString& 
         {u"license"_s, u"CC-BY-SA-4.0"_s},
         {u"license_url"_s, u"https://creativecommons.org/licenses/by-sa/4.0/"_s},
         {u"attribution"_s, u"test fixture"_s},
-        {u"entry_count"_s, 1},
+        {u"entry_count"_s, entryCount},
         {u"size_compressed"_s, static_cast<qint64>(compressedBody.size())},
         {u"size_installed"_s, sizeInstalled},
         {u"sha256"_s,
@@ -153,6 +156,10 @@ QJsonObject manifest(const QString& dictId, const QString& name, const QString& 
         {u"url"_s, url},
         {u"built_at"_s, u"2026-09-27T00:00:00Z"_s},
     };
+    if (!converter.isEmpty()) {
+        object.insert(u"source"_s, QJsonObject{{u"converter"_s, converter}});
+    }
+    return object;
 }
 
 QByteArray catalogJson(const QJsonArray& dictionaries)
@@ -394,6 +401,82 @@ private Q_SLOTS:
         QVERIFY(toCombo != nullptr);
         QCOMPARE(toCombo->itemText(toCombo->findData(u"en"_s)), u"English"_s);
         QCOMPARE(toCombo->maxVisibleItems(), 12);
+    }
+
+    void availableTabCountsFiltersByProviderAndShowsEntries()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        server.addRoute(
+            u"/catalog.json"_s,
+            catalogJson(QJsonArray{
+                manifest(u"wikt-en"_s, u"English"_s, u"1"_s, u"en"_s, u"en"_s, u"Wiktionary contributors"_s,
+                         u"http://example.invalid/en"_s, body, 0, u"kaikki"_s, 857931),
+                manifest(u"wikt-fr-en"_s, u"French - English"_s, u"1"_s, u"fr"_s, u"en"_s,
+                         u"Wiktionary contributors"_s, u"http://example.invalid/fr"_s, body, 0, u"kaikki"_s),
+                manifest(u"freedict-de-en"_s, u"German-English (FreeDict)"_s, u"1"_s, u"de"_s, u"en"_s,
+                         u"Frank Richter"_s, u"http://example.invalid/de"_s, body, 0, u"freedict"_s),
+            }));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"provider"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        QVERIFY(catalogChanged.wait(5000));
+
+        auto* tabs = dialog.findChild<QTabWidget*>(u"dictionariesTabs"_s);
+        QCOMPARE(tabs->tabText(1), u"Available (3)"_s);
+        auto* entries = dialog.findChild<QLabel*>(u"entryCount_wikt-en"_s);
+        QVERIFY(entries != nullptr);
+        QCOMPARE(entries->text(), u"%1 entries"_s.arg(QLocale().toString(857931)));
+
+        auto* provider = dialog.findChild<QComboBox*>(u"provider"_s);
+        QVERIFY(provider != nullptr);
+        QCOMPARE(provider->count(), 3); // Any, FreeDict (1), Wiktionary (2)
+        QCOMPARE(provider->itemText(2), u"Wiktionary (2)"_s);
+        provider->setCurrentIndex(provider->findData(u"FreeDict"_s));
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_freedict-de-en"_s) != nullptr);
+        QVERIFY(dialog.findChild<QWidget*>(u"availableRow_wikt-en"_s) == nullptr);
+        auto* footer = dialog.findChild<QLabel*>(u"availableFooter"_s);
+        QVERIFY(footer->text().startsWith(u"Showing 1 of 3 dictionaries."_s));
+        provider->setCurrentIndex(0);
+        QVERIFY(!footer->text().startsWith(u"Showing"_s));
+    }
+
+    void emptyInstalledTabLeadsToTheCatalogue()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        server.addRoute(
+            u"/catalog.json"_s,
+            catalogJson(QJsonArray{manifest(u"a"_s, u"A Dictionary"_s, u"1"_s, u"es"_s, u"en"_s,
+                                            u"Wiktionary"_s, u"http://example.invalid/a"_s, body)}));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"empty"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        QVERIFY(catalogChanged.wait(5000));
+
+        auto* tabs = dialog.findChild<QTabWidget*>(u"dictionariesTabs"_s);
+        QCOMPARE(tabs->currentIndex(), 0);
+        auto* empty = dialog.findChild<QWidget*>(u"installedEmpty"_s);
+        QVERIFY(empty != nullptr);
+        auto* stack = qobject_cast<QStackedWidget*>(empty->parentWidget());
+        QVERIFY(stack != nullptr);
+        QCOMPARE(stack->currentWidget(), empty);
+        bool mentionsCount = false;
+        for (const QLabel* label : empty->findChildren<QLabel*>()) {
+            mentionsCount = mentionsCount || label->text().contains(u"Choose from 1 free dictionaries."_s);
+        }
+        QVERIFY(mentionsCount);
+        auto* browse = empty->findChild<QPushButton*>();
+        QVERIFY(browse != nullptr);
+        QCOMPARE(browse->text(), u"Browse dictionaries"_s);
+        browse->click();
+        QCOMPARE(tabs->currentIndex(), 1);
     }
 
     void downloadingKeepsTheListInPlace()

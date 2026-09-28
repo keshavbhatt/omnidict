@@ -82,6 +82,17 @@ private Q_SLOTS:
         QCOMPARE(entry.sha256, u"abc123"_s);
         QCOMPARE(entry.url, u"http://localhost:8000/dicts/wikt-es-en/2026.09.1/wikt-es-en.odict"_s);
         QCOMPARE(entry.builtAt, u"2026-09-27T00:00:00Z"_s);
+        QCOMPARE(entry.sourceConverter, u"kaikki"_s);
+        QCOMPARE(providerName(entry), u"Wiktionary"_s);
+    }
+
+    void providerFallsBackToThePublisher()
+    {
+        CatalogEntry entry;
+        entry.publisher = u"Someone"_s;
+        QCOMPARE(providerName(entry), u"Someone"_s); // no source object at all
+        entry.sourceConverter = u"freedict"_s;
+        QCOMPARE(providerName(entry), u"FreeDict"_s);
     }
 
     void skipsAnEntryWithANewerSchemaVersion()

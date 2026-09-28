@@ -24,6 +24,8 @@ public:
     /// An empty `buttonText` hides the button.
     void setContent(const QString& glyph, const QString& title, const QString& text,
                     const QStringList& tips = {}, const QString& buttonText = {});
+    /// Shows the button in the accent colour, for a state whose button is the way forward.
+    void setButtonPrimary(bool primary);
 
 Q_SIGNALS:
     void buttonClicked();

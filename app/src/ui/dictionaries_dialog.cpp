@@ -4,6 +4,7 @@
 #include "core/installer.h"
 #include "core/settings.h"
 #include "services/dictionary_manager.h"
+#include "ui/empty_state.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
@@ -14,6 +15,7 @@
 #include <QDialog>
 #include <QDir>
 #include <QFileInfo>
+#include <QFontMetrics>
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
 #include <QHBoxLayout>
@@ -31,6 +33,7 @@
 #include <QSet>
 #include <QShortcut>
 #include <QSignalBlocker>
+#include <QStackedWidget>
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolButton>
@@ -50,6 +53,10 @@ constexpr int kSheetWidth = 760;
 constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
 constexpr int kLanguageComboVisibleItems = 12;
+constexpr int kActionSpacing = 6;
+constexpr int kFilterComboChars = 12;
+constexpr int kFilterFieldMinWidth = 150;
+constexpr int kSmallLabelPixels = 12; ///< style.cpp QLabel[small="true"]
 constexpr int kRingSize = 28;
 constexpr qreal kDimmedOpacity = 0.55;
 
@@ -206,10 +213,58 @@ void populateLanguageCombo(QComboBox* combo, const QSet<QString>& codes, const Q
     }
 }
 
+/// Lets a drop-down's popup be wider than the box, so long names show in full.
+void fitPopupWidth(QComboBox* combo)
+{
+    QAbstractItemView* view = combo->view();
+    const int scrollBar = view->verticalScrollBar()->sizeHint().width();
+    view->setMinimumWidth(view->sizeHintForColumn(0) + scrollBar + (2 * view->frameWidth()));
+}
+
 void restoreComboSelection(QComboBox* combo, const QString& code)
 {
+    fitPopupWidth(combo);
     const int index = combo->findData(code);
     combo->setCurrentIndex(index >= 0 ? index : 0);
+}
+
+/// "Any", then every provider in the catalogue with its count: "Wiktionary (14)".
+void populateProviderCombo(QComboBox* combo, const QList<core::CatalogEntry>& entries,
+                           const QString& anyLabel)
+{
+    const QSignalBlocker blocker(combo);
+    combo->setMaxVisibleItems(kLanguageComboVisibleItems);
+    combo->clear();
+    combo->addItem(anyLabel, QString());
+    QHash<QString, int> counts;
+    for (const core::CatalogEntry& entry : entries) {
+        ++counts[core::providerName(entry)];
+    }
+    QStringList providers = counts.keys();
+    std::ranges::sort(providers,
+                      [](const QString& a, const QString& b) { return a.localeAwareCompare(b) < 0; });
+    for (const QString& provider : providers) {
+        combo->addItem(u"%1 (%2)"_s.arg(provider).arg(counts.value(provider)), provider);
+    }
+}
+
+/// A muted small label, right-aligned at least `minWidth` wide: one cell of an Available row.
+QLabel* makeColumnLabel(const QString& text, int minWidth, QWidget* parent)
+{
+    auto* label = new QLabel(text, parent);
+    label->setProperty("muted", true);
+    label->setProperty("small", true);
+    label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    label->setMinimumWidth(minWidth);
+    return label;
+}
+
+/// The width a muted small label needs for `sample` (the widest value its column shows).
+int columnWidth(const QWidget* reference, const QString& sample)
+{
+    QFont small = reference->font();
+    small.setPixelSize(kSmallLabelPixels);
+    return QFontMetrics(small).horizontalAdvance(sample) + 2;
 }
 
 /// A small painted progress indicator (mock.css `.ring`): an accent arc over
@@ -310,7 +365,7 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
 
     connect(&m_manager, &services::DictionaryManager::catalogChanged, this, [this] {
         m_catalogFailure.clear();
-        refreshLanguageFilters();
+        refreshFilters();
         rebuildInstalledRows();
         rebuildAvailableRows();
         updateAvailableFooter();
@@ -321,7 +376,7 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     });
     connectDownloads();
 
-    refreshLanguageFilters();
+    refreshFilters();
     rebuildInstalledRows();
     rebuildAvailableRows();
     updateAvailableFooter();
@@ -428,8 +483,23 @@ QWidget* DictionariesDialog::buildInstalledTab()
     // to track individual rows through the drop.
     connect(m_installedList->model(), &QAbstractItemModel::rowsMoved, this,
             [this] { QTimer::singleShot(0, this, &DictionariesDialog::writeOrderFromList); });
-    pageLayout->addWidget(m_installedList, 1);
 
+    m_installedEmpty = new EmptyState(page);
+    m_installedEmpty->setObjectName(u"installedEmpty"_s);
+    m_installedEmpty->setButtonPrimary(true);
+    connect(m_installedEmpty, &EmptyState::buttonClicked, this, &DictionariesDialog::showAvailable);
+    m_installedStack = new QStackedWidget(page);
+    m_installedStack->addWidget(m_installedList);
+    m_installedStack->addWidget(m_installedEmpty);
+    pageLayout->addWidget(m_installedStack, 1);
+
+    pageLayout->addWidget(buildInstalledFoot(page));
+
+    return page;
+}
+
+QFrame* DictionariesDialog::buildInstalledFoot(QWidget* page)
+{
     auto* foot = new QFrame(page);
     foot->setProperty("sheetFoot", true);
     auto* footLayout = new QHBoxLayout(foot);
@@ -440,17 +510,15 @@ QWidget* DictionariesDialog::buildInstalledTab()
     m_installedFooter->setProperty("small", true);
     footLayout->addWidget(m_installedFooter);
     footLayout->addStretch(1);
-    auto* checkUpdates = new QPushButton(tr("Check for updates"), foot);
-    connect(checkUpdates, &QPushButton::clicked, this, [this] { m_manager.refreshCatalog(true); });
-    footLayout->addWidget(checkUpdates);
+    m_checkUpdatesButton = new QPushButton(tr("Check for updates"), foot);
+    connect(m_checkUpdatesButton, &QPushButton::clicked, this, [this] { m_manager.refreshCatalog(true); });
+    footLayout->addWidget(m_checkUpdatesButton);
     auto* done = new QPushButton(tr("Done"), foot);
     done->setProperty("primary", true);
     done->setDefault(true);
     connect(done, &QPushButton::clicked, this, &QDialog::accept);
     footLayout->addWidget(done);
-    pageLayout->addWidget(foot);
-
-    return page;
+    return foot;
 }
 
 QWidget* DictionariesDialog::buildAvailableTab()
@@ -480,22 +548,31 @@ QHBoxLayout* DictionariesDialog::buildAvailableFilterRow(QWidget* content)
     m_filterField->setObjectName(u"availableFilter"_s);
     m_filterField->setPlaceholderText(tr("Filter by name"));
     connect(m_filterField, &QLineEdit::textChanged, this, [this] { rebuildAvailableRows(); });
+    m_filterField->setMinimumWidth(kFilterFieldMinWidth);
     filterRow->addWidget(m_filterField, 1);
-    auto* fromLabel = new QLabel(tr("From"), content);
-    fromLabel->setProperty("muted", true);
-    filterRow->addWidget(fromLabel);
-    m_fromCombo = new QComboBox(content);
-    m_fromCombo->setObjectName(u"fromLanguage"_s);
-    connect(m_fromCombo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
-    filterRow->addWidget(m_fromCombo);
-    auto* toLabel = new QLabel(tr("To"), content);
-    toLabel->setProperty("muted", true);
-    filterRow->addWidget(toLabel);
-    m_toCombo = new QComboBox(content);
-    m_toCombo->setObjectName(u"toLanguage"_s);
-    connect(m_toCombo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
-    filterRow->addWidget(m_toCombo);
+    m_fromCombo = addFilterCombo(filterRow, content, tr("From"), u"fromLanguage"_s);
+    m_toCombo = addFilterCombo(filterRow, content, tr("To"), u"toLanguage"_s);
+    // mocks/dictionaries-available.html note 7: filter by who provides the content.
+    m_providerCombo = addFilterCombo(filterRow, content, tr("Provider"), u"provider"_s);
     return filterRow;
+}
+
+QComboBox* DictionariesDialog::addFilterCombo(QHBoxLayout* row, QWidget* parent, const QString& label,
+                                              const QString& name)
+{
+    auto* caption = new QLabel(label, parent);
+    caption->setProperty("muted", true);
+    row->addWidget(caption);
+    auto* combo = new QComboBox(parent);
+    combo->setObjectName(name);
+    // Sized for "Any language", not the longest name in the list, so the name
+    // filter keeps its room; the popup widens to fit (fitPopupWidth).
+    combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    combo->setMinimumContentsLength(kFilterComboChars);
+    combo->setAccessibleName(label);
+    connect(combo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
+    row->addWidget(combo);
+    return combo;
 }
 
 QScrollArea* DictionariesDialog::buildAvailableScroll(QWidget* content)
@@ -706,11 +783,18 @@ QWidget* DictionariesDialog::buildAvailableRow(const core::CatalogEntry& entry, 
     auto* text = new QVBoxLayout;
     text->setSpacing(2);
     text->addWidget(new QLabel(entry.name, row));
-    auto* desc = new QLabel(entry.publisher, row);
+    auto* desc = new QLabel(core::providerName(entry), row);
     desc->setProperty("muted", true);
     desc->setProperty("small", true);
     text->addWidget(desc);
     layout->addLayout(text, 1);
+
+    // mocks/dictionaries-available.html note 8: entries in their own column, before the size.
+    auto* entries =
+        makeColumnLabel(tr("%1 entries").arg(QLocale().toString(entry.entryCount)),
+                        columnWidth(row, tr("%1 entries").arg(QLocale().toString(9'999'999))), row);
+    entries->setObjectName(u"entryCount_"_s + entry.dictId);
+    layout->addWidget(entries);
 
     // The right-hand side changes with downloads; it is refilled on its own
     // (updateAvailableRow), so a download never rebuilds the whole list.
@@ -739,35 +823,59 @@ void DictionariesDialog::fillAvailableState(QWidget* row, const core::CatalogEnt
         return;
     }
 
+    // Size, then the action, each in a column of its own width so every row lines up.
+    layout->addWidget(makeColumnLabel(humanSize(entry.sizeCompressed), columnWidth(row, u"999.9 MB"_s), row));
+    QWidget* action = makeActionColumn(row);
+    auto* actionLayout = qobject_cast<QHBoxLayout*>(action->layout());
+    layout->addWidget(action);
+
     const std::optional<QString> installedVersion =
         effectiveVersion(m_installed, m_installedOverride, entry.dictId);
     if (!installedVersion) {
-        auto* size = new QLabel(humanSize(entry.sizeCompressed), row);
-        size->setProperty("muted", true);
-        size->setProperty("small", true);
-        layout->addWidget(size);
-        auto* download = new QPushButton(tr("Download"), row);
+        auto* download = new QPushButton(tr("Download"), action);
         download->setObjectName(u"downloadButton_"_s + entry.dictId);
         download->setProperty("primary", true);
         makeSmall(download);
         connect(download, &QPushButton::clicked, this, [this, entry] { startDownload(entry); });
-        layout->addWidget(download);
+        actionLayout->addWidget(download);
     } else if (core::compareVersions(*installedVersion, entry.version) < 0) {
-        auto* update = new QPushButton(tr("Update"), row);
+        auto* update = new QPushButton(tr("Update"), action);
         update->setObjectName(u"availableUpdateButton_"_s + entry.dictId);
         makeSmall(update);
         connect(update, &QPushButton::clicked, this, [this, entry] { startDownload(entry); });
-        layout->addWidget(update);
+        actionLayout->addWidget(update);
     } else {
-        auto* check = new QLabel(row);
+        auto* check = new QLabel(action);
         check->setPixmap(
             icons::pixmap(u"check"_s, Tokens::current().success, kIconSize, row->devicePixelRatioF()));
-        layout->addWidget(check);
-        auto* installedLabel = new QLabel(tr("Installed"), row);
+        actionLayout->addWidget(check);
+        auto* installedLabel = new QLabel(tr("Installed"), action);
         installedLabel->setProperty("muted", true);
         installedLabel->setProperty("small", true);
-        layout->addWidget(installedLabel);
+        actionLayout->addWidget(installedLabel);
     }
+}
+
+QWidget* DictionariesDialog::makeActionColumn(QWidget* parent) const
+{
+    auto* action = new QWidget(parent);
+    auto* layout = new QHBoxLayout(action);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(kActionSpacing);
+    layout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    action->setMinimumWidth(m_actionWidth);
+    return action;
+}
+
+int DictionariesDialog::measureActionWidth() const
+{
+    // As wide as the widest thing the column holds: a Download button, or the check and "Installed".
+    QPushButton probe(tr("Download"));
+    probe.setProperty("primary", true);
+    makeSmall(&probe);
+    probe.ensurePolished();
+    const int installedWidth = kIconSize + kActionSpacing + columnWidth(this, tr("Installed"));
+    return std::max(probe.sizeHint().width(), installedWidth);
 }
 
 QString DictionariesDialog::progressText(int percent, qint64 received, qint64 total)
@@ -880,6 +988,25 @@ void DictionariesDialog::rebuildInstalledRows()
     }
     m_tabs->setTabText(0, tr("Installed (%1)").arg(m_installed.size()));
     updateInstalledFooter();
+    updateInstalledEmptyState();
+}
+
+void DictionariesDialog::updateInstalledEmptyState()
+{
+    const bool empty = m_installed.isEmpty();
+    m_installedStack->setCurrentWidget(empty ? static_cast<QWidget*>(m_installedEmpty) : m_installedList);
+    m_installedFooter->setVisible(!empty);
+    m_checkUpdatesButton->setVisible(!empty);
+    if (!empty) {
+        return;
+    }
+    const qsizetype offered = m_manager.catalog().dictionaries.size();
+    const QString offer = offered > 0 ? tr("Choose from %1 free dictionaries.").arg(offered)
+                                      : tr("Choose from free dictionaries in many languages.");
+    m_installedEmpty->setContent(u"books"_s, tr("No dictionaries yet"),
+                                 offer + u' ' +
+                                     tr("Once downloaded, they work without an internet connection."),
+                                 {}, tr("Browse dictionaries"));
 }
 
 void DictionariesDialog::updateAvailableRow(const QString& dictId)
@@ -923,40 +1050,47 @@ void DictionariesDialog::rebuildAvailableRows()
         delete item;
     }
 
-    const QString filterText = m_filterField->text().trimmed();
-    const QString fromCode = m_fromCombo->currentData().toString();
-    const QString toCode = m_toCombo->currentData().toString();
-
     QList<core::CatalogEntry> entries = m_manager.catalog().dictionaries;
     std::ranges::sort(entries, [](const core::CatalogEntry& a, const core::CatalogEntry& b) {
         return a.name.localeAwareCompare(b.name) < 0;
     });
     QList<core::CatalogEntry> shown;
     for (const core::CatalogEntry& entry : entries) {
-        if (!filterText.isEmpty() && !entry.name.contains(filterText, Qt::CaseInsensitive)) {
-            continue;
+        if (matchesFilters(entry)) {
+            shown << entry;
         }
-        if (!fromCode.isEmpty() && entry.sourceLang != fromCode) {
-            continue;
-        }
-        if (!toCode.isEmpty() && entry.targetLang != toCode) {
-            continue;
-        }
-        shown << entry;
     }
 
+    m_actionWidth = measureActionWidth();
     for (qsizetype i = 0; i < shown.size(); ++i) {
         listLayout->insertWidget(static_cast<int>(i), buildAvailableRow(shown.at(i), i == shown.size() - 1));
     }
     m_availableList->setUpdatesEnabled(true);
+    // mocks/dictionaries-available.html note 6: the catalogue's size, and how much a filter shows.
+    m_shownCount = shown.size();
+    m_tabs->setTabText(1, entries.isEmpty() ? tr("Available") : tr("Available (%1)").arg(entries.size()));
+    updateAvailableFooter();
     // The new rows are laid out on the next pass; restore the place after it.
     QTimer::singleShot(0, this, [scrollBar, position] { scrollBar->setValue(position); });
 }
 
-void DictionariesDialog::refreshLanguageFilters()
+bool DictionariesDialog::matchesFilters(const core::CatalogEntry& entry) const
+{
+    const QString filterText = m_filterField->text().trimmed();
+    const QString fromCode = m_fromCombo->currentData().toString();
+    const QString toCode = m_toCombo->currentData().toString();
+    const QString provider = m_providerCombo->currentData().toString();
+    return (filterText.isEmpty() || entry.name.contains(filterText, Qt::CaseInsensitive)) &&
+           (fromCode.isEmpty() || entry.sourceLang == fromCode) &&
+           (toCode.isEmpty() || entry.targetLang == toCode) &&
+           (provider.isEmpty() || core::providerName(entry) == provider);
+}
+
+void DictionariesDialog::refreshFilters()
 {
     const QString previousFrom = m_fromCombo->currentData().toString();
     const QString previousTo = m_toCombo->currentData().toString();
+    const QString previousProvider = m_providerCombo->currentData().toString();
     QSet<QString> sources;
     QSet<QString> targets;
     for (const core::CatalogEntry& entry : m_manager.catalog().dictionaries) {
@@ -968,6 +1102,8 @@ void DictionariesDialog::refreshLanguageFilters()
     populateLanguageCombo(m_toCombo, targets, anyLanguage);
     restoreComboSelection(m_fromCombo, previousFrom);
     restoreComboSelection(m_toCombo, previousTo);
+    populateProviderCombo(m_providerCombo, m_manager.catalog().dictionaries, tr("Any"));
+    restoreComboSelection(m_providerCombo, previousProvider);
 }
 
 void DictionariesDialog::updateInstalledFooter()
@@ -1011,7 +1147,7 @@ void DictionariesDialog::updateAvailableFooter()
     }
     const QDateTime fetchedAt = m_manager.catalogFetchedAt();
     if (!fetchedAt.isValid()) {
-        m_availableFooter->setText(tr("Catalogue from %1").arg(host));
+        m_availableFooter->setText(shownPrefix() + tr("Catalogue from %1").arg(host));
         return;
     }
     const QDate fetchedDate = fetchedAt.toLocalTime().date();
@@ -1032,7 +1168,16 @@ void DictionariesDialog::updateAvailableFooter()
     } else {
         when = QLocale().toString(fetchedDate, QLocale::ShortFormat);
     }
-    m_availableFooter->setText(tr("Catalogue from %1, updated %2").arg(host, when));
+    m_availableFooter->setText(shownPrefix() + tr("Catalogue from %1, updated %2").arg(host, when));
+}
+
+QString DictionariesDialog::shownPrefix() const
+{
+    const qsizetype total = m_manager.catalog().dictionaries.size();
+    if (m_shownCount >= total) {
+        return {};
+    }
+    return tr("Showing %1 of %2 dictionaries.").arg(m_shownCount).arg(total) + u' ';
 }
 
 QStringList DictionariesDialog::orderedInstalledIds() const

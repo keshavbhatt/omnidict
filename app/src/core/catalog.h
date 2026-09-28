@@ -31,6 +31,8 @@ struct CatalogEntry
     QString sha256;            ///< lowercase hex, of the `.odict` file
     QString url;
     QString builtAt; ///< UTC, ISO 8601
+    /// `source.converter` ("kaikki", "freedict", ...); optional, empty when absent.
+    QString sourceConverter;
 
     [[nodiscard]] bool operator==(const CatalogEntry&) const = default;
 };
@@ -57,6 +59,10 @@ struct Catalog
 /// `> 0` as `a` compares less than, equal to, or greater than `b`. A component
 /// that is not a non-negative integer reads as 0, the same as a missing one.
 [[nodiscard]] int compareVersions(const QString& a, const QString& b);
+
+/// Who provides a dictionary's content, by the pipeline converter that built it
+/// ("Wiktionary" for `kaikki`); the publisher field when the converter is unknown.
+[[nodiscard]] QString providerName(const CatalogEntry& entry);
 
 } // namespace omnidict::core
 

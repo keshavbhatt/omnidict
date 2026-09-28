@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPushButton>
+#include <QStyle>
 #include <QVBoxLayout>
 
 using namespace Qt::StringLiterals;
@@ -86,6 +87,13 @@ void EmptyState::setContent(const QString& glyph, const QString& title, const QS
     }
     m_button->setText(buttonText);
     m_button->setVisible(!buttonText.isEmpty());
+}
+
+void EmptyState::setButtonPrimary(bool primary)
+{
+    m_button->setProperty("primary", primary);
+    m_button->style()->unpolish(m_button);
+    m_button->style()->polish(m_button);
 }
 
 void EmptyState::changeEvent(QEvent* event)

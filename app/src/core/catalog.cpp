@@ -3,6 +3,7 @@
 #include "core/bundle.h"
 #include "core/logging.h"
 
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -123,6 +124,9 @@ Result<CatalogEntry> parseEntry(const QJsonObject& object, const QString& label)
     }
     entry.schemaVersion = static_cast<int>(schemaVersion.take());
 
+    // Optional (PLAN.md 5.1 `source`): a missing or malformed object leaves it empty.
+    entry.sourceConverter = object.value(u"source"_s).toObject().value(u"converter"_s).toString();
+
     return entry;
 }
 
@@ -192,6 +196,16 @@ int compareVersions(const QString& a, const QString& b)
         }
     }
     return 0;
+}
+
+QString providerName(const CatalogEntry& entry)
+{
+    // Brand names, the same in every language; one row per pipeline converter.
+    static const QHash<QString, QString> kProviders{
+        {u"kaikki"_s, u"Wiktionary"_s}, {u"freedict"_s, u"FreeDict"_s}, {u"oewn"_s, u"WordNet"_s},
+        {u"jmdict"_s, u"JMdict"_s},     {u"cedict"_s, u"CC-CEDICT"_s},  {u"kengdic"_s, u"Kengdic"_s},
+    };
+    return kProviders.value(entry.sourceConverter, entry.publisher);
 }
 
 } // namespace omnidict::core

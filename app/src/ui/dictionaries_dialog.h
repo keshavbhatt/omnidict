@@ -29,6 +29,7 @@ class QLineEdit;
 class QListWidget;
 class QPushButton;
 class QScrollArea;
+class QStackedWidget;
 class QTabWidget;
 class QToolButton;
 class QVBoxLayout;
@@ -36,6 +37,7 @@ QT_END_NAMESPACE
 
 namespace omnidict::ui {
 
+class EmptyState;
 class SwitchButton;
 
 /// Dictionaries (DOCS/mocks/dictionaries.html, dictionaries-available.html):
@@ -67,8 +69,10 @@ protected:
 
 private:
     QWidget* buildInstalledTab();
+    QFrame* buildInstalledFoot(QWidget* page);
     QWidget* buildAvailableTab();
     QHBoxLayout* buildAvailableFilterRow(QWidget* content);
+    QComboBox* addFilterCombo(QHBoxLayout* row, QWidget* parent, const QString& label, const QString& name);
     QScrollArea* buildAvailableScroll(QWidget* content);
     QFrame* buildAvailableFoot(QWidget* page);
     QWidget* buildInstalledRow(const services::DictionaryInfo& info, bool isLast);
@@ -76,6 +80,9 @@ private:
     void appendUpdateControls(QHBoxLayout* layout, QWidget* row, const services::DictionaryInfo& info);
     SwitchButton* buildDictSwitch(QWidget* row, const services::DictionaryInfo& info);
     QWidget* buildAvailableRow(const core::CatalogEntry& entry, bool isLast);
+    /// The fixed-width right-hand column holding a row's button or status, so sizes line up.
+    QWidget* makeActionColumn(QWidget* parent) const;
+    [[nodiscard]] int measureActionWidth() const;
     void appendDownloadState(QHBoxLayout* layout, QWidget* row, const core::CatalogEntry& entry,
                              const services::DownloadStatus& status);
     QToolButton* makeCancelButton(QWidget* parent, const QString& dictId);
@@ -90,9 +97,15 @@ private:
     void updateAvailableRow(const QString& dictId);
     void fillAvailableState(QWidget* row, const core::CatalogEntry& entry);
     [[nodiscard]] static QString progressText(int percent, qint64 received, qint64 total);
-    void refreshLanguageFilters();
+    /// Refills the From, To and Provider drop-downs from the catalogue, keeping their choices.
+    void refreshFilters();
+    [[nodiscard]] bool matchesFilters(const core::CatalogEntry& entry) const;
     void updateInstalledFooter();
+    /// The empty state instead of the list when nothing is installed (mocks/dictionaries-empty.html).
+    void updateInstalledEmptyState();
     void updateAvailableFooter();
+    /// "Showing 24 of 308 dictionaries. " while a filter hides some; empty otherwise.
+    [[nodiscard]] QString shownPrefix() const;
     /// Reads the catalogue now (Refresh, F5).
     void refreshCatalog();
     [[nodiscard]] QStringList orderedInstalledIds() const;
@@ -107,12 +120,18 @@ private:
     QString m_selectedDictId; ///< survives a rebuild, for repeated Alt+Up / Alt+Down
 
     QTabWidget* m_tabs = nullptr;
+    QStackedWidget* m_installedStack = nullptr; ///< the list, or the empty state
     QListWidget* m_installedList = nullptr;
+    EmptyState* m_installedEmpty = nullptr;
     QLabel* m_installedFooter = nullptr;
+    QPushButton* m_checkUpdatesButton = nullptr;
 
     QLineEdit* m_filterField = nullptr;
     QComboBox* m_fromCombo = nullptr;
     QComboBox* m_toCombo = nullptr;
+    QComboBox* m_providerCombo = nullptr;
+    qsizetype m_shownCount = 0;         ///< rows shown after the filters, for the footer
+    int m_actionWidth = 0;              ///< the Available rows' action column, measured on each rebuild
     QWidget* m_availableList = nullptr; ///< a QVBoxLayout of rows, plus a trailing stretch
     QScrollArea* m_availableScroll = nullptr;
     QHash<QString, QWidget*> m_availableStates;            ///< each row's right-hand side, by dictionary id
