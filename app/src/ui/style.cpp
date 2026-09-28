@@ -149,6 +149,7 @@ QFrame[segmented="true"] QToolButton:hover { background: {{hover}}; }
 QFrame[segmented="true"] QToolButton:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
 QFrame[segmented="true"] QToolButton:focus { color: {{accent}}; }
 QPushButton[compact="true"] { padding: 0 4px; min-width: 32px; }
+QPushButton[small="true"] { padding: 0 10px; min-height: 0; }
 
 QToolButton[chip="true"] {
     background: {{input}}; border: 1px solid {{border}};

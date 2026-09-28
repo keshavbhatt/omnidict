@@ -79,19 +79,53 @@ QString languageLabel(const QString& code)
     return name;
 }
 
-QString pillStyleSheet(bool accent)
+/// A rounded pill (mock.css .pill), painted: a style sheet on a label did not
+/// give it the padding and rounding.
+class Pill : public QLabel
 {
-    const Tokens& t = Tokens::current();
-    const QColor bg = accent ? t.accentSoft : t.hover;
-    const QColor fg = accent ? t.accent : t.muted;
-    return u"QLabel { background: %1; color: %2; border-radius: 11px; padding: 2px 10px; font-size: 12px; }"_s
-        .arg(bg.name(), fg.name());
-}
+public:
+    Pill(const QString& text, bool accent, QWidget* parent)
+        : QLabel(text, parent)
+        , m_accent(accent)
+    {
+        QFont small = font();
+        small.setPixelSize(kPillTextPixels);
+        setFont(small);
+        setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    }
+
+    [[nodiscard]] QSize sizeHint() const override
+    {
+        const QFontMetrics metrics(font());
+        return {metrics.horizontalAdvance(text()) + (2 * kPillPadX), metrics.height() + (2 * kPillPadY)};
+    }
+    [[nodiscard]] QSize minimumSizeHint() const override { return sizeHint(); }
+
+protected:
+    void paintEvent(QPaintEvent* /*event*/) override
+    {
+        const Tokens& t = Tokens::current();
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(m_accent ? t.accentSoft : t.hover);
+        const qreal radius = height() / 2.0;
+        painter.drawRoundedRect(QRectF(rect()), radius, radius);
+        painter.setPen(m_accent ? t.accent : t.muted);
+        painter.drawText(rect(), Qt::AlignCenter, text());
+    }
+
+private:
+    static constexpr int kPillTextPixels = 12;
+    static constexpr int kPillPadX = 10;
+    static constexpr int kPillPadY = 3;
+    bool m_accent;
+};
 
 void makeSmall(QPushButton* button)
 {
     button->setFixedHeight(28);
-    button->setStyleSheet(u"QPushButton { padding: 0 10px; min-height: 0; }"_s);
+    button->setProperty("small", true); // app style sheet: less padding, no minimum height
 }
 
 bool isUnderRoot(const QString& path, const QString& root)
@@ -534,9 +568,8 @@ void DictionariesDialog::appendUpdateControls(QHBoxLayout* layout, QWidget* row,
     if (!newer) {
         return;
     }
-    auto* pill = new QLabel(tr("Update %1").arg(newer->version), row);
-    pill->setStyleSheet(pillStyleSheet(true));
-    layout->addWidget(pill);
+    auto* pill = new Pill(tr("Update %1").arg(newer->version), /*accent=*/true, row);
+    layout->addWidget(pill, 0, Qt::AlignVCenter);
     auto* update = new QPushButton(tr("Update"), row);
     update->setObjectName(u"installedUpdateButton_"_s + info.dictId);
     makeSmall(update);
@@ -677,9 +710,8 @@ void DictionariesDialog::appendDownloadState(QHBoxLayout* layout, QWidget* row,
 {
     switch (status.state) {
     case services::DownloadStatus::Waiting: {
-        auto* pill = new QLabel(tr("Waiting"), row);
-        pill->setStyleSheet(pillStyleSheet(false));
-        layout->addWidget(pill);
+        auto* pill = new Pill(tr("Waiting"), /*accent=*/false, row);
+        layout->addWidget(pill, 0, Qt::AlignVCenter);
         layout->addWidget(makeCancelButton(row, entry.dictId));
         break;
     }
