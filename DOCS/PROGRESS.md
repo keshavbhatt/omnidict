@@ -11,8 +11,27 @@ Newest first. One entry per working session.
 | M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening measured and not needed yet (B10) |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
 | M4 More converters, real catalog | done locally: every converter written (KEngDic added 2026-09-28); 328 Wiktionary languages listed, built in full by CI once the repository exists; hosting on GitHub Releases decided (ADR-016), publishing waits for the owner |
-| M5 Packaging | todo |
+| M5 Packaging | done locally: desktop file, metainfo, snap, Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage deferred; nothing runs until the repository exists |
 | M6 Web app | todo |
+
+## 2026-09-28 - M5 packaging
+
+- Owner: AppImage deferred, snap name `omnidict`, links on github.com/keshavbhatt/omnidict.
+- `app/dist/linux/`: desktop file (validates) and metainfo (validates; `<release>` comes with
+  the release checklist), installed by CMake with the binary and icons.
+- Store text tuned with the FlathubSEO playbook at the owner's request: summary "Offline
+  dictionary for any language" (35), first keywords dictionary, wiktionary, thesaurus,
+  "dictionary" in ten languages, languages named in the description. A Flathub search baseline
+  showed the "<language> dictionary" queries have no real answer today
+  (FlathubSEO/docs/omnidict-keyword-research.md).
+- `snap/snapcraft.yaml` (kde-neon-6, expands cleanly), `.github/workflows/snap.yml`,
+  `.github/workflows/release.yml` (tag checks tested locally), Flatpak manifest (passes
+  flatpak-builder-lint; the runtime's SQLite has FTS5 and trigram).
+- `scripts/store-screenshots.sh`: four plain captures in `screenshots/store/`.
+- A download test through an HTTP redirect (catalogue, download, resume with Range), the way
+  GitHub serves release assets.
+- CHANGELOG 0.1.0 rewritten for the catalogue app (it still described three built-in
+  dictionaries).
 
 ## 2026-09-28 - Hosting, Wiktionary languages, Kengdic
 

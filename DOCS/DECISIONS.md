@@ -367,3 +367,34 @@ Wiktionary bundles move to a release of their own.
   own release, as long as it stays available. Settled (owner, 2026-09-28): every bundle
   records its upstream source in `source_url` (schema 3) and the About card links it.
 - Needs the GitHub repository, which the owner has deferred.
+
+## ADR-017: Packaging: snap and Flatpak built in CI, AppImage deferred (2026-09-28)
+
+**Status.** Accepted (owner, 2026-09-28).
+
+**Context.** M5 (PLAN 8) packages the app. The rewrite kit packages its apps as a snap on the
+kde-neon-6 extension, built by GitHub Actions, and a Flatpak built by Flathub; its Flatpak
+repackages a closed-source snap, which Omnidict, being open source, does not need. An
+AppImage has no ready Qt 6.11 runtime to build against.
+
+**Decision.**
+- **Snap** `omnidict` (owner registers the name), core24, kde-neon-6 extension, built by
+  `.github/workflows/snap.yml` for amd64 and arm64; store publishing is opt-in by repo variable
+  (main to edge, tags to candidate), promotion to stable by hand.
+- **Flatpak** `com.ktechpit.omnidict` on `org.kde.Platform` 6.11, built from source by
+  Flathub; SQLite (FTS5), zstd and ICU come from the runtime, so no extra modules.
+- **AppImage** deferred until after the first release (FEATURES F3). The option on the table
+  is a CI build on Ubuntu 22.04 with Qt from aqtinstall and linuxdeploy, which would need its
+  own ADR and `THIRD_PARTY.md` rows.
+- **Releases**: `.github/workflows/release.yml` makes a GitHub release from a version tag,
+  with that version's CHANGELOG section as notes, after checking the tag against
+  `project(VERSION)` and that the section is dated.
+- **Store text** follows the FlathubSEO playbook (summary of 35 characters, `dictionary`,
+  `wiktionary`, `thesaurus` as the first three keywords); screenshots are plain window captures
+  from `scripts/store-screenshots.sh`.
+- Homepage, bug tracker and screenshots point at `github.com/keshavbhatt/omnidict`, which
+  does not exist until the owner creates the repository.
+
+**Consequences.** Nothing is built or published from this machine. The appstream lint stays
+red on unreachable URLs and the missing `<release>` until the repository is public and the
+release checklist runs. `packaging/README.md` is the working reference.

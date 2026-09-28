@@ -84,10 +84,10 @@ expects every ktechpit desktop app to have.
 
 | # | Feature | Milestone | Decision | Status |
 |---|---|---|---|---|
-| F1 | Snap packaging, built in CI | M5 | KEEP | planned |
-| F2 | Flatpak packaging | M5 | KEEP | planned |
-| F3 | AppImage packaging | M5 | KEEP | planned |
-| F4 | CI release workflow | M5 | KEEP | planned |
+| F1 | Snap packaging, built in CI | M5 | KEEP | done (runs once the repository exists) |
+| F2 | Flatpak packaging | M5 | KEEP | done (manifest; Flathub submission with the owner) |
+| F3 | AppImage packaging | M5 | DEFERRED | deferred until after the first release (owner, 2026-09-28; ADR-017) |
+| F4 | CI release workflow | M5 | KEEP | done (runs once the repository exists) |
 | F5 | Windows / macOS builds | v2 | LATER | - |
 
 ## G. Web
