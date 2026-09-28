@@ -5,6 +5,7 @@
 #include <QString>
 
 class QAbstractScrollArea;
+class QComboBox;
 class QLabel;
 
 namespace omnidict::ui {
@@ -55,6 +56,11 @@ void makeSectionLabel(QLabel* label);
 /// A window title ending in the app's name, "Settings - Omnidict". Without the
 /// name at the end, Qt appends it itself with an em dash, which our text never uses.
 [[nodiscard]] QString titleWithApp(const QString& title);
+
+/// Gives a drop-down's list the app's item style (row height, padding, hover) and
+/// the box's own font: Qt's default combo delegate ignores the sheet's `::item` rules
+/// and paints in the smaller menu font.
+void styleComboPopup(QComboBox* combo);
 
 /// Turns off the Ctrl+wheel zoom Qt's text views have built in: it has no limits
 /// and rescales only part of the text. Text size is Ctrl+Plus/Minus in the entry.

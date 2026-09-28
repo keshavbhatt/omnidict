@@ -86,7 +86,7 @@ select.input { width: auto; padding-right: 28px; }
 .btn.icon { width: 34px; padding: 0; justify-content: center; }
 .btn.on { color: var(--warm); }
 .btn:disabled, .btn.disabled { opacity: .5; }
-.btn.small { height: 28px; padding: 0 10px; font-size: 13px; }
+.btn.small { height: 20px; padding: 0 10px; font-size: 13px; border-radius: 10px; }
 .chip { height: 36px; padding: 0 10px 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--input); display: inline-flex; align-items: center; gap: 6px; color: var(--text); white-space: nowrap; }
 .chip:hover { background: var(--hover); }
 .chip .ic { color: var(--muted); }

@@ -54,8 +54,10 @@ constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
 constexpr int kLanguageComboVisibleItems = 12;
 constexpr int kActionSpacing = 6;
-constexpr int kFilterComboChars = 12;
-constexpr int kFilterFieldMinWidth = 150;
+/// A drop-down's width beyond its text: the sheet's 12 px left and 4 px right
+/// padding, the 26 px arrow, and a little air.
+constexpr int kComboChrome = 12 + 4 + 26 + 8;
+constexpr int kFilterFieldMinWidth = 120;
 constexpr int kSmallLabelPixels = 12; ///< style.cpp QLabel[small="true"]
 constexpr int kRingSize = 28;
 constexpr qreal kDimmedOpacity = 0.55;
@@ -211,6 +213,17 @@ void populateLanguageCombo(QComboBox* combo, const QSet<QString>& codes, const Q
             combo->addItem(languageLabel(code), code);
         }
     }
+}
+
+/// A drop-down as wide as the widest of `samples` needs, measured in its own font.
+void fitBoxWidth(QComboBox* combo, const QStringList& samples)
+{
+    const QFontMetrics metrics(combo->font());
+    int widest = 0;
+    for (const QString& sample : samples) {
+        widest = std::max(widest, metrics.horizontalAdvance(sample));
+    }
+    combo->setMinimumWidth(widest + kComboChrome);
 }
 
 /// Lets a drop-down's popup be wider than the box, so long names show in full.
@@ -568,7 +581,9 @@ QComboBox* DictionariesDialog::addFilterCombo(QHBoxLayout* row, QWidget* parent,
     // Sized for "Any language", not the longest name in the list, so the name
     // filter keeps its room; the popup widens to fit (fitPopupWidth).
     combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
-    combo->setMinimumContentsLength(kFilterComboChars);
+    combo->setMinimumContentsLength(1);
+    fitBoxWidth(combo, {tr("Any language")});
+    styleComboPopup(combo);
     combo->setAccessibleName(label);
     connect(combo, &QComboBox::currentIndexChanged, this, [this] { rebuildAvailableRows(); });
     row->addWidget(combo);
@@ -1104,6 +1119,12 @@ void DictionariesDialog::refreshFilters()
     restoreComboSelection(m_toCombo, previousTo);
     populateProviderCombo(m_providerCombo, m_manager.catalog().dictionaries, tr("Any"));
     restoreComboSelection(m_providerCombo, previousProvider);
+    // The provider list is short: the box fits every choice, "Wiktionary (310)" included.
+    QStringList providers;
+    for (int i = 0; i < m_providerCombo->count(); ++i) {
+        providers << m_providerCombo->itemText(i);
+    }
+    fitBoxWidth(m_providerCombo, providers);
 }
 
 void DictionariesDialog::updateInstalledFooter()

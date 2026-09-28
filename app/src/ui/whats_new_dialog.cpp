@@ -53,6 +53,7 @@ WhatsNewDialog::WhatsNewDialog(QString runningVersion, QWidget* parent)
     root->addLayout(buildHeader());
     root->addWidget(buildNotesCard(), 1);
     root->addWidget(buildFooter());
+    styleComboPopup(m_picker);
 
     // Open on the running version, or the newest release when the running
     // version has no section yet (a dev build ahead of the changelog).

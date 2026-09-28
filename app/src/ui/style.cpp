@@ -3,9 +3,11 @@
 #include "ui/icons.h"
 
 #include <QAbstractScrollArea>
+#include <QComboBox>
 #include <QGuiApplication>
 #include <QHash>
 #include <QLabel>
+#include <QStyledItemDelegate>
 #include <QWheelEvent>
 
 using namespace Qt::StringLiterals;
@@ -188,7 +190,8 @@ QTabWidget::pane { border: none; border-top: 1px solid {{border}}; }
 /* Drop-downs look like the header's filter chip (mocks/dictionaries-available.html). */
 QComboBox {
     background: {{input}}; color: {{text}};
-    border: 1px solid {{border}}; border-radius: 8px; min-height: 32px; padding: 0 30px 0 12px;
+    /* Right padding stays small: Qt already keeps the arrow's 26 px (::drop-down) clear of the text. */
+    border: 1px solid {{border}}; border-radius: 8px; min-height: 32px; padding: 0 4px 0 12px;
     combobox-popup: 0; /* a list under the box that honours maxVisibleItems, not a screen-high popup */
 }
 QComboBox:hover { background: {{hover}}; }
@@ -201,8 +204,13 @@ QComboBox::down-arrow { image: url({{chevron}}); width: 14px; height: 14px; }
 QComboBox::down-arrow:on { top: 1px; }
 QComboBox QAbstractItemView {
     background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 8px;
-    padding: 4px; outline: 0;
+    padding: 6px; outline: 0;
     selection-background-color: {{hover}}; selection-color: {{text}};
+}
+/* Rows with room to read and to aim at (applies with styleComboPopup's delegate). */
+QComboBox QAbstractItemView::item { min-height: 32px; padding: 0 10px; border-radius: 6px; }
+QComboBox QAbstractItemView::item:hover, QComboBox QAbstractItemView::item:selected {
+    background: {{hover}}; color: {{text}};
 }
 
 /* A slim handle with room on the content side: rows and buttons never touch it. */
@@ -295,6 +303,11 @@ QString titleWithApp(const QString& title)
 {
     const QString app = QGuiApplication::applicationDisplayName();
     return app.isEmpty() || title.endsWith(app) ? title : title + u" - "_s + app;
+}
+
+void styleComboPopup(QComboBox* combo)
+{
+    combo->setItemDelegate(new QStyledItemDelegate(combo));
 }
 
 void disableWheelZoom(QAbstractScrollArea* view)

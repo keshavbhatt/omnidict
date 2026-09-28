@@ -613,6 +613,10 @@ private Q_SLOTS:
                                      u"Wiktionary"_s, u"http://example.invalid/en"_s, body),
                             manifest(u"wikt-fr-en"_s, u"French - English"_s, u"1"_s, u"fr"_s, u"en"_s,
                                      u"Wiktionary"_s, u"http://example.invalid/fr"_s, body),
+                            manifest(u"wikt-de-en"_s, u"German - English"_s, u"1"_s, u"de"_s, u"en"_s,
+                                     u"Wiktionary"_s, u"http://example.invalid/de"_s, body),
+                            manifest(u"wikt-ko-en"_s, u"Korean - English"_s, u"1"_s, u"ko"_s, u"en"_s,
+                                     u"Wiktionary"_s, u"http://example.invalid/ko"_s, body),
                         }));
 
         Settings settings(iniPath(u"grabs"_s));
@@ -637,6 +641,17 @@ private Q_SLOTS:
             grab(&dialog, u"dictionaries"_s + suffix);
             dialog.showAvailable();
             grab(&dialog, u"dictionaries-available"_s + suffix);
+
+            dialog.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&dialog));
+            auto* from = dialog.findChild<QComboBox*>(u"fromLanguage"_s);
+            from->showPopup();
+            QWidget* popup = from->view()->window();
+            QTRY_VERIFY(popup->isVisible());
+            popup->grab().save(QString::fromUtf8(qgetenv("OMNIDICT_GRAB_DIR")) + u"/language-popup"_s +
+                               suffix + u".png"_s);
+            from->hidePopup();
+            dialog.hide();
         }
     }
 };
