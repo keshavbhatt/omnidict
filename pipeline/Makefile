@@ -14,9 +14,11 @@ BASE_URL ?= http://localhost:8000
 PORT ?= 8000
 
 DICTS_kaikki := wikt-hi-en wikt-es-en wikt-en
-DICTS := $(DICTS_kaikki)
+DICTS_oewn := oewn-en
+DICTS := $(DICTS_kaikki) $(DICTS_oewn)
 # dict_id prefix -> converter module
 CONVERTER_wikt := kaikki
+CONVERTER_oewn := oewn
 converter = $(CONVERTER_$(firstword $(subst -, ,$(1))))
 # English is large: skip the VACUUM, which needs a temporary copy of the whole bundle.
 BUILD_FLAGS_wikt-en := --no-vacuum

@@ -111,6 +111,43 @@
         "neccessary": "necessary",
         "ambigous": "ambiguous"
       }
+    },
+    "oewn-en": {
+      "headwords": [
+        "water",
+        "house",
+        "dog",
+        "cat",
+        "eat",
+        "speak",
+        "child",
+        "book",
+        "day",
+        "night",
+        "man",
+        "woman",
+        "tree",
+        "sun",
+        "moon",
+        "friend",
+        "love",
+        "hand",
+        "eye",
+        "hello"
+      ],
+      "forms": {
+        "ran": "run",
+        "children": "child",
+        "mice": "mouse"
+      },
+      "full_text": "domesticated",
+      "suggestions": {
+        "dictionery": "dictionary",
+        "acomodate": "accommodate",
+        "pronounciation": "pronunciation",
+        "neccessary": "necessary",
+        "ambigous": "ambiguous"
+      }
     }
   }
 }
