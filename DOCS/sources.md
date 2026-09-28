@@ -5,12 +5,12 @@ without a documented licence in this file.** Kaikki is first, in M1; the rest fo
 
 | Source | Format | Yields | Licence | Dump URL | Status |
 |---|---|---|---|---|---|
-| Kaikki (kaikki.org) | gzipped JSONL per language of English Wiktionary | Hundreds of `X to en` pairs from English Wiktionary; `en to X` and `X to X` pairs from other Wiktionary editions | CC BY-SA 4.0 | `https://kaikki.org/dictionary/<Language>/kaikki.org-dictionary-<Language>.jsonl.gz` | in use (M1): `wikt-hi-en`, `wikt-es-en`, `wikt-en` |
+| Kaikki (kaikki.org) | gzipped JSONL per language of English Wiktionary | Hundreds of `X to en` pairs from English Wiktionary; `en to X` and `X to X` pairs from other Wiktionary editions | CC BY-SA 4.0 | `https://kaikki.org/dictionary/<Language>/kaikki.org-dictionary-<LanguageWithoutSpaces>.jsonl.gz` | in use: 320 languages listed in `pipeline/kaikki-languages.tsv` (see "Wiktionary languages") |
 | FreeDict | TEI XML (P5) | 291 bilingual pairs (of 305 listed), good coverage for `en to X` and `X to en` | per dictionary, free licences only, see notes | `https://freedict.org/freedict-database.json` | in use (M4): 291 dictionaries |
 | WordNet (Open English WordNet) | XML / LMF (WN-LMF) | `en` monolingual entries plus synonym/antonym/hypernym relations | CC BY 4.0 | `https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz` | in use (M4): `oewn-en` |
 | CC-CEDICT | plain text, one line per entry | `zh to en` | CC BY-SA 4.0 | `https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz` | in use (M4): `cedict-zh-en` |
 | JMdict | XML | `ja to en` (and other targets) | CC BY-SA 4.0, EDRDG licence | `http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz` | in use (M4): `jmdict-ja-en` |
-| KEngDic | SQL/CSV | `ko to en` | MPL 2.0 | to be recorded when the converter is written | planned (M4) |
+| KEngDic (Kengdic) | tab-separated text, one row per word and gloss | `ko to en` | MPL 2.0 or LGPL 2.0 or later (choice), see notes | `https://raw.githubusercontent.com/garfieldnate/kengdic/<commit>/kengdic.tsv` | in use (M4): `kengdic-ko-en` |
 | StarDict community | `.ifo`/`.idx`/`.dict.dz` | Thousands of dictionaries, licence varies or is unclear per file | varies/unclear, needs review per dictionary | to be recorded when the converter is written | planned (v2, opt-in "unofficial" tier only, after licence review) |
 
 ## Rule
@@ -55,6 +55,38 @@ Converter: `pipeline/omnipipe/converters/kaikki.py`, run as
   `.odict`; `wikt-es-en` 113,073 entries, 169 MB, 38 MB. `wikt-en` is built without the final
   VACUUM (`--no-vacuum`), which would need a temporary copy of the whole database; on Spanish
   that costs 2.8% installed and 8% compressed.
+
+### Wiktionary languages
+
+Owner decision 2026-09-28, made once hosting was settled as free (ADR-016): every Kaikki
+language with **at least 1,000 senses**, historical languages included (Latin, Ancient Greek,
+Old and Middle English, Old Norse, ...), **Translingual left out** (symbols and scientific
+names, not a useful dictionary on its own). Reconstructed languages (the eight `Proto-`
+languages above the cut-off) are left out until the owner decides on them;
+`--discover --include-reconstructed` adds them.
+
+- **The list.** `pipeline/kaikki-languages.tsv` (`dict_id`, language, Wiktionary code,
+  senses) is checked in, so a build never depends on what kaikki.org lists that day.
+  `python -m omnipipe.converters.kaikki --discover` rewrites it: it reads the sense counts on
+  `https://kaikki.org/dictionary/`, applies the cut-off and the exclusions, and takes each
+  language's code from the first record of its dump (the first 128 KiB only, by a `Range`
+  request). As of 2026-09-28: 320 languages (332 above the cut-off, less Translingual, 8
+  reconstructed and 3 Chinese varieties). The Makefile's `DICTS_kaikki` is the first column.
+- **Chinese varieties.** Wiktionary files Mandarin, Cantonese and Hokkien words under
+  "Chinese" (`wikt-zh-en`), so their own dumps are romanizations and soft redirects: 107, 7
+  and 207 entries after conversion. They are excluded in the converter. Every other language
+  was converted in a dry run on 2026-09-28 (dumps streamed, nothing written): all 320 convert
+  without error, 3.15 million entries besides English, the smallest about 500 entries.
+- **Identity.** `dict_id` is `wikt-<code>-en` with Wiktionary's own language code
+  (`wikt-ang-en` Old English, `wikt-zlw-opl-en` Old Polish, `wikt-gmq-osw-en` Old Swedish), and
+  `wikt-en` for English; `name` is "Language-English (Wiktionary)".
+- **File names.** Kaikki's folder is the language name, its file name the name without spaces
+  or punctuation (`Old English/kaikki.org-dictionary-OldEnglish.jsonl.gz`,
+  `Ye'kwana/...-Yekwana...`); `file_stem` in the converter.
+- **Language names in the app.** Qt has no name for 153 of the 320 codes (most historical and
+  regional ones: `ang`, `grc`, `enm`, `non`, `zlw-opl`, ...), so the Available tab's language
+  filter would show the bare code for them. Open question for the owner before the catalogue
+  is published.
 
 ## Open English WordNet notes
 
@@ -219,6 +251,41 @@ Converter: `pipeline/omnipipe/converters/cedict.py`, run as
   entries, 0 malformed lines, 66 MB as `dict.sqlite` (built with the default VACUUM).
 
 
+
+## Kengdic notes
+
+Converter: `pipeline/omnipipe/converters/kengdic.py`, run as
+`python -m omnipipe.converters.kengdic --dict kengdic-ko-en` or `make build DICT=kengdic-ko-en`.
+
+- **Source.** Kengdic is Joe Speigle's Korean-English dictionary database (first hosted at
+  ezcorean.com), kept at `https://github.com/garfieldnate/kengdic` as one tab-separated file,
+  `kengdic.tsv`: `id, surface, hanja, gloss, level, created, source`. The fetch asks the GitHub
+  API for the last commit that changed that file and downloads the file at that commit into
+  `pipeline/sources/kengdic/` (git-ignored), with a sidecar recording the commit and its date.
+  The commit date gives the version `YYYY.MM.N` (2021.10.1 for commit `f85a3a5`).
+- **Licence.** The repository has no licence file. Its README (2021) says: "released under
+  dual licenses: users may choose to use MPL 2.0 or the LGPL, version 2.0 or later", recorded
+  as `MPL-2.0 OR LGPL-2.0-or-later`. Its `datapackage.json`, added ten days earlier, lists
+  CC-BY-SA-3.0 and LGPL-2.0 instead; the README is the later, explicit statement and is the
+  one followed. Both choices are file-level or library copyleft: whoever distributes the
+  bundle must tell recipients where the source is. The source is the upstream file at the
+  pinned commit, so the publishing side can link it (same open task as FreeDict's GPL
+  dictionaries) rather than host it.
+- **Entries.** Rows with the same surface (whitespace collapsed) merge into one entry, in
+  order of first row. One sense per gloss; a gloss repeated ignoring case and spacing is kept
+  once. Rows without a gloss (16,255) contribute only their hanja; a word with no glossed row
+  is dropped.
+- **Hanja.** The hanja column, comma-separated when a word has several spellings, becomes
+  `forms` tagged `hanja`, so a hanja query (`學校`) finds the entry (`학교`).
+- **Levels.** A, B, C (the basic vocabulary grades of a word list merged into Kengdic in 2014)
+  become frequency bands 5, 4, 3; D (40 rows) and blank are left unset. A graded row holds the
+  basic meaning, so graded senses come first (물: "Water" before "the color of something"),
+  the rest keep row order.
+- **Part of speech.** Not given; left `null`.
+- **Quality.** Kengdic's README calls the data "still quite dirty": 680 glosses contain Korean
+  text, some capitalisation and spacing is uneven. Spacing is normalised; nothing else is
+  rewritten.
+- **Size.** Commit `f85a3a5` (133,764 rows): 106,211 entries, 33 MB as `dict.sqlite`.
 
 ## FreeDict notes
 

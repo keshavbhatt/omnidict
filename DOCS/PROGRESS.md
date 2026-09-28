@@ -10,9 +10,30 @@ Newest first. One entry per working session.
 | M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
 | M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening measured and not needed yet (B10) |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
-| M4 More converters, real catalog | done locally: 297 dictionaries in the local catalogue; publishing to a CDN waits (PLAN 9 question 2); KEngDic (FEATURES A13) not started |
+| M4 More converters, real catalog | done locally: every converter written (KEngDic added 2026-09-28); 320 Wiktionary languages listed, built in full by CI once the repository exists; hosting on GitHub Releases decided (ADR-016), publishing waits for the owner |
 | M5 Packaging | todo |
 | M6 Web app | todo |
+
+## 2026-09-28 - Hosting, Wiktionary languages, Kengdic
+
+- Hosting (owner): GitHub Releases, bundles built and attached by GitHub Actions, upstream
+  sources not re-hosted (ADR-016, PLAN 9 question 2). Nothing is published yet.
+- Wiktionary (owner): every Kaikki language with at least 1,000 senses, historical languages
+  in, Translingual out. `kaikki.py --discover` writes the checked-in
+  `pipeline/kaikki-languages.tsv` (320 languages; the 8 reconstructed `Proto-` languages wait
+  for the owner). Dump URLs now drop spaces and punctuation from the file name, which 16
+  languages need. A sample of 12 new languages (Old English, Ancient Greek, Gothic, Sumerian,
+  Egyptian, Korean, Cantonese, Middle English, Old Norse, Navajo, Hokkien, Latin) was built
+  locally; the full set is for CI, since this machine's disk cannot hold it. Cantonese and
+  Hokkien came out nearly empty, so every language was converted in a streamed dry run: only
+  the three Chinese varieties (Mandarin, Cantonese, Hokkien, filed under "Chinese" by
+  Wiktionary) are empty, and they are now excluded.
+- Kengdic converter (FEATURES A13): `kengdic-ko-en`, 106,211 entries, hanja as forms, graded
+  senses first; licence `MPL-2.0 OR LGPL-2.0-or-later` from the upstream README
+  (DOCS/sources.md "Kengdic notes" has the discrepancy with its `datapackage.json`). Added to
+  `tests/known_headwords.json`.
+- Found: Qt cannot name 153 of the 320 Wiktionary language codes, so the language filter
+  would show bare codes; open question for the owner.
 
 ## 2026-09-27 - M3 download and install backend
 

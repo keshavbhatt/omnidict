@@ -22,7 +22,7 @@ expects every ktechpit desktop app to have.
 | A10 | WordNet converter | M4 | KEEP | done: `converters/oewn.py` (Open English WordNet 2025, CC BY 4.0), `oewn-en` 128,009 entries |
 | A11 | CC-CEDICT converter | M4 | KEEP | done: `converters/cedict.py`, `cedict-zh-en` 121,362 entries, pinyin as forms |
 | A12 | JMdict converter | M4 | KEEP | done: `converters/jmdict.py`, `jmdict-ja-en` 218,840 entries, readings and romaji as forms |
-| A13 | KEngDic converter | M4 | KEEP | planned |
+| A13 | KEngDic converter | M4 | KEEP | done |
 | A14 | StarDict community import, opt-in "unofficial" tier after licence review | v2 | LATER | - |
 
 ## B. Bundle and search core

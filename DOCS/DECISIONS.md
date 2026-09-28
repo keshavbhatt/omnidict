@@ -315,3 +315,41 @@ Dev builds get zstd's header from the `kde-qt6-core24-sdk` snap and its library 
 gains a Qt Network row. `core/` stays free of Qt Network (ADR/CODING_STANDARDS layering:
 `services/` may use Qt Network, `core/` may not), so `core/installer.cpp` is still testable
 without a network stack, only a file on disk.
+
+## ADR-016: Dictionaries hosted on GitHub Releases, built by GitHub Actions (2026-09-28)
+
+**Status.** Accepted in direction (owner, 2026-09-28); the workflow is not written yet and
+nothing is published (PLAN 9 question 2).
+
+**Context.** The catalogue is 297 dictionaries and 1.45 GB of `.odict` files today (median
+2.3 MB, largest `wikt-en` 275 MB), about 4 to 5 GB once the Wiktionary languages above 1,000
+senses are added. Download traffic, not storage, is what a paid host would charge for.
+Options compared: GitHub Releases (no bandwidth charge, 2 GB per file, 1,000 files per
+release), Cloudflare R2 (10 GB free, no egress fees, card on file), Hugging Face datasets,
+Internet Archive and SourceForge (free but slow or redirect-heavy), GitHub or Cloudflare
+Pages (too small per file for bundles, fine for `catalog.json`).
+
+**Decision.**
+- `.odict` files and `catalog.json` are served from GitHub Releases. Cloudflare R2 is the
+  fallback if GitHub ever limits the traffic; each catalogue entry carries its own URL, so a
+  move is a new catalogue, not a new app.
+- GitHub Actions builds the bundles and attaches them to the release; the owner's machine is
+  not in the upload path (its disk could not hold a full build anyway).
+- Upstream sources (FreeDict `.src.tar.xz`, Kengdic's `kengdic.tsv`) are not re-hosted in the
+  release; this keeps the file count down. Whether a link to the upstream source is enough
+  for the GPL, AGPL and MPL dictionaries is an open point, see Consequences.
+
+**Consequences.**
+- The Wiktionary cut-off could drop from 10,000 to 1,000 senses (DOCS/sources.md
+  "Wiktionary languages").
+- `package.py` needs a flat asset name and URL (`<dict_id>-<version>.odict` under
+  `releases/download/<tag>/`), since a release has no folders.
+- The app follows GitHub's redirect to its file host (Qt 6's default redirect policy); a
+  test with a redirecting server is to be added before publishing.
+- Copyleft: for GPL-3.0 and AGPL-3.0 dictionaries distributed online, an offer to supply the
+  source on request is not enough on its own (GPLv3 section 6(b) covers physical products
+  only); section 6(d) allows pointing to a copy on a third party's server, such as FreeDict's
+  own release, as long as it stays available. The owner's "provide on request" works for the
+  GPL-2.0-or-later dictionaries through a written offer, and for all of them once each
+  bundle's attribution links its upstream source. To be settled before publishing.
+- Needs the GitHub repository, which the owner has deferred.
