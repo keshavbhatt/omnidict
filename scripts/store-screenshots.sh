@@ -4,8 +4,8 @@
 #
 #   scripts/store-screenshots.sh            # writes screenshots/store/*.png
 #
-# Needs the dictionaries below in pipeline/out (make build DICT=...), the catalogue served on
-# localhost:8000 (make -C pipeline catalog serve) for the catalogue shot, and uv for Pillow.
+# Needs the dictionaries below in pipeline/out (make build DICT=...) and uv for Pillow. The
+# catalogue shot reads the published catalogue (the app's default), so it shows the real one.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -39,7 +39,7 @@ shot() {
     local name=$1 theme=$2 dir=$3
     shift 3
     profile "$work/profile-$name" "$theme"
-    env QT_QPA_PLATFORM=offscreen OMNIDICT_DEBUG_WINDOW_SIZE="$size" OMNIDICT_DEBUG_GRAB="$work/$name.png" "$@" \
+    env -u OMNIDICT_CATALOG_URL QT_QPA_PLATFORM=offscreen OMNIDICT_DEBUG_WINDOW_SIZE="$size" OMNIDICT_DEBUG_GRAB="$work/$name.png" "$@" \
         "$root/scripts/dev-run.sh" -- --bundles "$dir" --profile "$work/profile-$name" >/dev/null 2>&1
     [ -s "$work/$name.png" ] || { echo "no capture for $name" >&2; exit 1; }
 }

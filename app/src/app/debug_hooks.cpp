@@ -16,8 +16,9 @@ using namespace Qt::StringLiterals;
 namespace omnidict::app {
 
 namespace {
-constexpr int kSettleMs = 400;    // let the entry lay out before the grab
-constexpr int kGiveUpMs = 15'000; // quit even if no entry ever shows
+constexpr int kSettleMs = 400;         // let the entry lay out before the grab
+constexpr int kGiveUpMs = 15'000;      // quit even if no entry ever shows
+constexpr int kCatalogSettleMs = 1500; // the Available tab lays out hundreds of rows
 constexpr int kGrabFailedExit = 3;
 
 /// OMNIDICT_DEBUG_INSTALL: the whole install path against the real catalogue.
@@ -58,8 +59,10 @@ void installWhenListed(ui::MainWindow& window, services::DictionaryManager& mana
 }
 
 /// OMNIDICT_DEBUG_OPEN names a sheet: grab it from inside its own modal loop, then quit.
-/// True when it named one.
-bool grabSheet(ui::MainWindow& window, const QString& sheet, const QString& grabPath)
+/// A catalogue still being read (the Dictionaries sheet on a fresh profile) is waited for,
+/// so the grab shows the list rather than "Refreshing...". True when it named a sheet.
+bool grabSheet(ui::MainWindow& window, services::DictionaryManager& manager, const QString& sheet,
+               const QString& grabPath)
 {
     using Open = std::function<void(ui::MainWindow&)>;
     const QHash<QString, Open> sheets = {
@@ -75,13 +78,26 @@ bool grabSheet(ui::MainWindow& window, const QString& sheet, const QString& grab
         return false;
     }
     const Open open = sheets.value(sheet);
+    const auto grab = [grabPath] {
+        QWidget* dialog = QApplication::activeModalWidget();
+        const bool saved = dialog != nullptr && (grabPath.isEmpty() || dialog->grab().save(grabPath));
+        QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
+    };
     QObject::connect(
         &window, &ui::MainWindow::libraryReady, &window,
-        [&window, grabPath, open] {
-            QTimer::singleShot(kSettleMs, &window, [grabPath] {
-                QWidget* dialog = QApplication::activeModalWidget();
-                const bool saved = dialog != nullptr && (grabPath.isEmpty() || dialog->grab().save(grabPath));
-                QCoreApplication::exit(saved ? 0 : kGrabFailedExit);
+        [&window, &manager, grab, open] {
+            QTimer::singleShot(kSettleMs, &window, [&window, &manager, grab] {
+                if (!manager.isRefreshingCatalog()) {
+                    grab();
+                    return;
+                }
+                const auto settleThenGrab = [&window, grab] {
+                    QTimer::singleShot(kCatalogSettleMs, &window, grab);
+                };
+                QObject::connect(&manager, &services::DictionaryManager::catalogChanged, &window,
+                                 settleThenGrab, Qt::SingleShotConnection);
+                QObject::connect(&manager, &services::DictionaryManager::catalogFailed, &window,
+                                 settleThenGrab, Qt::SingleShotConnection);
             });
             open(window);
         },
@@ -132,7 +148,8 @@ void installDebugHooks(ui::MainWindow& window, services::DictionaryManager& mana
     }
 
     const QString grabPath = qEnvironmentVariable("OMNIDICT_DEBUG_GRAB");
-    if (grabSheet(window, qEnvironmentVariable("OMNIDICT_DEBUG_OPEN"), grabPath) || grabPath.isEmpty()) {
+    if (grabSheet(window, manager, qEnvironmentVariable("OMNIDICT_DEBUG_OPEN"), grabPath) ||
+        grabPath.isEmpty()) {
         return;
     }
     grabWindow(window, grabPath, !query.isEmpty());

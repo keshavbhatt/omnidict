@@ -14,6 +14,23 @@ Newest first. One entry per working session.
 | M5 Packaging | done locally: desktop file, metainfo, snap, Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage deferred; nothing runs until the repository exists |
 | M6 Web app | todo |
 
+## 2026-09-29 - Published catalogue, GitHub as the default
+
+- The owner made the repository public (free CI) and ran the dictionaries workflow: 623
+  dictionaries and catalog.json in the rolling release, 3.05 GB; checked entry by entry (schema
+  3, names and source links on all, release-asset URLs) and one download against its checksum.
+- Finnish was 490 MB (3.3 GB installed): 74% of its stored forms were possessive forms. The
+  owner chose to leave possessive forms out (DOCS/sources.md "Kaikki notes"); Finnish keeps 29
+  forms per entry instead of 133. The owner re-ran the workflow.
+- The app tested against the release from a scratch profile: HTTPS, GitHub's redirect and the
+  checksum all work (Sumerian, Kengdic installed); About shows the source links.
+- The default catalogue is now the rolling release (owner). A cached catalogue records its
+  address and is ignored when the address changes, so a switch never shows a stale list.
+- Store screenshot of the catalogue regenerated against the real catalogue; the sheet grab
+  hook waits for a catalogue still being read.
+- Measured: rebuilding the Available list of 623 rows takes about 140 ms, once per filter
+  keystroke; worth a short typing delay if it feels slow on older machines.
+
 ## 2026-09-28 - M5 packaging
 
 - Owner: AppImage deferred, snap name `omnidict`, links on github.com/keshavbhatt/omnidict.
