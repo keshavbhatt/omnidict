@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ktechpit.omnidict</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <developer id="com.ktechpit">
+    <name>Keshav Bhatt</name>
+  </developer>
+
+  <name>Omnidict</name>
+  <summary>Offline dictionary for any language</summary>
+  <icon type="stock">com.ktechpit.omnidict</icon>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#ffd6a5</color>
+    <color type="primary" scheme_preference="dark">#8f4a0f</color>
+  </branding>
+
+  <description>
+    <p>
+      Omnidict is a fast offline dictionary for the Linux desktop. Choose from more than six
+      hundred free dictionaries in hundreds of languages, download the ones you need once, and
+      look words up instantly, without an internet connection.
+    </p>
+    <p>A dictionary for every language:</p>
+    <ul>
+      <li>English dictionary and thesaurus: English Wiktionary definitions, and English WordNet with synonyms, antonyms and related words</li>
+      <li>Wiktionary for over three hundred languages: Spanish, French, German, Italian, Portuguese, Russian, Hindi, Arabic, Japanese, Chinese, Korean, Turkish and many more, each explained in English</li>
+      <li>Historical languages too: Latin, Ancient Greek, Old English, Sanskrit and Old Norse</li>
+      <li>Hundreds of bilingual FreeDict dictionaries, such as German-English, English-French and Spanish-Portuguese</li>
+      <li>JMdict Japanese dictionary, CC-CEDICT Chinese dictionary and Kengdic Korean dictionary</li>
+      <li>Filter the catalogue by language and provider, and see each dictionary's size and number of entries before you download</li>
+    </ul>
+    <p>Look words up quickly:</p>
+    <ul>
+      <li>Word lookup as you type, results grouped by dictionary with the best match first</li>
+      <li>Accents are optional, and an inflected form finds its entry: ran finds run</li>
+      <li>"Did you mean" spelling suggestions for misspelled words, in every script</li>
+      <li>Wildcards: ? for one letter, * for any run of letters</li>
+      <li>Full text search finds words used inside definitions</li>
+      <li>Links between entries, with Back and Forward as in a browser</li>
+    </ul>
+    <p>Made for learning and everyday use:</p>
+    <ul>
+      <li>Favourites and recent lookups to build your vocabulary</li>
+      <li>Reorder dictionaries, switch them off, update or remove them</li>
+      <li>Light and dark themes that follow the desktop, and an adjustable text size</li>
+      <li>Keyboard shortcuts for everything</li>
+      <li>Private: no tracking, nothing is sent anywhere; the only network use is downloading dictionaries</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.ktechpit.omnidict.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default" xml:lang="en">
+      <caption>Look a word up: results as you type, grouped by dictionary</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/omnidict/main/screenshots/store/00-lookup.png</image>
+    </screenshot>
+    <screenshot xml:lang="en">
+      <caption>Choose from more than six hundred dictionaries in hundreds of languages</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/omnidict/main/screenshots/store/01-catalogue.png</image>
+    </screenshot>
+    <screenshot xml:lang="en">
+      <caption>"Did you mean" suggestions when a word is misspelled</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/omnidict/main/screenshots/store/02-suggestions.png</image>
+    </screenshot>
+    <screenshot xml:lang="en">
+      <caption>Dictionaries in any script, in light and dark themes</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/omnidict/main/screenshots/store/03-dark.png</image>
+    </screenshot>
+  </screenshots>
+
+  <keywords>
+    <!-- Flathub's web search keeps only the first three single words of up to 10 letters
+         (FlathubSEO docs/flathub-search-algorithm.md): these three come first. The rest are
+         for GNOME Software, KDE Discover and flatpak search, which read the whole list. -->
+    <keyword>dictionary</keyword>
+    <keyword>wiktionary</keyword>
+    <keyword>thesaurus</keyword>
+    <keyword>offline dictionary</keyword>
+    <keyword>english dictionary</keyword>
+    <keyword>wordnet</keyword>
+    <keyword>freedict</keyword>
+    <keyword>vocabulary</keyword>
+    <keyword>definition</keyword>
+    <keyword>word lookup</keyword>
+    <keyword>bilingual dictionary</keyword>
+    <keyword>multilingual dictionary</keyword>
+    <keyword>japanese dictionary</keyword>
+    <keyword>chinese dictionary</keyword>
+    <keyword>korean dictionary</keyword>
+    <keyword>language learning</keyword>
+    <keyword>synonyms</keyword>
+    <!-- "Dictionary" in other languages: translated keywords are indexed for everyone. -->
+    <keyword xml:lang="de">Wörterbuch</keyword>
+    <keyword xml:lang="es">diccionario</keyword>
+    <keyword xml:lang="fr">dictionnaire</keyword>
+    <keyword xml:lang="it">dizionario</keyword>
+    <keyword xml:lang="pt">dicionário</keyword>
+    <keyword xml:lang="ru">словарь</keyword>
+    <keyword xml:lang="hi">शब्दकोश</keyword>
+    <keyword xml:lang="ja">辞書</keyword>
+    <keyword xml:lang="zh">词典</keyword>
+    <keyword xml:lang="ko">사전</keyword>
+  </keywords>
+
+  <url type="homepage">https://github.com/keshavbhatt/omnidict</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/omnidict/issues</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/omnidict</url>
+  <url type="donation">https://www.paypal.com/paypalme/keshavnrj/11</url>
+  <url type="contact">https://ktechpit.com</url>
+
+  <provides>
+    <binary>omnidict</binary>
+  </provides>
+
+  <requires>
+    <display_length compare="ge">768</display_length>
+    <internet>first-run</internet>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <categories>
+    <category>Office</category>
+    <category>Dictionary</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
+  <update_contact>connect@ktechpit.com</update_contact>
+</component>

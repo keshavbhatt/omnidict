@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Omnidict
+GenericName=Dictionary
+Comment=Offline dictionary for any language
+Icon=com.ktechpit.omnidict
+Exec=omnidict
+Terminal=false
+Type=Application
+Categories=Office;Dictionary;Qt;
+Keywords=dictionary;offline;thesaurus;wiktionary;wordnet;freedict;vocabulary;definition;synonyms;translation;language;
+StartupWMClass=omnidict
+StartupNotify=true
+SingleMainWindow=true

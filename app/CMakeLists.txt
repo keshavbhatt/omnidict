@@ -84,13 +84,17 @@ endif()
 add_subdirectory(src)
 
 # ---------------------------------------------------------------------------
-# Desktop integration (Linux): hicolor icons. The .desktop file and AppStream
-# metainfo join them with packaging (M5).
+# Desktop integration (Linux): hicolor icons, the .desktop file and the AppStream
+# metainfo, which the snap and the Flatpak take from the install tree.
 # ---------------------------------------------------------------------------
 if(LINUX)
     include(GNUInstallDirs)
     install(DIRECTORY src/resources/icons/hicolor
         DESTINATION ${CMAKE_INSTALL_DATADIR}/icons)
+    install(FILES dist/linux/com.ktechpit.omnidict.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+    install(FILES dist/linux/com.ktechpit.omnidict.metainfo.xml
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
 endif()
 
 if(OMNIDICT_BUILD_TESTS)
