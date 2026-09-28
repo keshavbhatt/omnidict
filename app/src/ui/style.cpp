@@ -2,8 +2,10 @@
 
 #include "ui/icons.h"
 
+#include <QAbstractScrollArea>
 #include <QHash>
 #include <QLabel>
+#include <QWheelEvent>
 
 using namespace Qt::StringLiterals;
 
@@ -263,6 +265,33 @@ QPalette paletteFor(const Tokens& t)
         palette.setColor(QPalette::Disabled, role, t.muted);
     }
     return palette;
+}
+
+namespace {
+
+/// Eats Ctrl+wheel events on a text view's viewport; plain scrolling passes.
+class WheelZoomBlocker : public QObject
+{
+public:
+    using QObject::QObject;
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() == QEvent::Wheel &&
+            (static_cast<QWheelEvent*>(event)->modifiers() & Qt::ControlModifier) != 0) {
+            event->accept();
+            return true;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+};
+
+} // namespace
+
+void disableWheelZoom(QAbstractScrollArea* view)
+{
+    view->viewport()->installEventFilter(new WheelZoomBlocker(view));
 }
 
 void makeSectionLabel(QLabel* label)

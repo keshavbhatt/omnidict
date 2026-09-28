@@ -1,6 +1,7 @@
 #include "ui/whats_new_dialog.h"
 
 #include "core/settings.h"
+#include "ui/style.h"
 
 #include <QComboBox>
 #include <QFile>
@@ -40,6 +41,7 @@ WhatsNewDialog::WhatsNewDialog(QString runningVersion, QWidget* parent)
     , m_picker(new QComboBox(this))
     , m_notes(new QTextBrowser(this))
 {
+    disableWheelZoom(m_notes);
     setWindowTitle(tr("What's new"));
     setModal(true);
     setMinimumWidth(560);

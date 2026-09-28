@@ -8,6 +8,7 @@
 #include <QScrollBar>
 #include <QTextDocument>
 #include <QUrl>
+#include <QWheelEvent>
 
 using namespace Qt::StringLiterals;
 
@@ -111,6 +112,18 @@ QString EntryView::withLabelImages(const QString& html)
     }
     out += html.mid(from);
     return out;
+}
+
+void EntryView::wheelEvent(QWheelEvent* event)
+{
+    // QTextEdit zooms on Ctrl+wheel: without limits, only the text without a set
+    // size, and past the text-size setting. Ctrl+Plus, Ctrl+Minus and Ctrl+0 are
+    // the way to change the size, so Ctrl+wheel does nothing here.
+    if ((event->modifiers() & Qt::ControlModifier) != 0) {
+        event->accept();
+        return;
+    }
+    QTextBrowser::wheelEvent(event);
 }
 
 void EntryView::changeEvent(QEvent* event)

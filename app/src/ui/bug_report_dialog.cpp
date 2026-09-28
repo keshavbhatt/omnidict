@@ -1,5 +1,7 @@
 #include "ui/bug_report_dialog.h"
 
+#include "ui/style.h"
+
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
@@ -43,6 +45,7 @@ BugReportDialog::BugReportDialog(QString diagnostics, QWidget* parent)
     , m_title(new QLineEdit(this))
     , m_description(new QPlainTextEdit(this))
 {
+    disableWheelZoom(m_description);
     setWindowTitle(tr("Report a bug"));
     setModal(true);
     setMinimumWidth(560);
@@ -116,6 +119,7 @@ QWidget* BugReportDialog::buildForm()
     body->addWidget(disclosureRow);
 
     auto* diagnosticsView = new QPlainTextEdit(form);
+    disableWheelZoom(diagnosticsView);
     diagnosticsView->setObjectName(u"diagnosticsView"_s);
     diagnosticsView->setReadOnly(true);
     diagnosticsView->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));

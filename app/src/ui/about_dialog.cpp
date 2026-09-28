@@ -2,6 +2,7 @@
 
 #include "ui/diagnostics.h"
 #include "ui/icons.h"
+#include "ui/style.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -242,6 +243,7 @@ QWidget* AboutDialog::buildDiagnosticsTab(QWidget* tabParent)
     copyRow->addWidget(copy);
     diagnosticsLayout->addLayout(copyRow);
     auto* diagnosticsView = new QPlainTextEdit(diagnosticsTab);
+    disableWheelZoom(diagnosticsView);
     diagnosticsView->setObjectName(u"aboutDiagnostics"_s);
     diagnosticsView->setReadOnly(true);
     diagnosticsView->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));

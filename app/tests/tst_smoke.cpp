@@ -16,6 +16,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QToolButton>
+#include <QWheelEvent>
 
 using namespace Qt::StringLiterals;
 using omnidict::models::ResultsModel;
@@ -176,6 +177,19 @@ private Q_SLOTS:
         settings.setDisabledDictionaries({});
         settings.setDictionaryFilter(u"sample-en"_s);
         QCOMPARE(search->placeholderText(), u"Search Sample English"_s);
+    }
+
+    void controlWheelDoesNotZoomTheEntry()
+    {
+        omnidict::ui::EntryView view;
+        view.showEntry(u"<p class=\"def\">text</p>"_s, {});
+        const qreal before = view.document()->defaultFont().pointSizeF();
+        const int pixelsBefore = view.document()->defaultFont().pixelSize();
+        QWheelEvent wheel(QPointF(5, 5), view.mapToGlobal(QPointF(5, 5)), QPoint(), QPoint(0, 120),
+                          Qt::NoButton, Qt::ControlModifier, Qt::NoScrollPhase, false);
+        QApplication::sendEvent(view.viewport(), &wheel);
+        QCOMPARE(view.document()->defaultFont().pointSizeF(), before);
+        QCOMPARE(view.document()->defaultFont().pixelSize(), pixelsBefore);
     }
 
     void aboutCreditsEveryDictionary()

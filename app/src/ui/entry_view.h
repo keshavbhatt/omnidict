@@ -29,6 +29,7 @@ Q_SIGNALS:
 
 protected:
     void changeEvent(QEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
 private:
     void applyStyleSheet();

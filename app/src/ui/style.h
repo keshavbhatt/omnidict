@@ -4,6 +4,7 @@
 #include <QPalette>
 #include <QString>
 
+class QAbstractScrollArea;
 class QLabel;
 
 namespace omnidict::ui {
@@ -50,6 +51,10 @@ struct Tokens
 /// Makes `label` a group title (mock.css .group-title): the sheet colours and
 /// sizes it; capitals and spacing are font settings a style sheet cannot make.
 void makeSectionLabel(QLabel* label);
+
+/// Turns off the Ctrl+wheel zoom Qt's text views have built in: it has no limits
+/// and rescales only part of the text. Text size is Ctrl+Plus/Minus in the entry.
+void disableWheelZoom(QAbstractScrollArea* view);
 
 /// The application style sheet. Widgets opt into the looks with dynamic
 /// properties: `primary` and `flat` buttons, `chip` tool buttons, `muted`,
