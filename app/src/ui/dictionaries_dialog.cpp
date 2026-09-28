@@ -34,6 +34,7 @@
 #include <QShortcut>
 #include <QSignalBlocker>
 #include <QStackedWidget>
+#include <QStyle>
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolButton>
@@ -383,10 +384,12 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
         rebuildInstalledRows();
         rebuildAvailableRows();
         updateAvailableFooter();
+        finishUpdateCheck({});
     });
     connect(&m_manager, &services::DictionaryManager::catalogFailed, this, [this](const QString& reason) {
         m_catalogFailure = reason;
         updateAvailableFooter();
+        finishUpdateCheck(reason);
     });
     connectDownloads();
 
@@ -524,8 +527,14 @@ QFrame* DictionariesDialog::buildInstalledFoot(QWidget* page)
     m_installedFooter->setProperty("small", true);
     footLayout->addWidget(m_installedFooter);
     footLayout->addStretch(1);
+    m_checkResult = new QLabel(foot);
+    m_checkResult->setObjectName(u"checkResult"_s);
+    m_checkResult->setProperty("small", true);
+    m_checkResult->hide();
+    footLayout->addWidget(m_checkResult);
     m_checkUpdatesButton = new QPushButton(tr("Check for updates"), foot);
-    connect(m_checkUpdatesButton, &QPushButton::clicked, this, [this] { m_manager.refreshCatalog(true); });
+    m_checkUpdatesButton->setObjectName(u"checkUpdatesButton"_s);
+    connect(m_checkUpdatesButton, &QPushButton::clicked, this, &DictionariesDialog::checkForUpdates);
     footLayout->addWidget(m_checkUpdatesButton);
     auto* done = new QPushButton(tr("Done"), foot);
     done->setProperty("primary", true);
@@ -1023,6 +1032,9 @@ void DictionariesDialog::updateInstalledEmptyState()
     m_installedStack->setCurrentWidget(empty ? static_cast<QWidget*>(m_installedEmpty) : m_installedList);
     m_installedFooter->setVisible(!empty);
     m_checkUpdatesButton->setVisible(!empty);
+    if (empty) {
+        m_checkResult->hide();
+    }
     if (!empty) {
         return;
     }
@@ -1145,6 +1157,47 @@ void DictionariesDialog::updateInstalledFooter()
         total += QFileInfo(info.path).size();
     }
     m_installedFooter->setText(tr("%1 dictionaries use %2").arg(m_installed.size()).arg(humanSize(total)));
+}
+
+void DictionariesDialog::checkForUpdates()
+{
+    m_checkingUpdates = true;
+    m_checkResult->hide();
+    m_checkUpdatesButton->setEnabled(false);
+    m_checkUpdatesButton->setText(tr("Checking..."));
+    m_manager.refreshCatalog(/*force=*/true);
+}
+
+void DictionariesDialog::finishUpdateCheck(const QString& failure)
+{
+    if (!m_checkingUpdates) {
+        return;
+    }
+    m_checkingUpdates = false;
+    m_checkUpdatesButton->setEnabled(true);
+    m_checkUpdatesButton->setText(tr("Check for updates"));
+    QString tone;
+    if (!failure.isEmpty()) {
+        tone = u"danger"_s;
+        m_checkResult->setText(tr("Could not check: %1").arg(failure));
+    } else {
+        const auto updates = std::ranges::count_if(m_installed, [this](const services::DictionaryInfo& info) {
+            return newerVersion(m_manager.catalog(), info).has_value();
+        });
+        // Plurals by hand: without a translation loaded, %n forms render literally.
+        if (updates == 0) {
+            m_checkResult->setText(tr("All dictionaries are up to date"));
+        } else {
+            tone = u"accent"_s;
+            m_checkResult->setText(updates == 1 ? tr("1 update available")
+                                                : tr("%1 updates available").arg(updates));
+        }
+    }
+    m_checkResult->setProperty("muted", tone.isEmpty());
+    m_checkResult->setProperty("tone", tone);
+    m_checkResult->style()->unpolish(m_checkResult);
+    m_checkResult->style()->polish(m_checkResult);
+    m_checkResult->show();
 }
 
 void DictionariesDialog::refreshCatalog()

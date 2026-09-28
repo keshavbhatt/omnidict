@@ -97,6 +97,8 @@ QLabel[title="true"] { font-size: 18px; font-weight: 600; }
 QLabel[heading="true"] { font-size: 16px; font-weight: 600; }
 QLabel[section="true"] { font-size: 11px; font-weight: 700; color: {{accent}}; letter-spacing: 1px; }
 QLabel[link="true"] { color: {{link}}; }
+QLabel[tone="accent"] { color: {{accent}}; }
+QLabel[tone="danger"] { color: {{danger}}; }
 
 QFrame[bar="true"] { background: {{bar}}; border: none; border-bottom: 1px solid {{border}}; }
 QFrame[card="true"] { background: {{panel}}; border: 1px solid {{border}}; border-radius: 12px; }

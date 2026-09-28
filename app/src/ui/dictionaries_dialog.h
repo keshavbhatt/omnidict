@@ -101,6 +101,10 @@ private:
     void refreshFilters();
     [[nodiscard]] bool matchesFilters(const core::CatalogEntry& entry) const;
     void updateInstalledFooter();
+    /// Check for updates: reads the catalogue now and reports what it found.
+    void checkForUpdates();
+    /// Ends a pending check: "N updates available", "All ... up to date", or the failure.
+    void finishUpdateCheck(const QString& failure);
     /// The empty state instead of the list when nothing is installed (mocks/dictionaries-empty.html).
     void updateInstalledEmptyState();
     void updateAvailableFooter();
@@ -125,6 +129,8 @@ private:
     EmptyState* m_installedEmpty = nullptr;
     QLabel* m_installedFooter = nullptr;
     QPushButton* m_checkUpdatesButton = nullptr;
+    QLabel* m_checkResult = nullptr; ///< the last Check for updates' outcome (mocks/dictionaries.html note 5)
+    bool m_checkingUpdates = false;  ///< a Check for updates is waiting for the catalogue
 
     QLineEdit* m_filterField = nullptr;
     QComboBox* m_fromCombo = nullptr;

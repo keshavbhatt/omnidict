@@ -338,6 +338,79 @@ private Q_SLOTS:
         QVERIFY(update != nullptr);
     }
 
+    void checkForUpdatesReportsWhatItFound()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        server.addRoute(u"/catalog.json"_s,
+                        catalogJson(QJsonArray{
+                            manifest(u"a"_s, u"A Dictionary"_s, u"2026.10.1"_s, u"es"_s, u"en"_s,
+                                     u"Wiktionary"_s, u"http://example.invalid/a"_s, body),
+                            manifest(u"b"_s, u"B Dictionary"_s, u"1"_s, u"es"_s, u"en"_s, u"Wiktionary"_s,
+                                     u"http://example.invalid/b"_s, body),
+                        }));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        const QString pathA = dictDir.filePath(u"a/2026.09.1/dict.sqlite"_s);
+        const QString pathB = dictDir.filePath(u"b/1/dict.sqlite"_s);
+        writeDummyFile(pathA);
+        writeDummyFile(pathB);
+        Settings settings(iniPath(u"check"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings,
+                                  {makeInstalled(u"a"_s, u"A Dictionary"_s, u"2026.09.1"_s, pathA),
+                                   makeInstalled(u"b"_s, u"B Dictionary"_s, u"1"_s, pathB)},
+                                  dictDir.path());
+        QVERIFY(catalogChanged.wait(5000)); // the read on opening says nothing
+        auto* check = dialog.findChild<QPushButton*>(u"checkUpdatesButton"_s);
+        auto* result = dialog.findChild<QLabel*>(u"checkResult"_s);
+        QVERIFY(check != nullptr && result != nullptr);
+        QVERIFY(result->isHidden());
+
+        check->click();
+        QCOMPARE(check->text(), u"Checking..."_s);
+        QVERIFY(!check->isEnabled());
+        QVERIFY(catalogChanged.wait(5000));
+        QVERIFY(check->isEnabled());
+        QCOMPARE(check->text(), u"Check for updates"_s);
+        QVERIFY(!result->isHidden());
+        QCOMPARE(result->text(), u"1 update available"_s);
+        QCOMPARE(result->property("tone").toString(), u"accent"_s);
+
+        // Up to date once "a" is at the catalogue's version.
+        const QString newA = dictDir.filePath(u"a/2026.10.1/dict.sqlite"_s);
+        writeDummyFile(newA);
+        dialog.setInstalled({makeInstalled(u"a"_s, u"A Dictionary"_s, u"2026.10.1"_s, newA),
+                             makeInstalled(u"b"_s, u"B Dictionary"_s, u"1"_s, pathB)});
+        check->click();
+        QVERIFY(catalogChanged.wait(5000));
+        QCOMPARE(result->text(), u"All dictionaries are up to date"_s);
+        QVERIFY(result->property("muted").toBool());
+    }
+
+    void checkForUpdatesReportsAFailure()
+    {
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        const QString path = dictDir.filePath(u"a/1/dict.sqlite"_s);
+        writeDummyFile(path);
+        Settings settings(iniPath(u"checkfail"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(),
+                                  QUrl(u"http://127.0.0.1:1/catalog.json"_s));
+        QSignalSpy failed(&manager, &DictionaryManager::catalogFailed);
+        DictionariesDialog dialog(manager, settings, {makeInstalled(u"a"_s, u"A Dictionary"_s, u"1"_s, path)},
+                                  dictDir.path());
+        QVERIFY(failed.wait(5000)); // the read on opening
+        auto* check = dialog.findChild<QPushButton*>(u"checkUpdatesButton"_s);
+        auto* result = dialog.findChild<QLabel*>(u"checkResult"_s);
+        check->click();
+        QVERIFY(failed.wait(5000));
+        QVERIFY(result->text().startsWith(u"Could not check: "_s));
+        QCOMPARE(result->property("tone").toString(), u"danger"_s);
+        QVERIFY(check->isEnabled());
+    }
+
     void refreshReadsTheCatalogueAgain()
     {
         TestHttpServer server;
@@ -678,6 +751,9 @@ private Q_SLOTS:
 
             DictionariesDialog dialog(manager, settings, installed, dictDir.path());
             grab(&dialog, u"dictionaries"_s + suffix);
+            dialog.findChild<QPushButton*>(u"checkUpdatesButton"_s)->click();
+            QVERIFY(catalogChanged.wait(5000));
+            grab(&dialog, u"dictionaries-checked"_s + suffix);
             dialog.showAvailable();
             grab(&dialog, u"dictionaries-available"_s + suffix);
 

@@ -42,6 +42,11 @@ Newest first. One entry per working session.
   to Wiktionary, FreeDict, ...), and shows entries, size and action in aligned columns; an
   empty Installed tab shows "No dictionaries yet" with Browse dictionaries, which opens the
   Available tab. Verified headlessly against the local 308-dictionary catalogue.
+- Owner-reported, fixed: the removal confirmation's footer spans the sheet; the mouse's back
+  and forward buttons go Back and Forward anywhere in the main window (on release, as in a
+  browser, only while the toolbar button is enabled).
+- Check for updates (mock approved 2026-09-28): "Checking..." while the catalogue is read,
+  then "N updates available", "All dictionaries are up to date" or "Could not check: ...".
 - Found: Qt cannot name 153 of the 320 Wiktionary language codes, so the language filter
   would show bare codes; open question for the owner.
 
