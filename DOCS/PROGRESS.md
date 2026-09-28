@@ -10,7 +10,7 @@ Newest first. One entry per working session.
 | M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
 | M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening measured and not needed yet (B10) |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
-| M4 More converters, real catalog | done locally: every converter written (KEngDic added 2026-09-28); 320 Wiktionary languages listed, built in full by CI once the repository exists; hosting on GitHub Releases decided (ADR-016), publishing waits for the owner |
+| M4 More converters, real catalog | done locally: every converter written (KEngDic added 2026-09-28); 328 Wiktionary languages listed, built in full by CI once the repository exists; hosting on GitHub Releases decided (ADR-016), publishing waits for the owner |
 | M5 Packaging | todo |
 | M6 Web app | todo |
 
@@ -47,8 +47,15 @@ Newest first. One entry per working session.
   browser, only while the toolbar button is enabled).
 - Check for updates (mock approved 2026-09-28): "Checking..." while the catalogue is read,
   then "N updates available", "All dictionaries are up to date" or "Could not check: ...".
-- Found: Qt cannot name 153 of the 320 Wiktionary language codes, so the language filter
-  would show bare codes; open question for the owner.
+- Owner decisions, same day, built: schema 3 adds optional `source_lang_name`,
+  `target_lang_name` and `source_url` to bundles and manifests (every converter fills them;
+  schema 2 bundles still open). The language filters use the English name where Qt has none
+  (about half the Wiktionary codes). The 8 reconstructed `Proto-` languages are in (328
+  Wiktionary languages, 623 dictionaries in all). The rolling release is written:
+  `package.py --flat-urls`, `catalog.py --previous --manifests-only`, `make ci-bundle-<id>`
+  and `.github/workflows/dictionaries.yml` (manual start only), checked locally end to end on
+  Sumerian; it cannot run until the repository exists.
+- Proposed mock, awaiting approval: a Source link on each About card (`about.html` note 4).
 
 ## 2026-09-27 - M3 download and install backend
 

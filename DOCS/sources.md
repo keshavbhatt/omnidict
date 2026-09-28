@@ -5,7 +5,7 @@ without a documented licence in this file.** Kaikki is first, in M1; the rest fo
 
 | Source | Format | Yields | Licence | Dump URL | Status |
 |---|---|---|---|---|---|
-| Kaikki (kaikki.org) | gzipped JSONL per language of English Wiktionary | Hundreds of `X to en` pairs from English Wiktionary; `en to X` and `X to X` pairs from other Wiktionary editions | CC BY-SA 4.0 | `https://kaikki.org/dictionary/<Language>/kaikki.org-dictionary-<LanguageWithoutSpaces>.jsonl.gz` | in use: 320 languages listed in `pipeline/kaikki-languages.tsv` (see "Wiktionary languages") |
+| Kaikki (kaikki.org) | gzipped JSONL per language of English Wiktionary | Hundreds of `X to en` pairs from English Wiktionary; `en to X` and `X to X` pairs from other Wiktionary editions | CC BY-SA 4.0 | `https://kaikki.org/dictionary/<Language>/kaikki.org-dictionary-<LanguageWithoutSpaces>.jsonl.gz` | in use: 328 languages listed in `pipeline/kaikki-languages.tsv` (see "Wiktionary languages") |
 | FreeDict | TEI XML (P5) | 291 bilingual pairs (of 305 listed), good coverage for `en to X` and `X to en` | per dictionary, free licences only, see notes | `https://freedict.org/freedict-database.json` | in use (M4): 291 dictionaries |
 | WordNet (Open English WordNet) | XML / LMF (WN-LMF) | `en` monolingual entries plus synonym/antonym/hypernym relations | CC BY 4.0 | `https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz` | in use (M4): `oewn-en` |
 | CC-CEDICT | plain text, one line per entry | `zh to en` | CC BY-SA 4.0 | `https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz` | in use (M4): `cedict-zh-en` |
@@ -61,21 +61,22 @@ Converter: `pipeline/omnipipe/converters/kaikki.py`, run as
 Owner decision 2026-09-28, made once hosting was settled as free (ADR-016): every Kaikki
 language with **at least 1,000 senses**, historical languages included (Latin, Ancient Greek,
 Old and Middle English, Old Norse, ...), **Translingual left out** (symbols and scientific
-names, not a useful dictionary on its own). Reconstructed languages (the eight `Proto-`
-languages above the cut-off) are left out until the owner decides on them;
-`--discover --include-reconstructed` adds them.
+names, not a useful dictionary on its own). Reconstructed languages are in too (owner, same
+day): the eight `Proto-` languages above the cut-off, Proto-Germanic to Proto-Turkic. Their
+headwords carry no asterisk in Kaikki; a leading asterisk on a form ("*aba") is dropped, since
+`*` is the search wildcard (Proto-Germanic: 5,443 entries in a dry run).
 
 - **The list.** `pipeline/kaikki-languages.tsv` (`dict_id`, language, Wiktionary code,
   senses) is checked in, so a build never depends on what kaikki.org lists that day.
   `python -m omnipipe.converters.kaikki --discover` rewrites it: it reads the sense counts on
   `https://kaikki.org/dictionary/`, applies the cut-off and the exclusions, and takes each
   language's code from the first record of its dump (the first 128 KiB only, by a `Range`
-  request). As of 2026-09-28: 320 languages (332 above the cut-off, less Translingual, 8
-  reconstructed and 3 Chinese varieties). The Makefile's `DICTS_kaikki` is the first column.
+  request). As of 2026-09-28: 328 languages (332 above the cut-off, less Translingual and 3
+  Chinese varieties). The Makefile's `DICTS_kaikki` is the first column.
 - **Chinese varieties.** Wiktionary files Mandarin, Cantonese and Hokkien words under
   "Chinese" (`wikt-zh-en`), so their own dumps are romanizations and soft redirects: 107, 7
   and 207 entries after conversion. They are excluded in the converter. Every other language
-  was converted in a dry run on 2026-09-28 (dumps streamed, nothing written): all 320 convert
+  was converted in a dry run on 2026-09-28 (dumps streamed, nothing written): all 320 others then listed convert
   without error, 3.15 million entries besides English, the smallest about 500 entries.
 - **Identity.** `dict_id` is `wikt-<code>-en` with Wiktionary's own language code
   (`wikt-ang-en` Old English, `wikt-zlw-opl-en` Old Polish, `wikt-gmq-osw-en` Old Swedish), and
@@ -83,10 +84,11 @@ languages above the cut-off) are left out until the owner decides on them;
 - **File names.** Kaikki's folder is the language name, its file name the name without spaces
   or punctuation (`Old English/kaikki.org-dictionary-OldEnglish.jsonl.gz`,
   `Ye'kwana/...-Yekwana...`); `file_stem` in the converter.
-- **Language names in the app.** Qt has no name for 153 of the 320 codes (most historical and
-  regional ones: `ang`, `grc`, `enm`, `non`, `zlw-opl`, ...), so the Available tab's language
-  filter would show the bare code for them. Open question for the owner before the catalogue
-  is published.
+- **Language names in the app.** Qt has no name for about half the codes (most historical and
+  regional ones: `ang`, `grc`, `enm`, `non`, `zlw-opl`, ...). Since schema 3 every bundle
+  carries the languages' English names (`source_lang_name`, `target_lang_name`; the Kaikki
+  language name here), and the Available tab's language filters show those where Qt has
+  none (owner, 2026-09-28).
 
 ## Open English WordNet notes
 
@@ -269,8 +271,8 @@ Converter: `pipeline/omnipipe/converters/kengdic.py`, run as
   CC-BY-SA-3.0 and LGPL-2.0 instead; the README is the later, explicit statement and is the
   one followed. Both choices are file-level or library copyleft: whoever distributes the
   bundle must tell recipients where the source is. The source is the upstream file at the
-  pinned commit, so the publishing side can link it (same open task as FreeDict's GPL
-  dictionaries) rather than host it.
+  pinned commit, and the bundle's `source_url` links exactly that file (schema 3), shown on
+  the dictionary's About card.
 - **Entries.** Rows with the same surface (whitespace collapsed) merge into one entry, in
   order of first row. One sense per gloss; a gloss repeated ignoring case and spacing is kept
   once. Rows without a gloss (16,255) contribute only their hanja; a word with no glossed row
@@ -324,9 +326,11 @@ Converter: `pipeline/omnipipe/converters/freedict.py`, run as
   distributes a bundle built from a GPL dictionary must also make its corresponding source
   available: the FreeDict `.src.tar.xz` release (its URL is in the index and in
   `pipeline/sources/freedict/`) together with this pipeline's converter, which is itself
-  GPL-3.0-or-later in this repository. Before the catalogue is published (PLAN 9 question 2),
-  the publishing side must link each GPL bundle's source release; that is an open task for
-  publishing, not for the local catalogue.
+  GPL-3.0-or-later in this repository. Each bundle's `source_url` (schema 3) is the FreeDict
+  `.src.tar.xz` it was built from, and the About card links it (owner, 2026-09-28): the source
+  is offered where the bundle is, as GPLv3 section 6(d) allows through a third party's server,
+  without re-hosting it in the release (ADR-016). Every other converter fills `source_url`
+  too (the Kaikki dump, the OEWN, JMdict and CC-CEDICT downloads).
 - **Identity.** `dict_id` is `freedict-<src>-<tgt>` with ISO 639-1 codes where one exists
   (`_LANG_TABLE` in `freedict.py`), else the FreeDict/ISO 639-3 code (`ast`, `ckb`, `kha`,
   `kmr`, `rom`, `swh`->`sw`... the full table is in the converter). `name` is
