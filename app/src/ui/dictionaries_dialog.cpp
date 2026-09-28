@@ -17,6 +17,7 @@
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
 #include <QHBoxLayout>
+#include <QHash>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
@@ -48,6 +49,7 @@ namespace {
 constexpr int kSheetWidth = 760;
 constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
+constexpr int kLanguageComboVisibleItems = 12;
 constexpr int kRingSize = 28;
 constexpr qreal kDimmedOpacity = 0.55;
 
@@ -71,7 +73,15 @@ void applyRowBorder(QWidget* row, bool isLast)
 /// also capitalised, when Qt does not recognise it.
 QString languageLabel(const QString& code)
 {
-    QString name = QLocale(code).nativeLanguageName();
+    // For these, Qt names the language after the country or script its bare code
+    // defaults to ("American English", "español de España", "简体中文"); a filter
+    // over languages wants the language alone.
+    static const QHash<QString, QString> plainNames{
+        {u"en"_s, u"English"_s},
+        {u"es"_s, u"español"_s},
+        {u"zh"_s, u"中文"_s},
+    };
+    QString name = plainNames.value(code, QLocale(code).nativeLanguageName());
     if (name.isEmpty()) {
         name = code;
     }
@@ -180,6 +190,9 @@ std::optional<QString> effectiveVersion(const QList<services::DictionaryInfo>& i
 void populateLanguageCombo(QComboBox* combo, const QSet<QString>& codes, const QString& anyLabel)
 {
     const QSignalBlocker blocker(combo);
+    // A few hundred languages: a short scrolling list, not a popup the height of
+    // the screen (the style sheet's `combobox-popup: 0` makes Qt honour this).
+    combo->setMaxVisibleItems(kLanguageComboVisibleItems);
     combo->clear();
     combo->addItem(anyLabel, QString());
     QStringList sorted(codes.begin(), codes.end());

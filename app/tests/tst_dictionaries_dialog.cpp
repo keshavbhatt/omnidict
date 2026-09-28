@@ -388,6 +388,12 @@ private Q_SLOTS:
 
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_fr-en"_s) != nullptr);
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_de-en"_s) == nullptr);
+
+        // English is "English", not the "American English" Qt gives the bare code.
+        auto* toCombo = dialog.findChild<QComboBox*>(u"toLanguage"_s);
+        QVERIFY(toCombo != nullptr);
+        QCOMPARE(toCombo->itemText(toCombo->findData(u"en"_s)), u"English"_s);
+        QCOMPARE(toCombo->maxVisibleItems(), 12);
     }
 
     void downloadingKeepsTheListInPlace()

@@ -189,6 +189,7 @@ QTabWidget::pane { border: none; border-top: 1px solid {{border}}; }
 QComboBox {
     background: {{input}}; color: {{text}};
     border: 1px solid {{border}}; border-radius: 8px; min-height: 32px; padding: 0 30px 0 12px;
+    combobox-popup: 0; /* a list under the box that honours maxVisibleItems, not a screen-high popup */
 }
 QComboBox:hover { background: {{hover}}; }
 QComboBox:focus { border-color: {{accent}}; }

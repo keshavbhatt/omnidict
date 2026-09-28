@@ -85,12 +85,17 @@ AboutDialog::AboutDialog(const QList<services::DictionaryInfo>& dictionaries, QW
     setModal(true);
     setMinimumWidth(600);
 
+    // The footer spans the sheet edge to edge (mock.css .sheet-foot); only the body is inset.
     auto* root = new QVBoxLayout(this);
-    root->setContentsMargins(20, 20, 20, 0);
-    root->setSpacing(14);
-    root->addLayout(buildHero());
-    root->addLayout(buildLinks());
-    root->addWidget(buildTabs(), 1);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
+    auto* body = new QVBoxLayout;
+    body->setContentsMargins(20, 20, 20, 16);
+    body->setSpacing(14);
+    body->addLayout(buildHero());
+    body->addLayout(buildLinks());
+    body->addWidget(buildTabs(), 1);
+    root->addLayout(body, 1);
     root->addWidget(buildFooter());
 
     resize(680, 620);
