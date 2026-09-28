@@ -58,6 +58,9 @@ public:
         /// them, to simulate a download still in flight.
         qsizetype splitAt = -1;
         int pauseMs = 0;
+        /// When set, the route answers 302 with this path as the Location, the way
+        /// GitHub serves a release asset from another host (ADR-016).
+        QString redirectTo{};
     };
 
     explicit TestHttpServer(QObject* parent = nullptr)
@@ -123,6 +126,10 @@ private:
             return;
         }
         const Route route = m_routes.value(path);
+        if (!route.redirectTo.isEmpty()) {
+            writeRedirect(socket, urlFor(route.redirectTo));
+            return;
+        }
         qint64 start = 0;
         bool partial = false;
         if (route.supportsRange && rangeValue.startsWith("bytes=")) {
@@ -134,6 +141,19 @@ private:
         const QByteArray content = route.body.mid(static_cast<qsizetype>(start));
         writeBody(socket, partial ? 206 : 200, content, partial, start, route.body.size(), route.splitAt,
                   route.pauseMs);
+    }
+
+    static void writeRedirect(QTcpSocket* socket, const QUrl& target)
+    {
+        const QByteArray head = "HTTP/1.1 302 Found\r\n"
+                                "Location: " +
+                                target.toEncoded() +
+                                "\r\n"
+                                "Content-Length: 0\r\n"
+                                "Connection: close\r\n\r\n";
+        socket->write(head);
+        socket->flush();
+        socket->disconnectFromHost();
     }
 
     static void writeStatusOnly(QTcpSocket* socket, int status)
@@ -417,6 +437,55 @@ private Q_SLOTS:
         QVERIFY(!QFile::exists(partPath));
         QCOMPARE(manager.downloads().size(), 0);
         QVERIFY(!listChanged.isEmpty()); // a finished download leaves the list with a signal
+    }
+
+    void followsARedirectForTheCatalogueAndAResumedDownload()
+    {
+        // GitHub answers a release URL with a redirect to its file host (ADR-016): the
+        // catalogue, a download and a resumed download must all follow it.
+        const QByteArray catalogBody =
+            QByteArrayLiteral("{\"catalog_version\":1,\"generated_at\":\"2026-09-27T00:00:00Z\","
+                              "\"dictionaries\":[]}");
+        TestHttpServer server;
+        TestHttpServer::Route catalogRedirect;
+        catalogRedirect.redirectTo = u"/files/catalog.json"_s;
+        server.addRoute(u"/releases/catalog.json"_s, catalogRedirect);
+        TestHttpServer::Route catalogFile;
+        catalogFile.body = catalogBody;
+        server.addRoute(u"/files/catalog.json"_s, catalogFile);
+        TestHttpServer::Route bundleRedirect;
+        bundleRedirect.redirectTo = u"/files/sample-en.odict"_s;
+        server.addRoute(u"/releases/sample-en-2026.09.1.odict"_s, bundleRedirect);
+        TestHttpServer::Route bundleFile;
+        bundleFile.body = m_compressedFixture;
+        bundleFile.supportsRange = true;
+        server.addRoute(u"/files/sample-en.odict"_s, bundleFile);
+
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        DictionaryManager manager(dictDir.path(), cacheDir.path(),
+                                  server.urlFor(u"/releases/catalog.json"_s));
+        QSignalSpy changed(&manager, &DictionaryManager::catalogChanged);
+        manager.refreshCatalog(true);
+        QVERIFY(changed.wait(5000));
+        QCOMPARE(manager.catalog().catalogVersion, 1);
+
+        // A third already downloaded: the resume's Range header must survive the redirect.
+        const QString partPath =
+            QDir(cacheDir.path()).filePath(u"downloads/sample-en-2026.09.1.odict.part"_s);
+        QVERIFY(QDir().mkpath(QFileInfo(partPath).absolutePath()));
+        {
+            QFile part(partPath);
+            QVERIFY(part.open(QIODevice::WriteOnly));
+            part.write(m_compressedFixture.left(m_compressedFixture.size() / 3));
+        }
+        QSignalSpy installedSpy(&manager, &DictionaryManager::installed);
+        manager.install(makeEntry(u"sample-en"_s, u"2026.09.1"_s,
+                                  server.urlFor(u"/releases/sample-en-2026.09.1.odict"_s),
+                                  m_compressedFixture, m_installedSize));
+        QVERIFY(installedSpy.wait(10000));
+        QVERIFY(server.sawRangeRequest(u"/files/sample-en.odict"_s));
+        QVERIFY(QFile::exists(QDir(dictDir.path()).filePath(u"sample-en/2026.09.1/dict.sqlite"_s)));
     }
 };
 
