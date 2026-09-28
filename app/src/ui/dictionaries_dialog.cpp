@@ -26,6 +26,7 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSet>
 #include <QShortcut>
 #include <QSignalBlocker>
@@ -209,7 +210,11 @@ public:
         setFixedSize(kRingSize, kRingSize);
     }
 
-    void setPercent(int percent) { m_percent = qBound(0, percent, 100); }
+    void setPercent(int percent)
+    {
+        m_percent = qBound(0, percent, 100);
+        update();
+    }
 
     /// While installing, the amount of work is unknown: a quarter arc turns
     /// instead of filling.
@@ -301,17 +306,7 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
         m_catalogFailure = reason;
         updateAvailableFooter();
     });
-    connect(&m_manager, &services::DictionaryManager::downloadChanged, this,
-            [this](const services::DownloadStatus& /*status*/) { rebuildAvailableRows(); });
-    connect(&m_manager, &services::DictionaryManager::installed, this, [this](const QString& dictId) {
-        m_installedOverride.insert(dictId, m_pendingInstallVersion.take(dictId));
-        rebuildAvailableRows();
-    });
-    connect(&m_manager, &services::DictionaryManager::removed, this, [this](const QString& dictId) {
-        m_installedOverride.remove(dictId);
-        m_pendingInstallVersion.remove(dictId);
-        rebuildAvailableRows();
-    });
+    connectDownloads();
 
     refreshLanguageFilters();
     rebuildInstalledRows();
@@ -319,6 +314,31 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     updateAvailableFooter();
 
     m_manager.refreshCatalog(false);
+}
+
+void DictionariesDialog::connectDownloads()
+{
+    connect(&m_manager, &services::DictionaryManager::downloadChanged, this,
+            [this](const services::DownloadStatus& status) { updateAvailableRow(status.dictId); });
+    connect(&m_manager, &services::DictionaryManager::downloadsChanged, this, [this] {
+        // A download left the list (finished or cancelled): refresh the rows that had one.
+        QSet<QString> ids = m_rowsWithDownload;
+        for (const services::DownloadStatus& status : m_manager.downloads()) {
+            ids.insert(status.dictId);
+        }
+        for (const QString& dictId : std::as_const(ids)) {
+            updateAvailableRow(dictId);
+        }
+    });
+    connect(&m_manager, &services::DictionaryManager::installed, this, [this](const QString& dictId) {
+        m_installedOverride.insert(dictId, m_pendingInstallVersion.take(dictId));
+        updateAvailableRow(dictId);
+    });
+    connect(&m_manager, &services::DictionaryManager::removed, this, [this](const QString& dictId) {
+        m_installedOverride.remove(dictId);
+        m_pendingInstallVersion.remove(dictId);
+        updateAvailableRow(dictId);
+    });
 }
 
 void DictionariesDialog::setInstalled(const QList<services::DictionaryInfo>& installed)
@@ -468,6 +488,7 @@ QHBoxLayout* DictionariesDialog::buildAvailableFilterRow(QWidget* content)
 QScrollArea* DictionariesDialog::buildAvailableScroll(QWidget* content)
 {
     auto* scroll = new QScrollArea(content);
+    m_availableScroll = scroll;
     scroll->setObjectName(u"availableScroll"_s);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -678,10 +699,31 @@ QWidget* DictionariesDialog::buildAvailableRow(const core::CatalogEntry& entry, 
     text->addWidget(desc);
     layout->addLayout(text, 1);
 
+    // The right-hand side changes with downloads; it is refilled on its own
+    // (updateAvailableRow), so a download never rebuilds the whole list.
+    auto* state = new QWidget(row);
+    state->setObjectName(u"availableState_"_s + entry.dictId);
+    auto* stateLayout = new QHBoxLayout(state);
+    stateLayout->setContentsMargins(0, 0, 0, 0);
+    stateLayout->setSpacing(12);
+    layout->addWidget(state);
+    m_availableStates.insert(entry.dictId, state);
+    m_availableEntries.insert(entry.dictId, entry);
+    fillAvailableState(state, entry);
+    return row;
+}
+
+void DictionariesDialog::fillAvailableState(QWidget* row, const core::CatalogEntry& entry)
+{
+    auto* layout = qobject_cast<QHBoxLayout*>(row->layout());
+    while (const QLayoutItem* item = layout->takeAt(0)) {
+        delete item->widget();
+        delete item;
+    }
     const std::optional<services::DownloadStatus> status = findDownload(m_manager.downloads(), entry.dictId);
     if (status) {
         appendDownloadState(layout, row, entry, *status);
-        return row;
+        return;
     }
 
     const std::optional<QString> installedVersion =
@@ -713,7 +755,11 @@ QWidget* DictionariesDialog::buildAvailableRow(const core::CatalogEntry& entry, 
         installedLabel->setProperty("small", true);
         layout->addWidget(installedLabel);
     }
-    return row;
+}
+
+QString DictionariesDialog::progressText(int percent, qint64 received, qint64 total)
+{
+    return tr("%1%, %2 of %3").arg(percent).arg(humanSize(received), humanSize(total));
 }
 
 void DictionariesDialog::appendDownloadState(QHBoxLayout* layout, QWidget* row,
@@ -730,10 +776,11 @@ void DictionariesDialog::appendDownloadState(QHBoxLayout* layout, QWidget* row,
     case services::DownloadStatus::Downloading: {
         const int percent = status.total > 0 ? static_cast<int>(status.received * 100 / status.total) : 0;
         auto* ring = new ProgressRing(row);
+        ring->setObjectName(u"progressRing_"_s + entry.dictId);
         ring->setPercent(percent);
         layout->addWidget(ring);
-        auto* label = new QLabel(
-            tr("%1%, %2 of %3").arg(percent).arg(humanSize(status.received), humanSize(status.total)), row);
+        auto* label = new QLabel(progressText(percent, status.received, status.total), row);
+        label->setObjectName(u"progressLabel_"_s + entry.dictId);
         label->setProperty("muted", true);
         label->setProperty("small", true);
         layout->addWidget(label);
@@ -822,8 +869,40 @@ void DictionariesDialog::rebuildInstalledRows()
     updateInstalledFooter();
 }
 
+void DictionariesDialog::updateAvailableRow(const QString& dictId)
+{
+    const bool downloading = findDownload(m_manager.downloads(), dictId).has_value();
+    if (downloading) {
+        m_rowsWithDownload.insert(dictId);
+    } else {
+        m_rowsWithDownload.remove(dictId);
+    }
+    QWidget* state = m_availableStates.value(dictId);
+    if (state == nullptr) {
+        return; // filtered out of the list
+    }
+    // Progress within one download: move the ring and the numbers, nothing else.
+    const std::optional<services::DownloadStatus> status = findDownload(m_manager.downloads(), dictId);
+    auto* ring = dynamic_cast<ProgressRing*>(state->findChild<QWidget*>(u"progressRing_"_s + dictId));
+    auto* label = state->findChild<QLabel*>(u"progressLabel_"_s + dictId);
+    if (status && status->state == services::DownloadStatus::Downloading && ring != nullptr &&
+        label != nullptr) {
+        const int percent = status->total > 0 ? static_cast<int>(status->received * 100 / status->total) : 0;
+        ring->setPercent(percent);
+        label->setText(progressText(percent, status->received, status->total));
+        return;
+    }
+    fillAvailableState(state, m_availableEntries.value(dictId));
+}
+
 void DictionariesDialog::rebuildAvailableRows()
 {
+    // Keep the reader's place: rebuilding (a filter, a new catalogue) must not jump to the top.
+    QScrollBar* scrollBar = m_availableScroll->verticalScrollBar();
+    const int position = scrollBar->value();
+    m_availableList->setUpdatesEnabled(false);
+    m_availableStates.clear();
+    m_availableEntries.clear();
     auto* listLayout = qobject_cast<QVBoxLayout*>(m_availableList->layout());
     while (listLayout->count() > 1) {
         const QLayoutItem* const item = listLayout->takeAt(0);
@@ -856,6 +935,9 @@ void DictionariesDialog::rebuildAvailableRows()
     for (qsizetype i = 0; i < shown.size(); ++i) {
         listLayout->insertWidget(static_cast<int>(i), buildAvailableRow(shown.at(i), i == shown.size() - 1));
     }
+    m_availableList->setUpdatesEnabled(true);
+    // The new rows are laid out on the next pass; restore the place after it.
+    QTimer::singleShot(0, this, [scrollBar, position] { scrollBar->setValue(position); });
 }
 
 void DictionariesDialog::refreshLanguageFilters()

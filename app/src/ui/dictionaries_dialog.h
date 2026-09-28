@@ -1,10 +1,12 @@
 #pragma once
 
+#include "core/catalog.h"
 #include "services/lookup_service.h"
 
 #include <QDialog>
 #include <QHash>
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -82,6 +84,12 @@ private:
     void startDownload(const core::CatalogEntry& entry);
     void rebuildInstalledRows();
     void rebuildAvailableRows();
+    /// Download, install and removal signals: each updates only the rows it concerns.
+    void connectDownloads();
+    /// Refreshes one row's right-hand side (download state) without touching the rest.
+    void updateAvailableRow(const QString& dictId);
+    void fillAvailableState(QWidget* row, const core::CatalogEntry& entry);
+    [[nodiscard]] static QString progressText(int percent, qint64 received, qint64 total);
     void refreshLanguageFilters();
     void updateInstalledFooter();
     void updateAvailableFooter();
@@ -106,6 +114,10 @@ private:
     QComboBox* m_fromCombo = nullptr;
     QComboBox* m_toCombo = nullptr;
     QWidget* m_availableList = nullptr; ///< a QVBoxLayout of rows, plus a trailing stretch
+    QScrollArea* m_availableScroll = nullptr;
+    QHash<QString, QWidget*> m_availableStates;            ///< each row's right-hand side, by dictionary id
+    QHash<QString, core::CatalogEntry> m_availableEntries; ///< the entry each shown row stands for
+    QSet<QString> m_rowsWithDownload;                      ///< rows last drawn with a download state
     QLabel* m_availableFooter = nullptr;
     QPushButton* m_refreshButton = nullptr;
     QPushButton* m_tryAgainButton = nullptr;

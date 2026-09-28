@@ -19,6 +19,8 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTcpServer>
@@ -386,6 +388,52 @@ private Q_SLOTS:
 
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_fr-en"_s) != nullptr);
         QVERIFY(dialog.findChild<QWidget*>(u"availableRow_de-en"_s) == nullptr);
+    }
+
+    void downloadingKeepsTheListInPlace()
+    {
+        // Forty rows; the reader scrolls to the last and downloads it. The list must
+        // stay where it is and the other rows must not be rebuilt.
+        QFile fixture(QString::fromUtf8(OMNIDICT_FIXTURE_BUNDLE));
+        QVERIFY(fixture.open(QIODevice::ReadOnly));
+        const QByteArray raw = fixture.readAll();
+        const QByteArray compressed = zstdCompress(raw);
+        TestHttpServer server;
+        server.addRoute(u"/last.odict"_s, compressed);
+        QJsonArray entries;
+        for (int i = 0; i < 40; ++i) {
+            const QString id = u"d%1"_s.arg(i, 2, 10, QLatin1Char('0'));
+            entries.append(manifest(id, u"Dictionary %1"_s.arg(id), u"1"_s, u"en"_s, u"en"_s, u"Test"_s,
+                                    server.urlFor(u"/last.odict"_s).toString(), compressed, raw.size()));
+        }
+        server.addRoute(u"/catalog.json"_s, catalogJson(entries));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"inplace"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        dialog.resize(760, 560);
+        dialog.show();
+        dialog.showAvailable();
+        QVERIFY(catalogChanged.wait(5000));
+        QCoreApplication::processEvents();
+
+        auto* scroll = dialog.findChild<QScrollArea*>(u"availableScroll"_s);
+        QVERIFY(scroll != nullptr);
+        QTRY_VERIFY(scroll->verticalScrollBar()->maximum() > 0); // rows laid out
+        scroll->verticalScrollBar()->setValue(scroll->verticalScrollBar()->maximum());
+        const int position = scroll->verticalScrollBar()->value();
+        QVERIFY(position > 0);
+        auto* firstRow = dialog.findChild<QWidget*>(u"availableRow_d00"_s);
+        QVERIFY(firstRow != nullptr);
+
+        QSignalSpy downloadChanged(&manager, &DictionaryManager::downloadChanged);
+        dialog.findChild<QPushButton*>(u"downloadButton_d39"_s)->click();
+        QVERIFY(downloadChanged.wait(5000));
+        QTest::qWait(50); // a rebuild would restore the position on the next pass
+        QCOMPARE(scroll->verticalScrollBar()->value(), position);
+        QCOMPARE(dialog.findChild<QWidget*>(u"availableRow_d00"_s), firstRow); // not rebuilt
     }
 
     void clickingDownloadEndsWithInstalledState()
