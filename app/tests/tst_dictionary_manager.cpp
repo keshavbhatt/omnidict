@@ -419,6 +419,28 @@ private Q_SLOTS:
         QVERIFY(!QFile::exists(QDir(cacheDir.path()).filePath(u"downloads/dict-changed-1.odict.part"_s)));
     }
 
+    void aRebuiltFileOfTheSameSizeSaysSoAndReadsTheCatalogueAgain()
+    {
+        // A rolling-release rebuild can keep the size and change the bytes: the checksum is
+        // then the only sign, and it must lead to the same "updated" path, catalogue re-read.
+        QByteArray rebuilt = m_compressedFixture;
+        rebuilt[rebuilt.size() / 2] = static_cast<char>(rebuilt.at(rebuilt.size() / 2) ^ 0x5a);
+        TestHttpServer server;
+        TestHttpServer::Route route;
+        route.body = rebuilt;
+        server.addRoute(u"/rebuilt.odict"_s, route);
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogRead(&manager, &DictionaryManager::catalogFailed); // no catalogue route: 404
+        manager.install(makeEntry(u"dict-rebuilt"_s, u"1"_s, server.urlFor(u"/rebuilt.odict"_s),
+                                  m_compressedFixture, m_installedSize));
+        QVERIFY(QTest::qWaitFor(
+            [&] { return stateOf(manager.downloads(), u"dict-rebuilt"_s) == DownloadStatus::Failed; }, 5000));
+        QVERIFY(manager.downloads().first().error.contains(u"updated on the server"_s));
+        QVERIFY(catalogRead.wait(5000)); // it asked for the catalogue again
+    }
+
     void installedFiresAndFileInPlaceViaRangeResume()
     {
         TestHttpServer::Route route;

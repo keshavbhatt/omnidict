@@ -439,8 +439,15 @@ void DictionaryManager::onInstallFinished(const QString& dictId, const core::Res
         qCWarning(lcDownloads) << dictId << "install failed:" << detail; // the numbers the message leaves out
         QString message;
         if (detail.contains(u"checksum"_s)) {
-            message = tr("The file did not match the catalogue (checksum)");
-        } else if (detail.contains(u"size mismatch"_s)) {
+            // All of it arrived, the size is right, the contents are not the catalogue's:
+            // the rolling release replaced the file (ADR-016) since the catalogue was read.
+            // Read the catalogue again so Retry fetches the new file with its new checksum.
+            failDownload(dictId, tr("This dictionary was updated on the server; try again"),
+                         /*keepPartial=*/false);
+            refreshCatalog(/*force=*/true);
+            return;
+        }
+        if (detail.contains(u"size mismatch"_s)) {
             message = tr("The file did not match the catalogue (size)");
         } else if (detail.contains(u"dict_id mismatch"_s) || detail.contains(u"version mismatch"_s)) {
             message = tr("The downloaded file did not match the catalogue entry");
