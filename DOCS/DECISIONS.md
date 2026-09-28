@@ -318,8 +318,9 @@ without a network stack, only a file on disk.
 
 ## ADR-016: Dictionaries hosted on GitHub Releases, built by GitHub Actions (2026-09-28)
 
-**Status.** Accepted in direction (owner, 2026-09-28); the workflow is not written yet and
-nothing is published (PLAN 9 question 2).
+**Status.** Accepted (owner, 2026-09-28): one rolling release, source links instead of
+re-hosted sources. The workflow is written (`.github/workflows/dictionaries.yml`) and runs
+only when started by hand; nothing is published until the owner does (PLAN 9 question 2).
 
 **Context.** The catalogue is 297 dictionaries and 1.45 GB of `.odict` files today (median
 2.3 MB, largest `wikt-en` 275 MB), about 4 to 5 GB once the Wiktionary languages above 1,000
@@ -339,17 +340,30 @@ Pages (too small per file for bundles, fine for `catalog.json`).
   release; this keeps the file count down. Whether a link to the upstream source is enough
   for the GPL, AGPL and MPL dictionaries is an open point, see Consequences.
 
+**The rolling release.** One release, tag `dictionaries`, holds every bundle as
+`<dict_id>-<version>.odict` (`package.py --flat-urls`, since a release has no folders) and the
+`catalog.json` the app reads, at a URL that never changes:
+`https://github.com/<owner>/<repo>/releases/download/dictionaries/catalog.json`. A run:
+1. drops every bundle the published catalogue no longer lists (those are two runs old);
+2. builds the dictionaries asked for (all by default) in chunks, one dictionary at a time
+   per runner (`make ci-bundle-<id>`), uploading each bundle as it is done, replacing a file
+   of the same name;
+3. merges the new manifests into the published catalogue (`catalog.py --previous
+   --manifests-only`: a dictionary that was not rebuilt, or whose chunk failed, keeps its
+   entry) and uploads it.
+Bundles of the previous catalogue stay until the next run, so an app that read it recently
+can still download them. 623 dictionaries today; a monthly run that renews the 328 Wiktionary
+ones peaks near 950 files, under GitHub's 1,000 per release. If that ever gets tight, the
+Wiktionary bundles move to a release of their own.
+
 **Consequences.**
-- The Wiktionary cut-off could drop from 10,000 to 1,000 senses (DOCS/sources.md
+- The Wiktionary cut-off dropped from 10,000 to 1,000 senses (DOCS/sources.md
   "Wiktionary languages").
-- `package.py` needs a flat asset name and URL (`<dict_id>-<version>.odict` under
-  `releases/download/<tag>/`), since a release has no folders.
 - The app follows GitHub's redirect to its file host (Qt 6's default redirect policy); a
   test with a redirecting server is to be added before publishing.
 - Copyleft: for GPL-3.0 and AGPL-3.0 dictionaries distributed online, an offer to supply the
   source on request is not enough on its own (GPLv3 section 6(b) covers physical products
   only); section 6(d) allows pointing to a copy on a third party's server, such as FreeDict's
-  own release, as long as it stays available. The owner's "provide on request" works for the
-  GPL-2.0-or-later dictionaries through a written offer, and for all of them once each
-  bundle's attribution links its upstream source. To be settled before publishing.
+  own release, as long as it stays available. Settled (owner, 2026-09-28): every bundle
+  records its upstream source in `source_url` (schema 3) and the About card links it.
 - Needs the GitHub repository, which the owner has deferred.

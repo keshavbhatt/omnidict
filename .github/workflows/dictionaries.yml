@@ -1,0 +1,173 @@
+# Builds the dictionaries and publishes them to one rolling GitHub release, "dictionaries"
+# (ADR-016): every bundle is an asset named <dict_id>-<version>.odict, next to the
+# catalog.json the app reads. Started by hand only: publishing is the owner's call.
+#
+# A run: plan (make sure the release exists, drop bundles that no catalogue lists any
+# more, split the dictionaries into chunks), build (each chunk fetches, builds and
+# packages one dictionary at a time and uploads it, so a runner's disk holds one at a
+# time), catalog (merge the new manifests into the published catalogue and upload it).
+# Bundles of the previous catalogue stay one more run, for apps that read it recently.
+name: dictionaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      dicts:
+        description: "Dictionary ids to rebuild, separated by spaces (empty: all of them)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dictionaries
+  cancel-in-progress: false
+
+env:
+  TAG: dictionaries
+  CHUNKS: "24"
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      chunks: ${{ steps.split.outputs.chunks }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DICTS: ${{ inputs.dicts }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: The release exists
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" \
+            --title "Dictionaries" --latest=false \
+            --notes "Dictionary bundles and the catalogue Omnidict reads. Rebuilt by the dictionaries workflow."
+
+      - name: Drop bundles no catalogue lists
+        run: |
+          if gh release download "$TAG" --pattern catalog.json --dir "$RUNNER_TEMP/published"; then
+            jq -r '.dictionaries[].url | split("/") | last' "$RUNNER_TEMP/published/catalog.json" | sort -u > keep
+            gh release view "$TAG" --json assets --jq '.assets[].name' | grep '\.odict$' | sort > have || true
+            comm -23 have keep | while read -r asset; do
+              echo "deleting $asset"
+              gh release delete-asset "$TAG" "$asset" --yes
+            done
+          fi
+
+      - name: Split into chunks
+        id: split
+        run: |
+          if [ -n "$DICTS" ]; then
+            list="$DICTS"
+          else
+            list=$(make -s -C pipeline list-dicts)
+          fi
+          # English Wiktionary is large enough for a runner of its own.
+          chunks=$(printf '%s\n' $list | python3 -c '
+          import json, os, sys
+          ids = [line.strip() for line in sys.stdin if line.strip()]
+          big = [i for i in ids if i == "wikt-en"]
+          rest = [i for i in ids if i not in big]
+          n = max(1, min(int(os.environ["CHUNKS"]), len(rest)))
+          chunks = [" ".join(rest[k::n]) for k in range(n)] if rest else []
+          print(json.dumps(big + [c for c in chunks if c]))
+          ')
+          echo "chunks=$chunks" >> "$GITHUB_OUTPUT"
+          echo "$chunks"
+
+  build:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        chunk: ${{ fromJSON(needs.plan.outputs.chunks) }}
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_URL: https://github.com/${{ github.repository }}/releases/download/dictionaries
+      CHUNK: ${{ matrix.chunk }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Room on the disk
+        working-directory: /
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
+
+      - name: ICU headers for PyICU
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libicu-dev pkg-config
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          working-directory: pipeline
+
+      - name: Sync
+        run: uv sync --locked
+
+      - name: Build, package and upload
+        run: |
+          for dict in $CHUNK; do
+            make ci-bundle-"$dict" RELEASE_URL="$RELEASE_URL"
+            manifest=$(ls out/publish/dicts/"$dict"/*/manifest.json)
+            version=$(jq -r .version "$manifest")
+            asset="$RUNNER_TEMP/$dict-$version.odict"
+            mv "out/publish/dicts/$dict/$version/$dict.odict" "$asset"
+            # Replaced when present: a rebuild of the same version is a new file.
+            gh release upload "$TAG" "$asset" --clobber
+            rm "$asset"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manifests-${{ strategy.job-index }}
+          path: pipeline/out/publish/dicts
+          retention-days: 7
+
+  catalog:
+    needs: [plan, build]
+    # Also after a failed chunk: its dictionaries keep their previous catalogue entries.
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ICU headers for PyICU
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libicu-dev pkg-config
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          working-directory: pipeline
+
+      - name: Sync
+        run: uv sync --locked
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: manifests-*
+          merge-multiple: true
+          path: pipeline/out/publish/dicts
+
+      - name: Merge into the published catalogue
+        run: |
+          previous=()
+          if gh release download "$TAG" --pattern catalog.json --dir "$RUNNER_TEMP/published"; then
+            previous=(--previous "$RUNNER_TEMP/published/catalog.json")
+          fi
+          uv run python -m omnipipe.catalog --publish out/publish --manifests-only "${previous[@]}"
+
+      - name: Publish the catalogue
+        run: |
+          gh release upload "$TAG" out/publish/catalog.json --clobber
+          count=$(gh release view "$TAG" --json assets --jq '.assets | length')
+          echo "the release holds $count files (GitHub allows 1000)"
