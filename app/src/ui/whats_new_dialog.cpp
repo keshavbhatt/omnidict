@@ -42,7 +42,7 @@ WhatsNewDialog::WhatsNewDialog(QString runningVersion, QWidget* parent)
     , m_notes(new QTextBrowser(this))
 {
     disableWheelZoom(m_notes);
-    setWindowTitle(tr("What's new"));
+    setWindowTitle(titleWithApp(tr("What's new")));
     setModal(true);
     setMinimumWidth(560);
     resize(600, 520);

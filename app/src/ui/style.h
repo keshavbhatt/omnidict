@@ -52,6 +52,10 @@ struct Tokens
 /// sizes it; capitals and spacing are font settings a style sheet cannot make.
 void makeSectionLabel(QLabel* label);
 
+/// A window title ending in the app's name, "Settings - Omnidict". Without the
+/// name at the end, Qt appends it itself with an em dash, which our text never uses.
+[[nodiscard]] QString titleWithApp(const QString& title);
+
 /// Turns off the Ctrl+wheel zoom Qt's text views have built in: it has no limits
 /// and rescales only part of the text. Text size is Ctrl+Plus/Minus in the entry.
 void disableWheelZoom(QAbstractScrollArea* view);

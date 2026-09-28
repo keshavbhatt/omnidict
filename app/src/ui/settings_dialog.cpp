@@ -65,7 +65,7 @@ SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictiona
     : QDialog(parent)
     , m_settings(settings)
 {
-    setWindowTitle(tr("Settings"));
+    setWindowTitle(titleWithApp(tr("Settings")));
     setModal(true);
     setMinimumSize(560, 480);
 

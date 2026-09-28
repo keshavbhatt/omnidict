@@ -81,7 +81,7 @@ AboutDialog::AboutDialog(const QList<services::DictionaryInfo>& dictionaries, QW
     : QDialog(parent)
     , m_dictionaries(dictionaries)
 {
-    setWindowTitle(tr("About Omnidict"));
+    setWindowTitle(titleWithApp(tr("About Omnidict")));
     setModal(true);
     setMinimumWidth(600);
 

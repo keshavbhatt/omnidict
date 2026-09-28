@@ -52,7 +52,7 @@ ShortcutsDialog::ShortcutsDialog(const QList<ShortcutRow>& rows, QWidget* parent
     : QDialog(parent)
     , m_filter(new QLineEdit(this))
 {
-    setWindowTitle(tr("Keyboard shortcuts"));
+    setWindowTitle(titleWithApp(tr("Keyboard shortcuts")));
     setModal(true);
     setMinimumWidth(640);
 

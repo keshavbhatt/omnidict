@@ -46,7 +46,7 @@ BugReportDialog::BugReportDialog(QString diagnostics, QWidget* parent)
     , m_description(new QPlainTextEdit(this))
 {
     disableWheelZoom(m_description);
-    setWindowTitle(tr("Report a bug"));
+    setWindowTitle(titleWithApp(tr("Report a bug")));
     setModal(true);
     setMinimumWidth(560);
 

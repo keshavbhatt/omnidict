@@ -268,7 +268,7 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     , m_dictionariesRoot(std::move(dictionariesRoot))
     , m_tabs(new QTabWidget(this))
 {
-    setWindowTitle(tr("Dictionaries"));
+    setWindowTitle(titleWithApp(tr("Dictionaries")));
     setModal(true);
     resize(kSheetWidth, 560);
     setMinimumWidth(kSheetWidth);
@@ -618,7 +618,7 @@ void DictionariesDialog::attachRowMenu(QToolButton* button, const services::Dict
 void DictionariesDialog::confirmRemove(const QString& dictId, const QString& name, qint64 freed)
 {
     QDialog confirm(this);
-    confirm.setWindowTitle(tr("Remove dictionary"));
+    confirm.setWindowTitle(titleWithApp(tr("Remove dictionary")));
     confirm.setModal(true);
     auto* layout = new QVBoxLayout(&confirm);
     layout->setContentsMargins(20, 20, 20, 0);

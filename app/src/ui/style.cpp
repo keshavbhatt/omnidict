@@ -3,6 +3,7 @@
 #include "ui/icons.h"
 
 #include <QAbstractScrollArea>
+#include <QGuiApplication>
 #include <QHash>
 #include <QLabel>
 #include <QWheelEvent>
@@ -288,6 +289,12 @@ protected:
 };
 
 } // namespace
+
+QString titleWithApp(const QString& title)
+{
+    const QString app = QGuiApplication::applicationDisplayName();
+    return app.isEmpty() || title.endsWith(app) ? title : title + u" - "_s + app;
+}
 
 void disableWheelZoom(QAbstractScrollArea* view)
 {

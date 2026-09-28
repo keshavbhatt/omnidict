@@ -79,6 +79,13 @@ private:
     [[nodiscard]] QString iniPath(const QString& name) const { return m_dir.filePath(name + u".ini"_s); }
 
 private Q_SLOTS:
+    void windowTitlesEndWithTheAppNameSoQtAddsNoDash()
+    {
+        QGuiApplication::setApplicationDisplayName(u"Omnidict"_s);
+        QCOMPARE(omnidict::ui::titleWithApp(u"Settings"_s), u"Settings - Omnidict"_s);
+        QCOMPARE(omnidict::ui::titleWithApp(u"About Omnidict"_s), u"About Omnidict"_s);
+    }
+
     void initTestCase()
     {
         QStandardPaths::setTestModeEnabled(true);
