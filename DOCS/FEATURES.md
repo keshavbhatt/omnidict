@@ -38,7 +38,7 @@ expects every ktechpit desktop app to have.
 | B7 | Wildcard search (`?`, `*`) | M2 | KEEP | done (`Bundle::searchPattern`) |
 | B8 | Spell suggestion on zero results | M2 | KEEP (owner, 2026-09-27: our own suggester, ADR-013) | core done: `suggest` table (schema 2), Python reference and `core::Suggester` agree on `tests/suggest_cases.json`; worst case 19 ms on English (`tst_real_bundles`); UI done (mocks/main-no-results.html: "Did you mean" in the list, a no-match state beside it) |
 | B9 | "All" dictionary filter dropdown restricts fan-out to one bundle | M2 | KEEP | done |
-| B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP | partly: `core::Library` discovers and opens bundles; lazy open and the LRU of 10 connections are still to do |
+| B10 | `services::BundleManager`: installed bundles, open/close, LRU of open connections | M2 | KEEP, lazy opening deferred (measured 2026-09-28) | done as `core::Library`: opens every dictionary at start. Measured: 54 dictionaries, English among them, start in 0.87 s to a shown sheet with 76 MB peak (4 dictionaries: 0.85 s, 64 MB), inside PLAN 7.3's targets, so the LRU waits until a measurement says otherwise |
 | B11 | `services::SearchEngine`: fan-out query across bundles, merge results | M2 | KEEP | done as `core::SearchEngine` (pure, on the lookup thread) |
 | B12 | Dedicated SQLite worker thread per bundle-manager (ADR-004) | M2 | KEEP | done: one lookup thread (`services::LookupService`) |
 | B13 | DAWG / perfect-hash search index | v2 | LATER | - |

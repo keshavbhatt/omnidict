@@ -8,7 +8,7 @@ Newest first. One entry per working session.
 |---|---|
 | M0 Scaffold | done locally; CI not yet run (no remote) |
 | M1 Kaikki + packaging + catalog | done: three real bundles, catalog served and verified locally |
-| M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening with an LRU (B10) still open |
+| M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening measured and not needed yet (B10) |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
 | M4 More converters, real catalog | todo |
 | M5 Packaging | todo |
@@ -70,7 +70,9 @@ Owner decisions: the 14 mocks approved; our own spell suggester (ADR-013); schem
 - Deviations from the mocks, since closed (2026-09-28): rows found through an inflected form
   now show that form with "from <headword>" (`EntryPreview::matchedForm`); the language filters
   are drawn as the mock's chips; the Installing ring turns. Owner, 2026-09-28: no dictionary
-  ships with the app (PLAN 9 question 5).
+  ships with the app (PLAN 9 question 5). Update checked end to end: a real Hindi package
+  marked 2026.09.2 installed over 2026.09.1 and removed the old folder. Start-up with 54
+  dictionaries: 0.87 s and 76 MB peak, so lazy opening waits (FEATURES B10).
 - Tests: 253 pipeline, 17 C++ suites. Lint clean.
 
 ## 2026-09-27 - Design mocks, spell-suggestion research, publishing stays local
