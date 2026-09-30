@@ -1,0 +1,132 @@
+# Builds a self-contained x86_64 AppImage (Qt 6.11 bundled) that runs on any glibc
+# distribution from 2022 on (built on Ubuntu 22.04). ADR-018.
+#
+# Where it goes: a version tag (v0.1.0) attaches it to that version's release, the one
+# release.yml creates with the changelog notes; it never goes near the rolling
+# "dictionaries" release. A manual run with no tag keeps it as a 7-day download on the run,
+# for testing between releases; a manual run with a tag (re)builds for that release.
+name: appimage
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach to (e.g. v0.1.0); empty: keep it on the run'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    # The oldest supported runner, for the widest glibc compatibility.
+    runs-on: ubuntu-22.04
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: 1 # GitHub runners have no FUSE
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Version
+        id: ver
+        run: |
+          tag="${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}"
+          project=$(awk '/^project\(omnidict/ {on = 1} on && $1 == "VERSION" {print $2; exit}' app/CMakeLists.txt)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "ver=${tag:+${tag#v}}${tag:-$project-$(git rev-parse --short HEAD)}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          # The base download includes Qt Svg and Qt Wayland, all the app needs.
+          version: '6.11.*'
+          cache: true
+
+      - name: Build tools and libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build libfuse2 \
+            libsqlite3-dev libzstd-dev libicu-dev libxkbcommon-dev
+
+      - name: Build and install into the AppDir
+        run: |
+          cmake -S app -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DOMNIDICT_BUILD_TESTS=ON
+          cmake --build build --parallel
+          DESTDIR="$PWD/AppDir" cmake --install build
+
+      - name: Normalization matches the pipeline with this ICU
+        run: |
+          # Ubuntu 22.04's ICU (70) is older than the snap's (74): the shared vectors
+          # (tests/normalize_vectors.json) must still hold, or lookups would miss.
+          QT_QPA_PLATFORM=offscreen ctest --test-dir build --output-on-failure -R tst_normalize
+
+      - name: Check the bundled SQLite has full-text search with trigrams
+        run: |
+          # The suggester needs FTS5's trigram tokenizer (SQLite 3.34+); Ubuntu 22.04 has 3.37.
+          python3 -c "import sqlite3; sqlite3.connect(':memory:').execute(\"create virtual table t using fts5(x, tokenize='trigram')\")"
+
+      - name: Fetch linuxdeploy
+        run: |
+          base=https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous
+          qtbase=https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous
+          wget -q --tries=5 --retry-connrefused "$base/linuxdeploy-x86_64.AppImage"
+          wget -q --tries=5 --retry-connrefused "$qtbase/linuxdeploy-plugin-qt-x86_64.AppImage"
+          chmod +x linuxdeploy*.AppImage
+
+      - name: Build the AppImage
+        run: |
+          export QMAKE="$QT_ROOT_DIR/bin/qmake"
+          # Wayland as well as X11: the platform plugins linuxdeploy leaves out by default.
+          export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so;libqoffscreen.so"
+          export EXTRA_QT_MODULES="svg;waylandclient"
+          export OUTPUT="omnidict-${{ steps.ver.outputs.ver }}-x86_64.AppImage"
+          n=0
+          until ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            --desktop-file AppDir/usr/share/applications/com.ktechpit.omnidict.desktop \
+            --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/com.ktechpit.omnidict.png \
+            --plugin qt --output appimage; do
+            n=$((n+1)); [ $n -ge 3 ] && { echo "::error::linuxdeploy failed after $n attempts"; exit 1; }
+            echo "linuxdeploy attempt $n failed; retrying in 15s"; sleep 15
+          done
+          echo "APPIMAGE=$OUTPUT" >> "$GITHUB_ENV"
+
+      - name: Check the bundle
+        run: |
+          need() { find AppDir -name "$1" | grep -q . || { echo "::error::missing $1 from the bundle"; exit 1; }; }
+          need libqxcb.so
+          need libqwayland-generic.so
+          need libQt6Svg.so.6
+          need libqsvg.so
+          # It starts, answers --version and exits, with nothing but the AppImage.
+          QT_QPA_PLATFORM=offscreen "./$APPIMAGE" --version
+
+      - name: Keep it on the run (no tag)
+        if: ${{ steps.ver.outputs.tag == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPIMAGE }}
+          path: ${{ env.APPIMAGE }}
+          retention-days: 7
+
+      - name: Attach to the version's release
+        if: ${{ steps.ver.outputs.tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          # release.yml creates the release with the changelog notes; wait for it rather than
+          # creating one here without them (both start on the same tag push).
+          for _ in $(seq 1 30); do
+            gh release view "$TAG" >/dev/null 2>&1 && break
+            sleep 20
+          done
+          gh release view "$TAG" >/dev/null 2>&1 || { echo "::error::no release for $TAG (release.yml failed?)"; exit 1; }
+          gh release upload "$TAG" "$APPIMAGE" --clobber

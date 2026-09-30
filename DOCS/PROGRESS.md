@@ -11,7 +11,7 @@ Newest first. One entry per working session.
 | M2 Qt client (search, entry view, app shell) | done: every approved M2 mock built; lazy opening measured and not needed yet (B10) |
 | M3 Manage dictionaries + downloader + About | download/install backend done; dialog UI still to do |
 | M4 More converters, real catalog | done locally: every converter written (KEngDic added 2026-09-28); 328 Wiktionary languages listed, built in full by CI once the repository exists; hosting on GitHub Releases decided (ADR-016), publishing waits for the owner |
-| M5 Packaging | done locally: desktop file, metainfo, snap, Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage deferred; nothing runs until the repository exists |
+| M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
 ## 2026-09-29 - Published catalogue, GitHub as the default

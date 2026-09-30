@@ -398,3 +398,29 @@ AppImage has no ready Qt 6.11 runtime to build against.
 **Consequences.** Nothing is built or published from this machine. The appstream lint stays
 red on unreachable URLs and the missing `<release>` until the repository is public and the
 release checklist runs. `packaging/README.md` is the working reference.
+
+## ADR-018: AppImage built in CI with Qt from the Qt installer and linuxdeploy (2026-09-30)
+
+**Status.** Accepted (owner, 2026-09-30: "add appimage support too in CI, similar to" the
+whatsie workflow). Replaces ADR-017's deferral of the AppImage.
+
+**Context.** An AppImage has no Qt runtime to build against, unlike the snap (kde-neon-6) and
+the Flatpak (KDE runtime): Qt has to be bundled. The owner's whatsie app already ships one from
+GitHub Actions this way.
+
+**Decision.** `.github/workflows/appimage.yml` on `ubuntu-22.04` (glibc 2.35, the widest
+compatibility GitHub offers): Qt 6.11 from the official installer (`jurplel/install-qt-action`,
+which uses aqtinstall; the base download includes Qt Svg, Qt Wayland and Qt's ICU), SQLite,
+zstd and ICU from Ubuntu 22.04, bundled with `linuxdeploy` and `linuxdeploy-plugin-qt`
+(continuous builds) with the X11, Wayland and offscreen platform plugins. The job builds the
+normalization test and runs it (Ubuntu 22.04's ICU 70 is older than the snap's 74), checks the
+bundle for the platform plugins and Qt Svg, and starts the AppImage once (`--version`).
+
+**Where it goes.** A version tag attaches `omnidict-<version>-x86_64.AppImage` to that
+version's release, which `release.yml` creates with the changelog notes (the AppImage job waits
+for it). It never goes to the rolling `dictionaries` release, which is not marked Latest, so
+the version release stays the one people see first. A manual run without a tag keeps the file
+on the run for 7 days, for testing between releases.
+
+**Consequences.** x86_64 only for now (an arm64 AppImage needs an arm64 Qt build and runner).
+The CI tools are rows in `THIRD_PARTY.md`; nothing new ships in the snap or the Flatpak.

@@ -1,8 +1,8 @@
 # Packaging
 
-Omnidict is packaged for Linux as a **snap** and a **Flatpak**, both built in CI, never on a
-developer machine (the KDE SDK images are several GB). An AppImage is deferred until after the
-first release (owner, 2026-09-28; FEATURES F3). ADR-017 has the reasoning.
+Omnidict is packaged for Linux as a **snap**, a **Flatpak** and an **AppImage**, all built in
+CI, never on a developer machine (the KDE SDK images are several GB). ADR-017 (snap, Flatpak)
+and ADR-018 (AppImage) have the reasoning.
 
 The app installs everything the packages need through CMake (`app/CMakeLists.txt`): the
 binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
@@ -53,6 +53,15 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream app/dis
 
 The appstream lint reports the repository URLs and screenshots as unreachable until the
 repository is public, and asks for a `<release>` entry, which the release checklist adds.
+
+## AppImage
+
+`.github/workflows/appimage.yml` (ADR-018) builds `omnidict-<version>-x86_64.AppImage` on
+Ubuntu 22.04 with Qt 6.11 from the Qt installer, bundled by linuxdeploy with the X11 and
+Wayland platform plugins. It checks the normalization vectors against Ubuntu 22.04's ICU, the
+bundle's plugins, and that the AppImage starts. A version tag attaches it to that version's
+release (created by `release.yml`), never to the rolling `dictionaries` release; a manual run
+without a tag keeps it on the run for 7 days.
 
 ## Store text and search
 

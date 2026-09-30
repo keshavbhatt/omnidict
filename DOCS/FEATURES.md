@@ -86,7 +86,7 @@ expects every ktechpit desktop app to have.
 |---|---|---|---|---|
 | F1 | Snap packaging, built in CI | M5 | KEEP | done (runs once the repository exists) |
 | F2 | Flatpak packaging | M5 | KEEP | done (manifest; Flathub submission with the owner) |
-| F3 | AppImage packaging | M5 | DEFERRED | deferred until after the first release (owner, 2026-09-28; ADR-017) |
+| F3 | AppImage packaging | M5 | KEEP | done in CI (owner, 2026-09-30; ADR-018): x86_64, attached to each version's release |
 | F4 | CI release workflow | M5 | KEEP | done (runs once the repository exists) |
 | F5 | Windows / macOS builds | v2 | LATER | - |
 
