@@ -305,7 +305,7 @@ QUrl SettingsDialog::shortcutSettingsUrl()
     if (!sandboxed || !qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s)) {
         return {};
     }
-    return QUrl(u"systemsettings://kcm_keys"_s);
+    return {u"systemsettings://kcm_keys"_s};
 }
 
 QStringList SettingsDialog::shortcutSettingsCommand()
