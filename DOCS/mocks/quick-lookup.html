@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Quick lookup</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  /* Another app underneath: a text editor with a word selected. */
+  .desk { position: relative; height: 100vh; min-height: 640px; background: #3b4252; overflow: hidden; }
+  .other { position: absolute; left: 40px; top: 30px; width: 760px; height: 540px; background: #fbfbfa; color: #2e3440; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.35); font: 15px/1.7 Georgia, serif; }
+  .other .bar { height: 34px; border-bottom: 1px solid #e2e2e0; font: 12px sans-serif; color: #777; display: grid; place-items: center; }
+  .other p { margin: 22px 34px; }
+  .other mark { background: #b3d4fc; color: inherit; }
+  /* The quick lookup popup. */
+  .quick { position: absolute; left: 470px; top: 110px; width: 470px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.45); display: flex; flex-direction: column; overflow: hidden; }
+  .quick .qhead { padding: 12px 12px 8px; display: flex; gap: 8px; align-items: center; }
+  .quick .qhead .search { flex: 1; }
+  .quick .qbody { padding: 4px 18px 12px; max-height: 300px; overflow: auto; }
+  .quick .qgroup { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 4px; }
+  .quick .qhw { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .quick .qipa { color: var(--muted); font-size: 13px; margin: 2px 0 8px; }
+  .quick .qsense { margin: 6px 0; }
+  .quick .qsense .qpos { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .quick .qalso { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .quick .qalso a { color: var(--link); }
+  .quick .qfoot { border-top: 1px solid var(--border); background: var(--panel); padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  /* The Settings row, beside it. */
+  .setsheet { position: absolute; left: 40px; top: 600px; width: 760px; }
+</style></head>
+<body>
+<div class="desk">
+  <div class="other">
+    <div class="bar">notes.txt - Text Editor</div>
+    <p>Finding the old letters in the attic was pure <mark>serendipity</mark>: we had been looking for the photo albums all afternoon.</p>
+    <p>Grandmother wrote in a careful, looping hand, and every page smelled faintly of lavender.</p>
+  </div>
+
+  <div class="quick">
+    <div class="qhead">
+      <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input focus" value="serendipity"><span class="clear" title="Clear"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+      <button class="btn flat icon" title="Close (Escape)"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="qbody">
+      <div class="qgroup">English (Wiktionary)</div>
+      <div class="qhw">serendipity</div>
+      <div class="qipa">UK /ˌsɛɹ.ənˈdɪp.ɪ.ti/ · US /ˌsɛɹ.ənˈdɪp.ə.ti/</div>
+      <div class="qsense"><span class="qpos">1 noun</span>An unsought, unintended, and unexpected, but fortunate, discovery or learning experience that happens by accident.</div>
+      <div class="qsense"><span class="qpos">2 noun</span>The faculty of making such fortunate discoveries.</div>
+      <div class="qalso">Also in <a href="#">English WordNet</a>, <a href="#">English-German (FreeDict)</a></div>
+    </div>
+    <div class="qfoot">
+      <span><span class="kbd">Enter</span> open in Omnidict</span>
+      <span><span class="kbd">Esc</span> close</span>
+      <span class="grow"></span>
+      <button class="btn small">Open in Omnidict</button>
+    </div>
+  </div>
+
+  <div class="setsheet card">
+    <div style="font-weight:600;margin-bottom:6px">Settings: Quick lookup</div>
+    <div class="set">
+      <div class="t"><div>Quick lookup shortcut</div><div class="d">Select a word in any app and press it. Change it in the desktop's keyboard settings.</div></div>
+      <span class="kbd">Ctrl</span><span class="kbd">Alt</span><span class="kbd">D</span>
+      <button class="btn small">Change...</button>
+    </div>
+    <div class="set">
+      <div class="t"><div>Where the desktop has no global shortcuts</div><div class="d">Add a custom shortcut in its keyboard settings that runs <code>omnidict --popup</code>. <a href="#">Copy the command</a></div></div>
+    </div>
+  </div>
+
+  <span class="pin" style="left:930px;top:122px">1</span>
+  <span class="pin" style="left:480px;top:180px">2</span>
+  <span class="pin" style="left:920px;top:394px">3</span>
+  <span class="pin" style="left:772px;top:640px">4</span>
+  <span class="pin" style="left:772px;top:700px">5</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+    <li><b>A small window over everything</b>: the Quick Lookup popup, about 470 px wide, opened by the global shortcut (or <code>omnidict --popup</code>). It shows only the best match, from the dictionaries switched on in Omnidict. Escape, or clicking elsewhere, closes it; the main window is not touched.</li>
+    <li><b>The word it starts with</b>: the word selected in the other app where the system allows reading it (X11, KDE); on GNOME Wayland the clipboard instead (copy, then press the shortcut), else an empty field with the cursor in it. Typing looks up as in the main window.</li>
+    <li><b>Open in Omnidict</b> (or Enter) hands the word to the main window, with all results, and closes the popup.</li>
+    <li><b>Settings row</b>: the shortcut registered through the desktop's global-shortcut service; "Change..." opens the desktop's own dialog for it. Shown only where that service exists (KDE Plasma, GNOME 48+, Hyprland).</li>
+    <li><b>Fallback</b>: elsewhere (GNOME 46 and 47, sway) this row explains the custom-shortcut route instead, with the command for the installed package (<code>flatpak run com.ktechpit.omnidict --popup</code>, <code>snap run omnidict --popup</code> or <code>omnidict --popup</code>).</li>
+  </ol></section>
+</body></html>
