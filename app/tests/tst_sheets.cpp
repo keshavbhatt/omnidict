@@ -167,12 +167,23 @@ private Q_SLOTS:
         qputenv("XDG_CURRENT_DESKTOP", "KDE");
         QCOMPARE(SettingsDialog::shortcutSettingsCommand(),
                  (QStringList{u"systemsettings"_s, u"kcm_keys"_s}));
+        QVERIFY(!SettingsDialog::shortcutSettingsUrl().isValid()); // native: the program itself
         qputenv("SNAP", "/snap/omnidict/5");
-        QVERIFY(SettingsDialog::shortcutSettingsCommand().isEmpty());
+        QVERIFY(SettingsDialog::shortcutSettingsCommand().isEmpty()); // a sandbox cannot start it,
+        QCOMPARE(SettingsDialog::shortcutSettingsUrl(), QUrl(u"systemsettings://kcm_keys"_s)); // but opens it
         qunsetenv("SNAP");
         qputenv("XDG_CURRENT_DESKTOP", "GNOME");
         QVERIFY(SettingsDialog::shortcutSettingsCommand().isEmpty());
+        QVERIFY(!SettingsDialog::shortcutSettingsUrl().isValid());
         qputenv("XDG_CURRENT_DESKTOP", desktop);
+
+        // System Settings starts with the system's libraries, not the ones Omnidict runs on.
+        qputenv("LD_LIBRARY_PATH", "/snap/kf6-core24/current/usr/lib");
+        qputenv("QT_PLUGIN_PATH", "/snap/kf6-core24/current/usr/lib/qt6/plugins");
+        const QProcessEnvironment environment = SettingsDialog::systemEnvironment();
+        QVERIFY(!environment.contains(u"LD_LIBRARY_PATH"_s));
+        QVERIFY(!environment.contains(u"QT_PLUGIN_PATH"_s));
+        QVERIFY(environment.contains(u"PATH"_s));
     }
 
     void shortcutsFilterHidesRowsAndEmptyGroups()

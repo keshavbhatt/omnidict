@@ -1,7 +1,9 @@
 #pragma once
 
 #include <QDialog>
+#include <QProcessEnvironment>
 #include <QString>
+#include <QUrl>
 
 namespace omnidict::core {
 class Settings;
@@ -43,6 +45,16 @@ public:
     /// the Quick Lookup key: KDE's Shortcuts page, from outside a sandbox (a Flatpak or snap
     /// cannot start it). Empty where there is none to start.
     [[nodiscard]] static QStringList shortcutSettingsCommand();
+    /// The same page as a URL, for a Flatpak or snap on KDE: KDE handles `systemsettings:`
+    /// (plasma-open-settings), and Qt opens URLs through the portal from a sandbox. Empty
+    /// elsewhere.
+    [[nodiscard]] static QUrl shortcutSettingsUrl();
+
+    /// This process's environment without what points at Omnidict's own Qt and libraries,
+    /// for starting a desktop program (System Settings) that must use the system's.
+    [[nodiscard]] static QProcessEnvironment systemEnvironment();
+    /// Starts `command` detached with systemEnvironment(); nothing when it is empty.
+    static void startWithSystemEnvironment(const QStringList& command);
     ~SettingsDialog() override = default;
 
 Q_SIGNALS:

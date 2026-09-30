@@ -87,9 +87,11 @@ privacy concern).
 - Settings, "Quick lookup": the key as the desktop describes it, or the custom-shortcut command
   for the way the app was installed (Flatpak, snap, AppImage, native). "Change..." opens the
   portal's own dialog where the portal has it (interface version 2, xdg-desktop-portal 1.21+);
-  with version 1 on KDE it opens System Settings on the Shortcuts page (`systemsettings
-  kcm_keys`, where KDE keeps portal shortcuts) from a native or AppImage copy; a Flatpak or snap
-  cannot start it, so the row names the place instead. Tried by the owner on KDE Plasma 6.6.2
+  with version 1 on KDE it opens System Settings on the Shortcuts page, where KDE keeps portal
+  shortcuts: a native or AppImage copy starts `systemsettings kcm_keys` with its own library
+  paths removed from the environment (the dev runtime's made System Settings fail to load
+  Kirigami); a Flatpak or snap opens `systemsettings://kcm_keys`, KDE's URL for the page
+  (handled by plasma-open-settings), which Qt passes through the portal. Tried by the owner on KDE Plasma 6.6.2
   (portal 1.20.3, 2026-09-30): KDE reported Ctrl+Alt+D taken and asked for another key at the
   first bind; the shortcut then worked.
 

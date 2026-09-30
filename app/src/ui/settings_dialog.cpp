@@ -274,6 +274,40 @@ QString SettingsDialog::popupCommand()
     return u"omnidict --popup"_s;
 }
 
+QProcessEnvironment SettingsDialog::systemEnvironment()
+{
+    // What points at Omnidict's own libraries (the dev runtime, an AppImage) would make a
+    // desktop program load them instead of the system's: System Settings then failed with
+    // "module org.kde.kirigami is not installed".
+    QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
+    for (const char* name : {"LD_LIBRARY_PATH", "LD_PRELOAD", "QT_PLUGIN_PATH", "QT_QPA_PLATFORM_PLUGIN_PATH",
+                             "QML_IMPORT_PATH", "QML2_IMPORT_PATH", "QT_FORCE_STDERR_LOGGING"}) {
+        environment.remove(QString::fromLatin1(name));
+    }
+    return environment;
+}
+
+void SettingsDialog::startWithSystemEnvironment(const QStringList& command)
+{
+    if (command.isEmpty()) {
+        return;
+    }
+    QProcess process;
+    process.setProgram(command.first());
+    process.setArguments(command.mid(1));
+    process.setProcessEnvironment(systemEnvironment());
+    process.startDetached();
+}
+
+QUrl SettingsDialog::shortcutSettingsUrl()
+{
+    const bool sandboxed = !qEnvironmentVariableIsEmpty("FLATPAK_ID") || !qEnvironmentVariableIsEmpty("SNAP");
+    if (!sandboxed || !qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s)) {
+        return {};
+    }
+    return QUrl(u"systemsettings://kcm_keys"_s);
+}
+
 QStringList SettingsDialog::shortcutSettingsCommand()
 {
     const bool sandboxed = !qEnvironmentVariableIsEmpty("FLATPAK_ID") || !qEnvironmentVariableIsEmpty("SNAP");
@@ -298,10 +332,11 @@ void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
                 shortcuts->configure(); // the portal's own dialog (interface version 2)
                 return;
             }
-            const QStringList command = shortcutSettingsCommand();
-            if (!command.isEmpty()) {
-                QProcess::startDetached(command.first(), command.mid(1));
+            if (const QUrl url = shortcutSettingsUrl(); url.isValid()) {
+                QDesktopServices::openUrl(url); // from the Flatpak or snap, through the portal
+                return;
             }
+            startWithSystemEnvironment(shortcutSettingsCommand());
         });
         connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
                 &SettingsDialog::refreshQuickLookup);
@@ -377,7 +412,8 @@ void SettingsDialog::refreshQuickLookup()
     // Change... where it can do something: the portal's dialog, else KDE's Shortcuts page;
     // a sandboxed copy on KDE says where to go instead (mocks/quick-lookup.html note 4).
     const bool canChange =
-        m_shortcuts != nullptr && (m_shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty());
+        m_shortcuts != nullptr && (m_shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty() ||
+                                   shortcutSettingsUrl().isValid());
     m_quickChange->setVisible(canChange);
     const bool kde = qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s);
     m_quickShortcutHint->setText(
