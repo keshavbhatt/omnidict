@@ -21,6 +21,9 @@ public:
     void showEntry(const QString& html, const QString& credit);
     /// Body text size in pixels; headings scale with it.
     void setTextSize(int pixels);
+    /// Without the main pane's margins, for the Quick Lookup popup, whose own padding
+    /// lines the entry up with its dictionary name (mocks/quick-lookup.html).
+    void setCompact(bool compact);
     /// The entry as plain text, for the clipboard (labels included, though they are drawn as images).
     [[nodiscard]] QString plainText() const;
 

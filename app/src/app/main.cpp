@@ -5,6 +5,7 @@
 #include "core/log_sink.h"
 #include "core/settings.h"
 #include "services/dictionary_manager.h"
+#include "services/global_shortcuts.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
 #include "ui/theme_applier.h"
@@ -16,6 +17,7 @@
 #include <QJsonObject>
 #include <QStandardPaths>
 #include <QTextStream>
+#include <QTimer>
 
 #include <cstring>
 #include <memory>
@@ -44,7 +46,31 @@ struct Options
         u"profile"_s,
         QCoreApplication::translate("main", "Keep history, favourites and dictionaries in <directory>."),
         QCoreApplication::translate("main", "directory")};
+    QCommandLineOption popup{
+        u"popup"_s, QCoreApplication::translate(
+                        "main", "Open the quick lookup popup, with [word] or else the selected text.")};
 };
+
+/// What a second launch hands to the running one: the word, whether it wants the
+/// popup, and the tokens that let the running window come to the front (Wayland's
+/// xdg-activation token, X11's startup id), which only the launched process was given.
+QJsonObject commandFor(const QString& query, bool popup)
+{
+    return {{u"query"_s, query},
+            {u"popup"_s, popup},
+            {u"activationToken"_s, qEnvironmentVariable("XDG_ACTIVATION_TOKEN")},
+            {u"startupId"_s, qEnvironmentVariable("DESKTOP_STARTUP_ID")}};
+}
+
+/// Takes the launching process's tokens (see commandFor) before a window is raised.
+QByteArray adoptActivation(const QJsonObject& command)
+{
+    const QByteArray startupId = command.value(u"startupId"_s).toString().toUtf8();
+    if (!startupId.isEmpty()) {
+        qputenv("DESKTOP_STARTUP_ID", startupId);
+    }
+    return command.value(u"activationToken"_s).toString().toUtf8();
+}
 
 /// `--lookup`, `--help` and `--version` run without a window, so they must not need a display.
 bool wantsWindow(int argc, char* argv[])
@@ -81,6 +107,62 @@ int runLookup(const QCommandLineParser& parser, const Options& options)
     return omnidict::app::runLookup(parser.value(options.lookup), words.join(u' '), out, err);
 }
 
+/// A second launch's command: the popup, or the main window brought up with the word.
+void handleCommand(omnidict::ui::MainWindow& window, const QJsonObject& command)
+{
+    const QByteArray token = adoptActivation(command);
+    const QString word = command.value(u"query"_s).toString();
+    if (command.value(u"popup"_s).toBool()) {
+        window.showQuickLookup(word, token);
+        return;
+    }
+    if (!token.isEmpty()) {
+        qputenv("XDG_ACTIVATION_TOKEN", token);
+    }
+    window.showNormal();
+    window.raise();
+    window.activateWindow();
+    if (!word.isEmpty()) {
+        window.setQuery(word);
+    }
+}
+
+/// The main window, or with `--popup` only the Quick Lookup popup; the main window then
+/// waits for "Open in Omnidict".
+void showFirstWindow(omnidict::ui::MainWindow& window, const QString& query, bool popupOnly)
+{
+    if (popupOnly) {
+        QObject::connect(
+            &window, &omnidict::ui::MainWindow::libraryReady, &window,
+            [&window, query] { window.showQuickLookup(query, qgetenv("XDG_ACTIVATION_TOKEN")); },
+            Qt::SingleShotConnection);
+        return;
+    }
+    window.show();
+    window.showWhatsNewIfUpdated();
+    if (!query.isEmpty()) {
+        QObject::connect(
+            &window, &omnidict::ui::MainWindow::libraryReady, &window,
+            [&window, query] { window.setQuery(query); }, Qt::SingleShotConnection);
+    }
+}
+
+/// The Quick Lookup shortcut (DOCS/quick-lookup.md): registered with the desktop, which
+/// asks the user once; pressing it opens the popup over whatever has focus.
+void connectQuickLookupShortcut(omnidict::services::GlobalShortcuts& shortcuts,
+                                omnidict::ui::MainWindow& window)
+{
+    window.setGlobalShortcuts(&shortcuts);
+    QObject::connect(&shortcuts, &omnidict::services::GlobalShortcuts::activated, &window,
+                     [&window](const QByteArray& token) { window.showQuickLookup({}, token); });
+    // After the window is up: the desktop's one-time question comes over a visible app.
+    // Not headless (tests, screenshots): there is no screen to press a shortcut on, and
+    // the desktop would put its question up on the real session's screen.
+    if (QGuiApplication::platformName() != u"offscreen"_s) {
+        QTimer::singleShot(0, &shortcuts, &omnidict::services::GlobalShortcuts::start);
+    }
+}
+
 int runWindow(const QCommandLineParser& parser, const Options& options)
 {
     // Everything the app keeps lives in one directory, a scratch one with --profile.
@@ -99,7 +181,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     const QString query = parser.positionalArguments().join(u' ');
     omnidict::app::SingleInstance instance(omnidict::app::instanceKeyFor(dataDir));
     if (!instance.isPrimary()) {
-        instance.sendToPrimary({{u"query"_s, query}});
+        instance.sendToPrimary(commandFor(query, parser.isSet(options.popup)));
         return 0;
     }
     omnidict::core::LogSink::setLogFile(dataDir + u"/logs/omnidict.log"_s);
@@ -115,23 +197,12 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
         window.resize(kWindowWidth, kWindowHeight);
     }
     omnidict::app::installDebugHooks(window, dictionaries);
-    window.show();
-    window.showWhatsNewIfUpdated();
+
+    omnidict::services::GlobalShortcuts shortcuts(QString::fromLatin1(version::kDesktopId));
+    connectQuickLookupShortcut(shortcuts, window);
+    showFirstWindow(window, query, parser.isSet(options.popup));
     QObject::connect(&instance, &omnidict::app::SingleInstance::commandReceived, &window,
-                     [&window](const QJsonObject& command) {
-                         window.showNormal();
-                         window.raise();
-                         window.activateWindow();
-                         const QString word = command.value(u"query"_s).toString();
-                         if (!word.isEmpty()) {
-                             window.setQuery(word);
-                         }
-                     });
-    if (!query.isEmpty()) {
-        QObject::connect(
-            &window, &omnidict::ui::MainWindow::libraryReady, &window,
-            [&window, query] { window.setQuery(query); }, Qt::SingleShotConnection);
-    }
+                     [&window](const QJsonObject& command) { handleCommand(window, command); });
     return QCoreApplication::exec();
 }
 
@@ -153,6 +224,7 @@ int main(int argc, char* argv[])
     parser.addOption(options.lookup);
     parser.addOption(options.bundles);
     parser.addOption(options.profile);
+    parser.addOption(options.popup);
     parser.addPositionalArgument(u"word"_s, QCoreApplication::translate("main", "The word to look up."),
                                  u"[word]"_s);
     parser.process(*app);

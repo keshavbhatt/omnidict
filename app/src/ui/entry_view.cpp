@@ -16,6 +16,8 @@ namespace omnidict::ui {
 
 namespace {
 constexpr int kMarginX = 8; // with the document margin, mocks/mock.css .entry padding
+constexpr int kDocumentMargin = 24;
+constexpr int kCompactDocumentMargin = 2;
 constexpr double kHeadwordScale = 2.0;
 constexpr double kSmallScale = 0.8;    // labels, part of speech, credit
 constexpr double kHeadingScale = 0.87; // the sense heading line
@@ -31,7 +33,7 @@ EntryView::EntryView(QWidget* parent)
     setOpenExternalLinks(false);
     setFrameShape(QFrame::NoFrame);
     setViewportMargins(kMarginX, 0, kMarginX, 0);
-    document()->setDocumentMargin(24);
+    document()->setDocumentMargin(kDocumentMargin);
     connect(this, &QTextBrowser::anchorClicked, this, &EntryView::onAnchorClicked);
     applyStyleSheet();
 }
@@ -42,6 +44,15 @@ void EntryView::showEntry(const QString& html, const QString& credit)
     m_credit = credit;
     render();
     verticalScrollBar()->setValue(0);
+}
+
+void EntryView::setCompact(bool compact)
+{
+    setViewportMargins(compact ? 0 : kMarginX, 0, compact ? 0 : kMarginX, 0);
+    document()->setDocumentMargin(compact ? kCompactDocumentMargin : kDocumentMargin);
+    // The popup's own background shows through, in either theme, rather than a box of its own.
+    viewport()->setAutoFillBackground(!compact);
+    setFrameShape(compact ? QFrame::NoFrame : frameShape());
 }
 
 void EntryView::setTextSize(int pixels)

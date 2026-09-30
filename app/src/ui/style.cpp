@@ -5,6 +5,7 @@
 #include <QAbstractScrollArea>
 #include <QComboBox>
 #include <QGuiApplication>
+#include <QHBoxLayout>
 #include <QHash>
 #include <QLabel>
 #include <QStyledItemDelegate>
@@ -97,6 +98,12 @@ QLabel[title="true"] { font-size: 18px; font-weight: 600; }
 QLabel[heading="true"] { font-size: 16px; font-weight: 600; }
 QLabel[section="true"] { font-size: 11px; font-weight: 700; color: {{accent}}; letter-spacing: 1px; }
 QLabel[link="true"] { color: {{link}}; }
+QLabel[keycap="true"] {
+    background: {{panel}}; color: {{text}}; border: 1px solid {{border}}; border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 6px; font-weight: 600; font-size: 12px;
+}
+/* The Quick Lookup popup's own frame: a frameless, rounded window (mocks/quick-lookup.html). */
+QFrame[quickPopup="true"] { background: {{bg}}; border: 1px solid {{border}}; border-radius: 12px; }
 QLabel[tone="accent"] { color: {{accent}}; }
 QLabel[tone="danger"] { color: {{danger}}; }
 
@@ -305,6 +312,21 @@ QString titleWithApp(const QString& title)
 {
     const QString app = QGuiApplication::applicationDisplayName();
     return app.isEmpty() || title.endsWith(app) ? title : title + u" - "_s + app;
+}
+
+QWidget* makeKeyCaps(const QString& keys, QWidget* parent)
+{
+    auto* row = new QWidget(parent);
+    auto* layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(4);
+    for (const QString& key : keys.split(u'+', Qt::SkipEmptyParts)) {
+        auto* cap = new QLabel(key.trimmed(), row);
+        cap->setProperty("keycap", true);
+        cap->setAlignment(Qt::AlignCenter);
+        layout->addWidget(cap);
+    }
+    return row;
 }
 
 void styleComboPopup(QComboBox* combo)

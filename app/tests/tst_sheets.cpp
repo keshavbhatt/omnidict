@@ -137,6 +137,32 @@ private Q_SLOTS:
         QVERIFY(!settings.rememberHistory());
     }
 
+    void settingsExplainTheCustomShortcutWhereTheDesktopHasNoGlobalOnes()
+    {
+        omnidict::core::Settings settings(m_dir.filePath(u"quick.ini"_s));
+        SettingsDialog dialog(settings, u"/tmp/omnidict-dicts"_s); // no shortcut service: unavailable
+        dialog.show();
+        auto* shortcutRow = dialog.findChild<QWidget*>(u"quickLookupShortcutRow"_s);
+        auto* fallbackRow = dialog.findChild<QWidget*>(u"quickLookupFallbackRow"_s);
+        auto* command = dialog.findChild<QLabel*>(u"quickLookupCommand"_s);
+        QVERIFY(shortcutRow != nullptr && fallbackRow != nullptr && command != nullptr);
+        QVERIFY(!shortcutRow->isVisible());
+        QVERIFY(fallbackRow->isVisible());
+        QVERIFY(command->text().contains(u"--popup"_s));
+
+        // The command matches how this copy was installed.
+        qputenv("FLATPAK_ID", "com.ktechpit.omnidict");
+        QCOMPARE(SettingsDialog::popupCommand(), u"flatpak run com.ktechpit.omnidict --popup"_s);
+        qunsetenv("FLATPAK_ID");
+        qputenv("SNAP_NAME", "omnidict");
+        QCOMPARE(SettingsDialog::popupCommand(), u"snap run omnidict --popup"_s);
+        qunsetenv("SNAP_NAME");
+        qputenv("APPIMAGE", "/home/me/Omnidict.AppImage");
+        QCOMPARE(SettingsDialog::popupCommand(), u"\"/home/me/Omnidict.AppImage\" --popup"_s);
+        qunsetenv("APPIMAGE");
+        QCOMPARE(SettingsDialog::popupCommand(), u"omnidict --popup"_s);
+    }
+
     void shortcutsFilterHidesRowsAndEmptyGroups()
     {
         ShortcutsDialog dialog(defaultShortcuts());

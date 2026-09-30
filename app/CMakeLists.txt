@@ -42,6 +42,7 @@ find_package(Qt6 ${OMNIDICT_QT_MIN_VERSION} REQUIRED COMPONENTS
     Widgets
     Svg
     Network
+    DBus
 )
 qt_standard_project_setup()
 

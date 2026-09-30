@@ -4,11 +4,16 @@
 #include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/main_window.h"
+#include "ui/quick_lookup.h"
+#include "ui/style.h"
 
 #include <QAbstractItemModel>
 #include <QApplication>
+#include <QClipboard>
 #include <QDir>
 #include <QFile>
+#include <QGuiApplication>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListView>
 #include <QSignalSpy>
@@ -108,6 +113,86 @@ private Q_SLOTS:
         QVERIFY(shown.wait());
         QCOMPARE(shown.last().at(1).toString(), u"book"_s);
         QVERIFY(star->isChecked());
+    }
+
+    void quickLookupShowsTheBestMatchAndOpensItInTheMainWindow()
+    {
+        omnidict::core::Settings settings(m_profile.filePath(u"quick.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"quick-dicts"_s),
+                                                      m_profile.filePath(u"quick-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"quick.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        QSignalSpy mainShown(&window, &MainWindow::entryShown);
+        QVERIFY(ready.wait()); // the main window is not shown: `omnidict --popup` starts like this
+
+        omnidict::ui::QuickLookup* quick = window.quickLookup();
+        QSignalSpy quickShown(quick, &omnidict::ui::QuickLookup::entryShown);
+        window.showQuickLookup(u"perhaps"_s);
+        QVERIFY(quick->isVisible());
+        QVERIFY(!window.isVisible());
+        QTRY_VERIFY(!quickShown.isEmpty());
+        QCOMPARE(quickShown.last().at(1).toString(), u"perhaps"_s);
+        QVERIFY(mainShown.isEmpty()); // its own requests: the main window saw none of them
+        if (const QString dir = qEnvironmentVariable("OMNIDICT_GRAB_DIR"); !dir.isEmpty()) {
+            QDir().mkpath(dir);
+            qApp->setPalette(omnidict::ui::paletteFor(omnidict::ui::Tokens::current()));
+            qApp->setStyleSheet(omnidict::ui::styleSheetFor(omnidict::ui::Tokens::current()));
+            QTest::qWait(100);
+            quick->grab().save(dir + u"/quick-lookup.png"_s); // for review against mocks/quick-lookup.html
+        }
+
+        // Nothing found: the "did you mean" words are offered.
+        auto* field = quick->findChild<QLineEdit*>(u"quickSearch"_s);
+        auto* message = quick->findChild<QLabel*>(u"quickMessage"_s);
+        quick->lookUp(u"prehaps"_s);
+        QTRY_VERIFY(message->isVisible());
+        QVERIFY(message->text().contains(u"perhaps"_s));
+
+        // Enter hands the word to the main window, which comes up with it; the popup closes.
+        quick->lookUp(u"serendipity"_s);
+        QTest::keyClick(field, Qt::Key_Return);
+        QTRY_VERIFY(window.isVisible());
+        QVERIFY(!quick->isVisible());
+        QTRY_VERIFY(!mainShown.isEmpty() && mainShown.last().at(1).toString() == u"serendipity"_s);
+    }
+
+    void quickLookupStartsWithTheClipboardAndEscapeClosesIt()
+    {
+        omnidict::core::Settings settings(m_profile.filePath(u"quick2.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"quick2-dicts"_s),
+                                                      m_profile.filePath(u"quick2-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"quick2.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        window.show();
+        QVERIFY(ready.wait());
+
+        // No word given: the selection where the system has one, else the clipboard
+        // (GNOME on Wayland: copy, then press the shortcut).
+        QGuiApplication::clipboard()->setText(u"  bookshelf \nsecond line"_s);
+        if (QGuiApplication::clipboard()->supportsSelection()) {
+            QGuiApplication::clipboard()->setText(QString(), QClipboard::Selection);
+        }
+        omnidict::ui::QuickLookup* quick = window.quickLookup();
+        QSignalSpy quickShown(quick, &omnidict::ui::QuickLookup::entryShown);
+        window.showQuickLookup({});
+        QTRY_VERIFY(!quickShown.isEmpty());
+        QCOMPARE(quickShown.last().at(1).toString(), u"bookshelf"_s);
+
+        QTest::keyClick(quick, Qt::Key_Escape);
+        QVERIFY(!quick->isVisible());
+        QVERIFY(window.isVisible()); // closing the popup leaves the main window alone
+    }
+
+    void quickLookupTakesOnlySomethingThatLooksLikeAWord()
+    {
+        using omnidict::ui::QuickLookup;
+        QCOMPARE(QuickLookup::wordFrom(u"  run away  "_s), u"run away"_s);
+        QCOMPARE(QuickLookup::wordFrom(u"first line\nsecond"_s), u"first line"_s);
+        QCOMPARE(QuickLookup::wordFrom(u"one two three four five six"_s), QString()); // a sentence
+        QCOMPARE(QuickLookup::wordFrom(QString(70, u'a')), QString());                // not a word
+        QCOMPARE(QuickLookup::wordFrom(u"\n"_s), QString());
     }
 
     void noMatchSuggestsAndLinksGoBack()

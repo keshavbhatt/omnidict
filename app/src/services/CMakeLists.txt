@@ -4,6 +4,8 @@
 qt_add_library(omnidict_services STATIC
     dictionary_manager.cpp
     dictionary_manager.h
+    global_shortcuts.cpp
+    global_shortcuts.h
     logging.cpp
     logging.h
     lookup_service.cpp
@@ -16,4 +18,5 @@ target_link_libraries(omnidict_services
     PUBLIC
         omnidict_core
         Qt6::Network
+        Qt6::DBus
 )

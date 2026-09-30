@@ -6,5 +6,6 @@ namespace omnidict::services {
 
 Q_DECLARE_LOGGING_CATEGORY(lcLookup)
 Q_DECLARE_LOGGING_CATEGORY(lcDownloads)
+Q_DECLARE_LOGGING_CATEGORY(lcShortcuts)
 
 } // namespace omnidict::services

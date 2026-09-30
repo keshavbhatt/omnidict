@@ -21,6 +21,8 @@ qt_add_library(omnidict_ui STATIC
     logging.h
     main_window.cpp
     main_window.h
+    quick_lookup.cpp
+    quick_lookup.h
     results_delegate.cpp
     results_delegate.h
     search_field.cpp

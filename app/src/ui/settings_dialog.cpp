@@ -1,13 +1,16 @@
 #include "ui/settings_dialog.h"
 
 #include "core/settings.h"
+#include "services/global_shortcuts.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
 
 #include <QButtonGroup>
+#include <QClipboard>
 #include <QDesktopServices>
 #include <QFontDatabase>
 #include <QFrame>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -61,7 +64,8 @@ QFrame* makeSeparator(QWidget* parent)
 
 } // namespace
 
-SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictionaryFolder, QWidget* parent)
+SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictionaryFolder, QWidget* parent,
+                               services::GlobalShortcuts* shortcuts)
     : QDialog(parent)
     , m_settings(settings)
 {
@@ -90,6 +94,7 @@ SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictiona
 
     setupAppearance(body, content);
     setupSearch(body, content);
+    setupQuickLookup(body, content, shortcuts);
     setupHistory(body, content);
     setupStorage(body, content, dictionaryFolder);
 
@@ -252,6 +257,102 @@ void SettingsDialog::setupHistory(QVBoxLayout* body, QWidget* content)
     clearHistory->setProperty("danger", true);
     connect(clearHistory, &QPushButton::clicked, this, &SettingsDialog::clearHistoryRequested);
     body->addWidget(makeRow(content, tr("Clear history"), tr("Favourites are kept"), clearHistory));
+}
+
+QString SettingsDialog::popupCommand()
+{
+    if (const QString flatpak = qEnvironmentVariable("FLATPAK_ID"); !flatpak.isEmpty()) {
+        return u"flatpak run %1 --popup"_s.arg(flatpak);
+    }
+    if (const QString snap = qEnvironmentVariable("SNAP_NAME"); !snap.isEmpty()) {
+        return u"snap run %1 --popup"_s.arg(snap);
+    }
+    if (const QString appImage = qEnvironmentVariable("APPIMAGE"); !appImage.isEmpty()) {
+        return u"\"%1\" --popup"_s.arg(appImage);
+    }
+    return u"omnidict --popup"_s;
+}
+
+void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
+                                      services::GlobalShortcuts* shortcuts)
+{
+    // mocks/quick-lookup.html notes 4 and 5: the global shortcut where the desktop has
+    // the portal, and the custom-shortcut route where it does not.
+    m_shortcuts = shortcuts;
+    body->addWidget(makeSectionLabel(content, tr("Quick lookup"), false));
+    body->addWidget(buildQuickLookupShortcutRow(content));
+    body->addWidget(buildQuickLookupFallbackRow(content));
+    if (shortcuts != nullptr) {
+        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] { shortcuts->configure(); });
+        connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
+                &SettingsDialog::refreshQuickLookup);
+    }
+    refreshQuickLookup();
+}
+
+QWidget* SettingsDialog::buildQuickLookupShortcutRow(QWidget* content)
+{
+    m_quickKeys = new QWidget(content);
+    m_quickKeys->setObjectName(u"quickLookupKeys"_s);
+    auto* keysLayout = new QHBoxLayout(m_quickKeys);
+    keysLayout->setContentsMargins(0, 0, 0, 0);
+    keysLayout->setSpacing(8);
+    m_quickChange = new QPushButton(tr("Change..."), content);
+    m_quickChange->setObjectName(u"quickLookupChange"_s);
+    auto* controls = new QWidget(content);
+    auto* controlsLayout = new QHBoxLayout(controls);
+    controlsLayout->setContentsMargins(0, 0, 0, 0);
+    controlsLayout->setSpacing(8);
+    controlsLayout->addWidget(m_quickKeys);
+    controlsLayout->addWidget(m_quickChange);
+    m_quickShortcutRow = makeRow(content, tr("Quick lookup shortcut"),
+                                 tr("Select a word in any app and press it. Change it in the desktop's "
+                                    "keyboard settings."),
+                                 controls);
+    m_quickShortcutRow->setObjectName(u"quickLookupShortcutRow"_s);
+    return m_quickShortcutRow;
+}
+
+QWidget* SettingsDialog::buildQuickLookupFallbackRow(QWidget* content)
+{
+    auto* copy = new QLabel(content);
+    copy->setObjectName(u"quickLookupCommand"_s);
+    copy->setTextFormat(Qt::RichText);
+    copy->setWordWrap(true);
+    copy->setProperty("muted", true);
+    copy->setProperty("small", true);
+    const QString command = popupCommand();
+    copy->setText(
+        tr("Add a custom shortcut in its keyboard settings that runs <code>%1</code>. %2")
+            .arg(command.toHtmlEscaped(), u"<a href=\"copy\">%1</a>"_s.arg(tr("Copy the command"))));
+    connect(copy, &QLabel::linkActivated, this,
+            [command] { QGuiApplication::clipboard()->setText(command); });
+    m_quickFallbackRow =
+        makeRow(content, tr("Where the desktop has no global shortcuts"), {}, new QWidget(content));
+    m_quickFallbackRow->setObjectName(u"quickLookupFallbackRow"_s);
+    qobject_cast<QVBoxLayout*>(m_quickFallbackRow->layout()->itemAt(0)->layout())->addWidget(copy);
+    return m_quickFallbackRow;
+}
+
+void SettingsDialog::refreshQuickLookup()
+{
+    using State = services::GlobalShortcuts::State;
+    const State state = m_shortcuts != nullptr ? m_shortcuts->state() : State::Unavailable;
+    auto* keysLayout = qobject_cast<QHBoxLayout*>(m_quickKeys->layout());
+    while (const QLayoutItem* item = keysLayout->takeAt(0)) {
+        delete item->widget();
+        delete item;
+    }
+    if (state == State::Active && !m_shortcuts->trigger().isEmpty()) {
+        keysLayout->addWidget(makeKeyCaps(m_shortcuts->trigger(), m_quickKeys));
+    } else {
+        auto* status = new QLabel(state == State::Checking ? tr("Checking...") : tr("Not set"), m_quickKeys);
+        status->setProperty("muted", true);
+        keysLayout->addWidget(status);
+    }
+    m_quickChange->setVisible(m_shortcuts != nullptr && m_shortcuts->canConfigure());
+    m_quickShortcutRow->setVisible(state == State::Active || state == State::Checking);
+    m_quickFallbackRow->setVisible(state == State::Unavailable || state == State::Declined);
 }
 
 void SettingsDialog::setupStorage(QVBoxLayout* body, QWidget* content, const QString& dictionaryFolder)

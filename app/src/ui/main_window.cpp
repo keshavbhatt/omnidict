@@ -12,6 +12,7 @@
 #include "ui/first_run_panel.h"
 #include "ui/icons.h"
 #include "ui/logging.h"
+#include "ui/quick_lookup.h"
 #include "ui/results_delegate.h"
 #include "ui/search_field.h"
 #include "ui/settings_dialog.h"
@@ -113,6 +114,7 @@ MainWindow::MainWindow(core::Settings& settings, services::DictionaryManager& ma
 
 MainWindow::~MainWindow()
 {
+    delete m_quick; // a window of its own (not a child), gone before the lookup thread it asks
     m_lookupThread.quit();
     m_lookupThread.wait();
 }
@@ -514,6 +516,9 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
 {
     m_dictionaries = dictionaries;
     m_libraryOpen = true;
+    if (m_quick != nullptr) {
+        m_quick->setDictionaries(dictionaries);
+    }
     QHash<QString, QString> names;
     for (const services::DictionaryInfo& info : dictionaries) {
         names.insert(info.dictId, info.name);
@@ -942,9 +947,35 @@ void MainWindow::showDictionaries(bool available)
     dialog.exec();
 }
 
+QuickLookup* MainWindow::quickLookup()
+{
+    if (m_quick == nullptr) {
+        // A window of its own, not a child of this one: a child hides with a minimized
+        // parent, and the shortcut must work while the main window is minimized.
+        m_quick = new QuickLookup(m_lookup, m_settings);
+        m_quick->setDictionaries(m_dictionaries);
+        connect(m_quick, &QuickLookup::openInMain, this, [this](const QString& word) {
+            // Shown before the popup closes: closing the only visible window quits the app.
+            showNormal();
+            raise();
+            activateWindow();
+            m_quick->close();
+            if (!word.isEmpty()) {
+                setQuery(word);
+            }
+        });
+    }
+    return m_quick;
+}
+
+void MainWindow::showQuickLookup(const QString& word, const QByteArray& activationToken)
+{
+    quickLookup()->present(word, activationToken);
+}
+
 void MainWindow::showSettings()
 {
-    SettingsDialog dialog(m_settings, m_roots.constLast(), this);
+    SettingsDialog dialog(m_settings, m_roots.constLast(), this, m_shortcuts);
     connect(&dialog, &SettingsDialog::clearHistoryRequested, this, &MainWindow::clearHistory);
     dialog.exec();
 }

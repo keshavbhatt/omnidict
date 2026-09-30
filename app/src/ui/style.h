@@ -7,6 +7,7 @@
 class QAbstractScrollArea;
 class QComboBox;
 class QLabel;
+class QWidget;
 
 namespace omnidict::ui {
 
@@ -56,6 +57,10 @@ void makeSectionLabel(QLabel* label);
 /// A window title ending in the app's name, "Settings - Omnidict". Without the
 /// name at the end, Qt appends it itself with an em dash, which our text never uses.
 [[nodiscard]] QString titleWithApp(const QString& title);
+
+/// Key caps for a key sequence as the desktop writes it ("Ctrl+Alt+D"), one label
+/// per key (the app sheet's `keycap` look), in a row.
+[[nodiscard]] QWidget* makeKeyCaps(const QString& keys, QWidget* parent);
 
 /// Gives a drop-down's list the app's item style (row height, padding, hover) and
 /// the box's own font: Qt's default combo delegate ignores the sheet's `::item` rules

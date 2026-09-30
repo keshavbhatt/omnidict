@@ -23,6 +23,7 @@ class Settings;
 
 namespace omnidict::services {
 class DictionaryManager;
+class GlobalShortcuts;
 struct DownloadStatus;
 } // namespace omnidict::services
 
@@ -35,6 +36,7 @@ namespace omnidict::ui {
 class DictionariesDialog;
 class EmptyState;
 class FirstRunPanel;
+class QuickLookup;
 class EntryView;
 class SearchField;
 
@@ -69,6 +71,13 @@ public:
     void showBugReport();
     /// After an update, shows What's new once; always remembers the running version.
     void showWhatsNewIfUpdated();
+    /// Opens the Quick Lookup popup (DOCS/quick-lookup.md) with `word`, or with the
+    /// selected text when empty; `activationToken` brings it to the front on Wayland.
+    void showQuickLookup(const QString& word, const QByteArray& activationToken = {});
+    /// The Quick Lookup popup, created on first use.
+    [[nodiscard]] QuickLookup* quickLookup();
+    /// The global shortcut, for Settings to show its state (owned by the caller).
+    void setGlobalShortcuts(services::GlobalShortcuts* shortcuts) { m_shortcuts = shortcuts; }
 
 Q_SIGNALS:
     /// The dictionaries are open (or found to be missing).
@@ -148,6 +157,8 @@ private:
     services::LookupService* m_lookup = nullptr; ///< lives on m_lookupThread, deleted when it finishes
     QStringList m_roots;
     QList<services::DictionaryInfo> m_dictionaries;
+    QuickLookup* m_quick = nullptr;
+    services::GlobalShortcuts* m_shortcuts = nullptr;
     bool m_libraryOpen = false;
 
     QBoxLayout* m_headerLayout = nullptr;
