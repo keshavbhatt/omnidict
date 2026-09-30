@@ -28,7 +28,9 @@ Newest first. One entry per working session.
 - Release 0.1.0 prepared (owner): changelog dated 2026-09-30, metainfo `<release>` (Flathub's
   appstream lint now passes clean), quick lookup in the store and snap descriptions,
   `project(VERSION)` already 0.1.0; release.yml marks the version release Latest. The tag
-  v0.1.0 is the owner's to push.
+  v0.1.0 is the owner's to push. The snap is already published by the owner (stable has an
+  earlier 0.1.0 build, revision 4); the Flatpak comes later. The snap description is now one
+  line per paragraph, since the store kept the YAML's line wraps.
 
 ## 2026-09-29 - Published catalogue, GitHub as the default
 

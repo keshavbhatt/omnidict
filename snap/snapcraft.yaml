@@ -8,23 +8,16 @@ compression: lzo
 title: Omnidict - offline dictionary
 summary: Offline dictionary for any language, with 600+ free dictionaries
 description: |
-  Omnidict is a fast offline dictionary for the Linux desktop. Choose from more than six
-  hundred free dictionaries in hundreds of languages, download the ones you need once, and look
-  words up instantly, without an internet connection.
+  Omnidict is a fast offline dictionary for the Linux desktop. Choose from more than six hundred free dictionaries in hundreds of languages, download the ones you need once, and look words up instantly, without an internet connection.
 
   **A dictionary for every language**
 
-  * English dictionary and thesaurus: English Wiktionary definitions, and English WordNet with
-    synonyms, antonyms and related words.
-  * Wiktionary for over three hundred languages: Spanish, French, German, Italian, Portuguese,
-    Russian, Hindi, Arabic, Japanese, Chinese, Korean, Turkish and many more, each explained in
-    English.
+  * English dictionary and thesaurus: English Wiktionary definitions, and English WordNet with synonyms, antonyms and related words.
+  * Wiktionary for over three hundred languages: Spanish, French, German, Italian, Portuguese, Russian, Hindi, Arabic, Japanese, Chinese, Korean, Turkish and many more, each explained in English.
   * Historical languages too: Latin, Ancient Greek, Old English, Sanskrit and Old Norse.
-  * Hundreds of bilingual FreeDict dictionaries, such as German-English, English-French and
-    Spanish-Portuguese.
+  * Hundreds of bilingual FreeDict dictionaries, such as German-English, English-French and Spanish-Portuguese.
   * JMdict Japanese dictionary, CC-CEDICT Chinese dictionary and Kengdic Korean dictionary.
-  * Filter the catalogue by language and provider, and see each dictionary's size and number
-    of entries before you download.
+  * Filter the catalogue by language and provider, and see each dictionary's size and number of entries before you download.
 
   **Look words up quickly**
 
@@ -34,8 +27,7 @@ description: |
   * Wildcards: `?` for one letter, `*` for any run of letters.
   * Full text search finds words used inside definitions.
   * Links between entries, with Back and Forward as in a browser.
-  * Quick lookup: select a word in any app and press a shortcut to see its meaning in a small
-    window.
+  * Quick lookup: select a word in any app and press a shortcut to see its meaning in a small window.
 
   **Made for learning and everyday use**
 
@@ -43,8 +35,7 @@ description: |
   * Reorder dictionaries, switch them off, update or remove them.
   * Light and dark themes that follow the desktop, and an adjustable text size.
   * Keyboard shortcuts for everything.
-  * Private: no tracking, nothing is sent anywhere; the only network use is downloading
-    dictionaries.
+  * Private: no tracking, nothing is sent anywhere; the only network use is downloading dictionaries.
 
   Bugs and requests: https://github.com/keshavbhatt/omnidict/issues
 website: https://github.com/keshavbhatt/omnidict

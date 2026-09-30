@@ -13,7 +13,10 @@ binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
 `snap/snapcraft.yaml` builds `app/` against the **kde-neon-6** extension (Qt 6.11 from the
 `kf6-core24` content snap, the same runtime `scripts/dev-run.sh` targets).
 
-- Store name **`omnidict`**, registered by the owner at snapcraft.io (never by CI or an agent).
+- Store name **`omnidict`**, registered and published by the owner (snapcraft.io/omnidict;
+  0.1.0 revision 4 on stable since 2026-09-28). `PUBLISH_TO_STORE` and the credentials secret
+  are set, so every push to `main` goes to edge and every version tag to candidate; the owner
+  promotes to stable.
   App id `com.ktechpit.omnidict`; `adopt-info` takes summary and description from the
   metainfo, the version comes from `project(VERSION)`.
 - SQLite and zstd come from the core24 base at run time, ICU from the KDE runtime; their
@@ -30,7 +33,9 @@ binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
 
 The listing (title, summary, description) is edited by hand at the Snap Store; uploads never
 change it. `snap/snapcraft.yaml` carries the same text so the snap's own metadata matches.
-Limits: title 40 characters, summary 79, description 4096.
+Limits: title 40 characters, summary 79, description 4096. Keep each paragraph and bullet of
+the description on one line: the store keeps line breaks inside a paragraph, so text wrapped
+in the YAML shows up broken mid-sentence.
 
 ## Flatpak
 
@@ -42,7 +47,7 @@ disk outside the app's own data.
 
 ### Submitting to Flathub
 
-Only with the owner's explicit consent (CLAUDE.md). The Flathub repository takes this manifest
+Later (owner, 2026-09-30), and only with the owner's explicit consent (CLAUDE.md). The Flathub repository takes this manifest
 with the `dir` source replaced by the release tag (`type: git`, `url`, `tag`, `commit`). Lint
 without building:
 
