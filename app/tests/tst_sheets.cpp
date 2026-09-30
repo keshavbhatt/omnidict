@@ -161,6 +161,18 @@ private Q_SLOTS:
         QCOMPARE(SettingsDialog::popupCommand(), u"\"/home/me/Omnidict.AppImage\" --popup"_s);
         qunsetenv("APPIMAGE");
         QCOMPARE(SettingsDialog::popupCommand(), u"omnidict --popup"_s);
+
+        // Changing the key: KDE's Shortcuts page from outside a sandbox, nothing from inside.
+        const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
+        qputenv("XDG_CURRENT_DESKTOP", "KDE");
+        QCOMPARE(SettingsDialog::shortcutSettingsCommand(),
+                 (QStringList{u"systemsettings"_s, u"kcm_keys"_s}));
+        qputenv("SNAP", "/snap/omnidict/5");
+        QVERIFY(SettingsDialog::shortcutSettingsCommand().isEmpty());
+        qunsetenv("SNAP");
+        qputenv("XDG_CURRENT_DESKTOP", "GNOME");
+        QVERIFY(SettingsDialog::shortcutSettingsCommand().isEmpty());
+        qputenv("XDG_CURRENT_DESKTOP", desktop);
     }
 
     void shortcutsFilterHidesRowsAndEmptyGroups()

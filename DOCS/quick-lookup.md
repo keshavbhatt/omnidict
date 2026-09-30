@@ -84,8 +84,13 @@ privacy concern).
 - `omnidict --popup [word]`: a running instance shows the popup; a fresh one shows only the
   popup, and closing it ends the app. A second launch passes XDG_ACTIVATION_TOKEN (and X11's
   DESKTOP_STARTUP_ID) to the running one.
-- Settings, "Quick lookup": the key as the desktop describes it (and "Change..." where the
-  portal can open its own dialog, version 2), or the custom-shortcut command for the way the
-  app was installed (Flatpak, snap, AppImage, native).
+- Settings, "Quick lookup": the key as the desktop describes it, or the custom-shortcut command
+  for the way the app was installed (Flatpak, snap, AppImage, native). "Change..." opens the
+  portal's own dialog where the portal has it (interface version 2, xdg-desktop-portal 1.21+);
+  with version 1 on KDE it opens System Settings on the Shortcuts page (`systemsettings
+  kcm_keys`, where KDE keeps portal shortcuts) from a native or AppImage copy; a Flatpak or snap
+  cannot start it, so the row names the place instead. Tried by the owner on KDE Plasma 6.6.2
+  (portal 1.20.3, 2026-09-30): KDE reported Ctrl+Alt+D taken and asked for another key at the
+  first bind; the shortcut then worked.
 
 Sources are listed in the research notes of 2026-09-30 in `DOCS/PROGRESS.md`.

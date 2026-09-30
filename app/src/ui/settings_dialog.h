@@ -38,6 +38,11 @@ public:
     /// The command a desktop's custom shortcut should run to open Quick Lookup, for the
     /// way this copy was installed (Flatpak, snap, AppImage or a plain install).
     [[nodiscard]] static QString popupCommand();
+
+    /// The program that opens the desktop's own shortcut settings, where the portal keeps
+    /// the Quick Lookup key: KDE's Shortcuts page, from outside a sandbox (a Flatpak or snap
+    /// cannot start it). Empty where there is none to start.
+    [[nodiscard]] static QStringList shortcutSettingsCommand();
     ~SettingsDialog() override = default;
 
 Q_SIGNALS:
@@ -66,6 +71,7 @@ private:
     QWidget* m_quickKeys = nullptr;
     QPushButton* m_quickChange = nullptr;
     QWidget* m_quickShortcutRow = nullptr;
+    QLabel* m_quickShortcutHint = nullptr;
     QWidget* m_quickFallbackRow = nullptr;
 };
 

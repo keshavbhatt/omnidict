@@ -13,6 +13,7 @@
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QProcess>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSignalBlocker>
@@ -273,6 +274,15 @@ QString SettingsDialog::popupCommand()
     return u"omnidict --popup"_s;
 }
 
+QStringList SettingsDialog::shortcutSettingsCommand()
+{
+    const bool sandboxed = !qEnvironmentVariableIsEmpty("FLATPAK_ID") || !qEnvironmentVariableIsEmpty("SNAP");
+    if (sandboxed || !qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s)) {
+        return {};
+    }
+    return {u"systemsettings"_s, u"kcm_keys"_s};
+}
+
 void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
                                       services::GlobalShortcuts* shortcuts)
 {
@@ -283,7 +293,16 @@ void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
     body->addWidget(buildQuickLookupShortcutRow(content));
     body->addWidget(buildQuickLookupFallbackRow(content));
     if (shortcuts != nullptr) {
-        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] { shortcuts->configure(); });
+        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] {
+            if (shortcuts->canConfigure()) {
+                shortcuts->configure(); // the portal's own dialog (interface version 2)
+                return;
+            }
+            const QStringList command = shortcutSettingsCommand();
+            if (!command.isEmpty()) {
+                QProcess::startDetached(command.first(), command.mid(1));
+            }
+        });
         connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
                 &SettingsDialog::refreshQuickLookup);
     }
@@ -305,11 +324,16 @@ QWidget* SettingsDialog::buildQuickLookupShortcutRow(QWidget* content)
     controlsLayout->setSpacing(8);
     controlsLayout->addWidget(m_quickKeys);
     controlsLayout->addWidget(m_quickChange);
-    m_quickShortcutRow = makeRow(content, tr("Quick lookup shortcut"),
-                                 tr("Select a word in any app and press it. Change it in the desktop's "
-                                    "keyboard settings."),
-                                 controls);
+    m_quickShortcutRow = makeRow(content, tr("Quick lookup shortcut"), u" "_s, controls);
     m_quickShortcutRow->setObjectName(u"quickLookupShortcutRow"_s);
+    // The description (the second label of the row's text column) says where to change the
+    // key, which depends on the desktop and the sandbox (refreshQuickLookup).
+    for (QLabel* label : m_quickShortcutRow->findChildren<QLabel*>()) {
+        if (label->text() == u" "_s) {
+            m_quickShortcutHint = label; // the placeholder description above
+        }
+    }
+    m_quickShortcutHint->setObjectName(u"quickLookupHint"_s);
     return m_quickShortcutRow;
 }
 
@@ -350,7 +374,17 @@ void SettingsDialog::refreshQuickLookup()
         status->setProperty("muted", true);
         keysLayout->addWidget(status);
     }
-    m_quickChange->setVisible(m_shortcuts != nullptr && m_shortcuts->canConfigure());
+    // Change... where it can do something: the portal's dialog, else KDE's Shortcuts page;
+    // a sandboxed copy on KDE says where to go instead (mocks/quick-lookup.html note 4).
+    const bool canChange =
+        m_shortcuts != nullptr && (m_shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty());
+    m_quickChange->setVisible(canChange);
+    const bool kde = qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s);
+    m_quickShortcutHint->setText(
+        !canChange && kde
+            ? tr("Select a word in any app and press it. Change it in System Settings, Keyboard, "
+                 "Shortcuts, Omnidict.")
+            : tr("Select a word in any app and press it. Change it in the desktop's keyboard settings."));
     m_quickShortcutRow->setVisible(state == State::Active || state == State::Checking);
     m_quickFallbackRow->setVisible(state == State::Unavailable || state == State::Declined);
 }
