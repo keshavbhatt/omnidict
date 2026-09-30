@@ -91,7 +91,8 @@ privacy concern).
   shortcuts: a native or AppImage copy starts `systemsettings kcm_keys` with its own library
   paths removed from the environment (the dev runtime's made System Settings fail to load
   Kirigami); a Flatpak or snap opens `systemsettings://kcm_keys`, KDE's URL for the page
-  (handled by plasma-open-settings), which Qt passes through the portal. Tried by the owner on KDE Plasma 6.6.2
+  (handled by plasma-open-settings; the owner confirmed `xdg-open systemsettings://kcm_keys`
+  opens the page on Plasma 6.6.2, 2026-09-30), which Qt passes through the portal. Tried by the owner on KDE Plasma 6.6.2
   (portal 1.20.3, 2026-09-30): KDE reported Ctrl+Alt+D taken and asked for another key at the
   first bind; the shortcut then worked.
 
