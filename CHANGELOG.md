@@ -23,3 +23,4 @@ choose from, in hundreds of languages.
 - Light and dark themes that follow the desktop, and a text size you can change.
 - Keyboard shortcuts for everything, listed with F1.
 - An About screen that credits every dictionary and links its source, and a bug report sheet.
+- Quick lookup: select a word in any app and press Ctrl+Alt+D to see its meaning in a small window; `omnidict --popup` opens it from a custom shortcut on desktops without global shortcuts.

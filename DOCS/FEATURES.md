@@ -79,6 +79,7 @@ expects every ktechpit desktop app to have.
 | E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | done (mocks/shortcuts.html, filterable) |
 | E8 | What's new sheet from the bundled changelog | M2 | KEEP | done (mocks/whats-new.html; once after an update, and from the menu and About) |
 | E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | planned |
+| E10 | Quick lookup: a popup over any app from a global shortcut (Ctrl+Alt+D suggested) or `omnidict --popup` (DOCS/quick-lookup.md, mocks/quick-lookup.html) | M5 | KEEP (owner, 2026-09-30) | done: portal shortcut (ADR-019), popup, `--popup`, activation token on Wayland, Settings rows; launcher search (KRunner, GNOME) later |
 
 ## F. Packaging
 

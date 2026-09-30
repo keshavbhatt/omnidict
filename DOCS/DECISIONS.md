@@ -424,3 +424,23 @@ on the run for 7 days, for testing between releases.
 
 **Consequences.** x86_64 only for now (an arm64 AppImage needs an arm64 Qt build and runner).
 The CI tools are rows in `THIRD_PARTY.md`; nothing new ships in the snap or the Flatpak.
+
+## ADR-019: Quick lookup's global shortcut through the xdg-desktop-portal, with Qt DBus (2026-09-30)
+
+**Status.** Accepted (owner, 2026-09-30; research in DOCS/quick-lookup.md).
+
+**Context.** Quick lookup needs a key that works while another app has focus, from the
+Flatpak and the snap, on Wayland and X11. A sandboxed app cannot grab keys on Wayland, and
+KDE's KGlobalAccel works on KDE only. The xdg-desktop-portal `GlobalShortcuts` portal is
+implemented by KDE Plasma (5.27+), GNOME (48+) and Hyprland, and reachable from Flatpak and
+from a snap's `desktop` plug. Qt has no API for it.
+
+**Decision.** `services::GlobalShortcuts` talks to `org.freedesktop.portal.GlobalShortcuts`
+with Qt DBus (a Qt module, in both runtimes and bundled in the AppImage): one shortcut,
+`quick-lookup`, suggested as Ctrl+Alt+D; the desktop owns the key, asks the user once and
+lets them change it. Where the portal is missing, Settings explains a custom desktop shortcut
+running `omnidict --popup`. No X11 key grab (the portal covers KDE on X11; GNOME dropped X11).
+
+**Consequences.** Qt DBus joins the app's Qt modules (`THIRD_PARTY.md`). The shortcut works
+only while Omnidict runs. The service is never started headless, so tests and screenshots
+cannot put the desktop's approval dialog on a real session.

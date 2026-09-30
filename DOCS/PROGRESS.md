@@ -14,6 +14,18 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-09-30 - Quick lookup, AppImage
+
+- Quick lookup (owner approved the mock, Ctrl+Alt+D, launcher search later): research in
+  DOCS/quick-lookup.md, ADR-019. `services::GlobalShortcuts` (Qt DBus, xdg-desktop-portal),
+  `ui::QuickLookup` (frameless popup, compact entry view), `omnidict --popup [word]`, the
+  Wayland activation token passed from a second launch, Settings "Quick lookup" rows.
+  Tested headless (best match, own request ids, clipboard start, nothing found, Escape,
+  Enter to the main window, Settings fallback per package); the service is never started
+  headless and its tests point D-Bus at a missing bus, so no test reaches the real portal.
+  Not yet tried on a real desktop: that is the owner's to do (it registers a real shortcut).
+- AppImage workflow (ADR-018), not yet run: waits for a push.
+
 ## 2026-09-29 - Published catalogue, GitHub as the default
 
 - The owner made the repository public (free CI) and ran the dictionaries workflow: 623

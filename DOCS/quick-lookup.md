@@ -1,6 +1,7 @@
 # Quick lookup: research and proposal (2026-09-30)
 
-Status: **proposal, waiting for the owner's decision.** Nothing here is built.
+Status: **phase 1 approved and built** (owner, 2026-09-30: mock and Ctrl+Alt+D approved,
+launcher search later). ADR-019 records the portal decision.
 
 The owner asked for a quick lookup integrated with the desktop that also works in the Flatpak
 and the snap: look a word up from anywhere without switching to the full window.
@@ -63,11 +64,28 @@ decision after phase 1.
 KDE X11; GNOME X11 is gone from GNOME 49), clipboard watching (not possible on Wayland, and a
 privacy concern).
 
-## Decisions for the owner
+## Decisions (owner, 2026-09-30)
 
-1. Approve phase 1 as above (portal shortcut, popup, `--popup`, activation token)?
-2. Approve the popup mock (`DOCS/mocks/quick-lookup.html`)?
-3. Default shortcut: Ctrl+Alt+D, or another?
-4. Phase 2 (launcher search): now, later, or not at all?
+1. Phase 1 as above: built.
+2. Popup mock: approved.
+3. Default shortcut: Ctrl+Alt+D (a suggestion to the desktop, which may choose another).
+4. Phase 2 (launcher search): later.
+
+## As built
+
+- `services::GlobalShortcuts` (Qt DBus): CreateSession, ListShortcuts, and BindShortcuts only
+  when the shortcut is not bound yet, so the desktop asks once; Activated opens the popup with
+  its activation token. Not started headless (tests, screenshots), so it never reaches the
+  real session's portal from there. Works while Omnidict runs.
+- `ui::QuickLookup`: a frameless window of its own (not a child of the main window, which would
+  hide it with a minimized main window); closes on Escape, the close button or clicking
+  elsewhere; with no word it reads the selection once active (Wayland offers it only then),
+  else the clipboard. Its own request ids on the shared LookupService.
+- `omnidict --popup [word]`: a running instance shows the popup; a fresh one shows only the
+  popup, and closing it ends the app. A second launch passes XDG_ACTIVATION_TOKEN (and X11's
+  DESKTOP_STARTUP_ID) to the running one.
+- Settings, "Quick lookup": the key as the desktop describes it (and "Change..." where the
+  portal can open its own dialog, version 2), or the custom-shortcut command for the way the
+  app was installed (Flatpak, snap, AppImage, native).
 
 Sources are listed in the research notes of 2026-09-30 in `DOCS/PROGRESS.md`.

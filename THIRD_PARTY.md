@@ -18,6 +18,7 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | Qt Svg | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps (ADR-014) | `app` (tinted UI glyphs) |
 | Lucide icons | snapshot ba6751a, 2026-09-18 | ISC (Feather-derived ones also MIT) | copied from the rewrite kit's vendored set into `app/src/resources/icons/ui/`, notice in `LICENSE` there (ADR-014) | `app` |
 | Qt Network | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps (ADR-015) | `app` (`services::DictionaryManager`: catalogue and `.odict` downloads) |
+| Qt DBus | 6.11.1 | LGPL-3.0 | part of Qt: the same SDK and runtime snaps, the Flatpak runtime, bundled in the AppImage (ADR-019) | `app` (`services::GlobalShortcuts`: the Quick Lookup shortcut) |
 | Qt (AppImage build) | 6.11.x | LGPL-3.0 | official Qt installer through `jurplel/install-qt-action` (aqtinstall), bundled into the AppImage with its ICU (ADR-018) | AppImage |
 | linuxdeploy, linuxdeploy-plugin-qt | continuous | MIT | downloaded in CI, not shipped (ADR-018) | AppImage build |
 | SQLite, zstd, ICU (AppImage) | as in Ubuntu 22.04 (SQLite 3.37, ICU 70) | Public domain, BSD-3-Clause, Unicode-3.0 | Ubuntu 22.04 packages, bundled into the AppImage by linuxdeploy (ADR-018) | AppImage |
