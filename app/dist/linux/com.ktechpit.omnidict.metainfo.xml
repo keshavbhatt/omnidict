@@ -40,6 +40,7 @@
       <li>Wildcards: ? for one letter, * for any run of letters</li>
       <li>Full text search finds words used inside definitions</li>
       <li>Links between entries, with Back and Forward as in a browser</li>
+      <li>Quick lookup: select a word in any app and press a shortcut to see its meaning in a small window</li>
     </ul>
     <p>Made for learning and everyday use:</p>
     <ul>
@@ -131,6 +132,21 @@
   </categories>
 
   <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="0.1.0" date="2026-09-30" type="stable">
+      <description>
+        <p>The first version: an offline dictionary with more than six hundred free dictionaries in hundreds of languages.</p>
+        <ul>
+          <li>A catalogue of dictionaries to download: Wiktionary for over three hundred languages, FreeDict bilingual dictionaries, English WordNet, JMdict, CC-CEDICT and Kengdic</li>
+          <li>Results as you type, optional accents, inflected forms, wildcards and "Did you mean" suggestions in every script</li>
+          <li>Words found inside definitions, links between entries, favourites and recent lookups</li>
+          <li>Quick lookup: select a word in any app and press Ctrl+Alt+D</li>
+          <li>Light and dark themes, an adjustable text size and keyboard shortcuts for everything</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
 
   <update_contact>connect@ktechpit.com</update_contact>
 </component>

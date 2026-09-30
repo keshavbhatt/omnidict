@@ -25,6 +25,10 @@ Newest first. One entry per working session.
   headless and its tests point D-Bus at a missing bus, so no test reaches the real portal.
   Not yet tried on a real desktop: that is the owner's to do (it registers a real shortcut).
 - AppImage workflow (ADR-018), not yet run: waits for a push.
+- Release 0.1.0 prepared (owner): changelog dated 2026-09-30, metainfo `<release>` (Flathub's
+  appstream lint now passes clean), quick lookup in the store and snap descriptions,
+  `project(VERSION)` already 0.1.0; release.yml marks the version release Latest. The tag
+  v0.1.0 is the owner's to push.
 
 ## 2026-09-29 - Published catalogue, GitHub as the default
 

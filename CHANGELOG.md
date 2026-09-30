@@ -3,7 +3,7 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-09-30
 
 The first version: an offline dictionary with more than six hundred free dictionaries to
 choose from, in hundreds of languages.

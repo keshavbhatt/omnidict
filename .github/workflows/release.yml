@@ -39,4 +39,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --title "Omnidict ${TAG#v}" --notes-file notes.md --verify-tag
+        # --latest: the version release, not the rolling "dictionaries" one, is what visitors see first.
+        run: gh release create "$TAG" --title "Omnidict ${TAG#v}" --notes-file notes.md --verify-tag --latest

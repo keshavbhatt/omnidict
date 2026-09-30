@@ -34,6 +34,8 @@ description: |
   * Wildcards: `?` for one letter, `*` for any run of letters.
   * Full text search finds words used inside definitions.
   * Links between entries, with Back and Forward as in a browser.
+  * Quick lookup: select a word in any app and press a shortcut to see its meaning in a small
+    window.
 
   **Made for learning and everyday use**
 
