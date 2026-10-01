@@ -37,7 +37,12 @@ jobs:
           tag="${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}"
           project=$(awk '/^project\(omnidict/ {on = 1} on && $1 == "VERSION" {print $2; exit}' app/CMakeLists.txt)
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "ver=${tag:+${tag#v}}${tag:-$project-$(git rev-parse --short HEAD)}" >> "$GITHUB_OUTPUT"
+          # A tag names the release's file (omnidict-0.1.0-...); a run without one says which commit.
+          if [ -n "$tag" ]; then
+            echo "ver=${tag#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ver=$project-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
