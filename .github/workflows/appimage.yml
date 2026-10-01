@@ -84,8 +84,10 @@ jobs:
       - name: Build the AppImage
         run: |
           export QMAKE="$QT_ROOT_DIR/bin/qmake"
-          # Wayland as well as X11: the platform plugins linuxdeploy leaves out by default.
-          export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so;libqoffscreen.so"
+          # Wayland as well as X11: the platform plugins linuxdeploy leaves out by default. Qt 6.11
+          # has one Wayland plugin (no more -egl/-generic), with its helpers in wayland-* folders,
+          # which the waylandclient module below brings along.
+          export EXTRA_PLATFORM_PLUGINS="libqwayland.so;libqoffscreen.so"
           export EXTRA_QT_MODULES="svg;waylandclient"
           export OUTPUT="omnidict-${{ steps.ver.outputs.ver }}-x86_64.AppImage"
           n=0
@@ -102,7 +104,8 @@ jobs:
         run: |
           need() { find AppDir -name "$1" | grep -q . || { echo "::error::missing $1 from the bundle"; exit 1; }; }
           need libqxcb.so
-          need libqwayland-generic.so
+          need libqwayland.so
+          find AppDir -path '*wayland-shell-integration/*.so' | grep -q . || { echo "::error::no Wayland shell integration bundled"; exit 1; }
           need libQt6Svg.so.6
           need libqsvg.so
           # It starts, answers --version and exits, with nothing but the AppImage.

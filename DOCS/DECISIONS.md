@@ -412,7 +412,8 @@ GitHub Actions this way.
 compatibility GitHub offers): Qt 6.11 from the official installer (`jurplel/install-qt-action`,
 which uses aqtinstall; the base download includes Qt Svg, Qt Wayland and Qt's ICU), SQLite,
 zstd and ICU from Ubuntu 22.04, bundled with `linuxdeploy` and `linuxdeploy-plugin-qt`
-(continuous builds) with the X11, Wayland and offscreen platform plugins. The job builds the
+(continuous builds) with the X11, Wayland (Qt 6.11's single `libqwayland.so` and its
+`wayland-*` helpers) and offscreen platform plugins. The job builds the
 normalization test and runs it (Ubuntu 22.04's ICU 70 is older than the snap's 74), checks the
 bundle for the platform plugins and Qt Svg, and starts the AppImage once (`--version`).
 
