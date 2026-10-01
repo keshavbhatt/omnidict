@@ -24,7 +24,9 @@ Newest first. One entry per working session.
   Enter to the main window, Settings fallback per package); the service is never started
   headless and its tests point D-Bus at a missing bus, so no test reaches the real portal.
   Not yet tried on a real desktop: that is the owner's to do (it registers a real shortcut).
-- AppImage workflow (ADR-018), not yet run: waits for a push.
+- AppImage workflow (ADR-018): the first run failed on Qt 6.11's renamed Wayland plugin (one
+  `libqwayland.so` now); fixed. The dry run then passed: a 46.7 MB AppImage that, on this Arch
+  host, starts, reads the GitHub catalogue over HTTPS, installs a dictionary and looks a word up.
 - Release 0.1.0 prepared (owner): changelog dated 2026-09-30, metainfo `<release>` (Flathub's
   appstream lint now passes clean), quick lookup in the store and snap descriptions,
   `project(VERSION)` already 0.1.0; release.yml marks the version release Latest. The tag
