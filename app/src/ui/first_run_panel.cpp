@@ -22,10 +22,11 @@ constexpr int kCards = 3;
 constexpr int kPercent = 100;
 constexpr int kColumnWidth = 680;
 
-/// The catalogue's dictionaries, the suggested ones first.
+/// The catalogue's dictionaries, the suggested ones first: English WordNet (small, with
+/// synonyms), English Wiktionary, then the most asked-for pair (owner, 2026-10-05).
 QList<core::CatalogEntry> suggested(const QList<core::CatalogEntry>& all)
 {
-    static const QStringList kFirst = {u"wikt-en"_s, u"wikt-es-en"_s, u"wikt-hi-en"_s};
+    static const QStringList kFirst = {u"oewn-en"_s, u"wikt-en"_s, u"wikt-es-en"_s};
     QList<core::CatalogEntry> entries = all;
     const auto rank = [](const core::CatalogEntry& entry) {
         const qsizetype at = kFirst.indexOf(entry.dictId);
