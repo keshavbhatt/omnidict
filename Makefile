@@ -13,7 +13,7 @@ BUILD_DIR ?= build
 CXX_SOURCES := $(shell find app/src app/tests -name '*.cpp' -o -name '*.h')
 TIDY_SOURCES := $(shell find app/src app/tests -name '*.cpp')
 
-.PHONY: all fixture build test test-pipeline test-app lint lint-pipeline lint-app format clean
+.PHONY: all fixture build test test-pipeline test-app lint lint-pipeline lint-app format clean distclean
 
 all: test
 
@@ -53,3 +53,7 @@ format:
 clean:
 	rm -rf $(BUILD_DIR) compile_commands.json
 	$(MAKE) -C pipeline clean
+
+# Everything generated, for a small copy of the repository: `make test` brings it back.
+distclean: clean
+	$(MAKE) -C pipeline distclean

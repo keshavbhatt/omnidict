@@ -41,7 +41,7 @@ BUILD_FLAGS_wikt-en := --no-vacuum
 BUILD_FLAGS_freedict-de-en := --no-vacuum
 BUILD_FLAGS_freedict-en-de := --no-vacuum
 
-.PHONY: sync test lint format fixture fetch build package catalog serve publish all clean \
+.PHONY: sync test lint format fixture fetch build package catalog serve publish all clean distclean \
 	require-dict list-dicts
 
 sync:
@@ -119,3 +119,8 @@ all: $(addprefix bundle-,$(DICTS))
 
 clean:
 	rm -rf out .pytest_cache .mypy_cache .ruff_cache
+
+# Also the downloaded dumps and the virtual environment (`make fetch` and `make sync`
+# bring them back); the published dictionaries live on the GitHub release (ADR-016).
+distclean: clean
+	rm -rf sources .venv
