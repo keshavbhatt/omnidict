@@ -22,6 +22,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSignalSpy>
@@ -440,6 +441,72 @@ private Q_SLOTS:
         QCOMPARE(catalogChanged.size(), 2);
     }
 
+    void refreshWithTheSameCatalogueKeepsTheRows()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        server.addRoute(
+            u"/catalog.json"_s,
+            catalogJson(QJsonArray{manifest(u"a"_s, u"A Dictionary"_s, u"2026.10.1"_s, u"es"_s, u"en"_s,
+                                            u"Wiktionary"_s, u"http://example.invalid/a"_s, body)}));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"samecatalog"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        dialog.showAvailable();
+        QVERIFY(catalogChanged.wait(5000)); // the read on opening
+        auto* row = dialog.findChild<QWidget*>(u"availableRow_a"_s);
+        QVERIFY(row != nullptr);
+
+        dialog.findChild<QPushButton*>(u"refreshCatalogButton"_s)->click();
+        QVERIFY(catalogChanged.wait(5000));
+        QTest::qWait(50); // a rebuild would delete the row on the next pass
+        QCOMPARE(dialog.findChild<QWidget*>(u"availableRow_a"_s), row);
+        QVERIFY(dialog.findChild<QLabel*>(u"availableFooter"_s)->text().contains(u"just now"_s));
+    }
+
+    void longCatalogueIsBuiltInBatches()
+    {
+        TestHttpServer server;
+        const QByteArray body = QByteArrayLiteral("odict body");
+        constexpr int kCount = 150;
+        QJsonArray entries;
+        for (int i = 0; i < kCount; ++i) {
+            const QString id = u"d%1"_s.arg(i, 3, 10, QLatin1Char('0'));
+            entries.append(manifest(id, u"Dictionary %1"_s.arg(id), u"1"_s, u"en"_s, u"en"_s, u"Test"_s,
+                                    u"http://example.invalid/"_s + id, body));
+        }
+        server.addRoute(u"/catalog.json"_s, catalogJson(entries));
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        Settings settings(iniPath(u"batches"_s));
+        DictionaryManager manager(dictDir.path(), cacheDir.path(), server.urlFor(u"/catalog.json"_s));
+        QSignalSpy catalogChanged(&manager, &DictionaryManager::catalogChanged);
+        DictionariesDialog dialog(manager, settings, {}, dictDir.path());
+        dialog.showAvailable();
+        QVERIFY(catalogChanged.wait(5000));
+
+        const auto rows = [&dialog] {
+            return dialog.findChildren<QWidget*>(QRegularExpression(u"^availableRow_"_s));
+        };
+        QVERIFY(!rows().isEmpty()); // the first screenful at once
+        QTRY_COMPARE(rows().size(), kCount);
+        const QList<QWidget*> built = rows();
+        for (int i = 0; i < kCount; ++i) {
+            QCOMPARE(built.at(i)->objectName(), u"availableRow_d%1"_s.arg(i, 3, 10, QLatin1Char('0')));
+            // The hairline under every row but the last.
+            QCOMPARE(built.at(i)->property("dictionaryRow").toBool(), i < kCount - 1);
+        }
+
+        // A filter typed while batches are pending replaces them.
+        dialog.findChild<QLineEdit*>(u"availableFilter"_s)->setText(u"d14"_s);
+        QTRY_COMPARE(rows().size(), 10);
+        QTest::qWait(50);
+        QCOMPARE(rows().size(), 10);
+    }
+
     void availableTabLanguageFilterHidesRows()
     {
         TestHttpServer server;
@@ -628,6 +695,8 @@ private Q_SLOTS:
 
         auto* scroll = dialog.findChild<QScrollArea*>(u"availableScroll"_s);
         QVERIFY(scroll != nullptr);
+        // Rows past the first screenful are built in batches after the sheet shows.
+        QTRY_VERIFY(dialog.findChild<QPushButton*>(u"downloadButton_d39"_s) != nullptr);
         QTRY_VERIFY(scroll->verticalScrollBar()->maximum() > 0); // rows laid out
         scroll->verticalScrollBar()->setValue(scroll->verticalScrollBar()->maximum());
         const int position = scroll->verticalScrollBar()->value();

@@ -91,6 +91,10 @@ private:
     void startDownload(const core::CatalogEntry& entry);
     void rebuildInstalledRows();
     void rebuildAvailableRows();
+    /// Builds up to `count` more of the rows the last rebuild chose.
+    void appendAvailableRows(qsizetype count);
+    /// The next batch of rows on the next event-loop turn, until all are built.
+    void scheduleAvailableBatch();
     /// Download, install and removal signals: each updates only the rows it concerns.
     void connectDownloads();
     /// Refreshes one row's right-hand side (download state) without touching the rest.
@@ -131,16 +135,22 @@ private:
     QPushButton* m_checkUpdatesButton = nullptr;
     QLabel* m_checkResult = nullptr; ///< the last Check for updates' outcome (mocks/dictionaries.html note 5)
     bool m_checkingUpdates = false;  ///< a Check for updates is waiting for the catalogue
+    bool m_rowsDark = false;         ///< the scheme the rows were painted for
 
     QLineEdit* m_filterField = nullptr;
     QComboBox* m_fromCombo = nullptr;
     QComboBox* m_toCombo = nullptr;
     QComboBox* m_providerCombo = nullptr;
-    qsizetype m_shownCount = 0; ///< rows shown after the filters, for the footer
-    int m_actionWidth = 0;
-    bool m_availableRowsStale = true;   ///< rows to build when the Available tab is next shown ///< the
-                                        ///< Available rows' action column, measured on each rebuild
-    QWidget* m_availableList = nullptr; ///< a QVBoxLayout of rows, plus a trailing stretch
+    qsizetype m_shownCount = 0;               ///< rows shown after the filters, for the footer
+    int m_actionWidth = 0;                    ///< the Available rows' action column, measured on each rebuild
+    bool m_availableRowsStale = true;         ///< rows to build when the Available tab is next shown
+    QList<core::CatalogEntry> m_catalogShown; ///< the catalogue the filters and rows were made from
+    QList<core::CatalogEntry> m_rowsToBuild;  ///< the rows the last rebuild chose, built in batches
+    qsizetype m_rowsBuilt = 0;                ///< how many of them exist so far
+    int m_buildGeneration = 0;                ///< a pending batch from an older rebuild stops
+    int m_restorePosition = 0;                ///< the scroll position the rebuild keeps
+    int m_positionSetByBuild = 0;       ///< the position last set by a batch; anything else is the reader's
+    QWidget* m_availableList = nullptr; ///< a QVBoxLayout of blocks of rows, plus a trailing stretch
     QScrollArea* m_availableScroll = nullptr;
     QHash<QString, QWidget*> m_availableStates;            ///< each row's right-hand side, by dictionary id
     QHash<QString, core::CatalogEntry> m_availableEntries; ///< the entry each shown row stands for

@@ -14,6 +14,26 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-10-15 - Flathub draft, Available tab speed
+
+- Flathub submission drafted locally (owner opens the PR): `com.ktechpit.omnidict.yaml` on the
+  `omnidict` branch of the owner's flathub clone, built from the `v0.1.0` tag. Built and
+  installed with `org.flatpak.Builder` on this host at the owner's request; the manifest lint
+  passes, the repo lint only reports screenshots not mirrored (Flathub's build mirrors them).
+- Available tab no longer stutters on opening (owner report). Measured headless with the real
+  catalogue (623 rows): every opening built all rows twice more than needed, once for the
+  PaletteChange that showing the sheet sends and once when the catalogue read on opening
+  brought the same catalogue, each about 300 ms of row building, styling and layout on the UI
+  thread. Now a PaletteChange rebuilds only when the scheme flips, an unchanged catalogue
+  rebuilds nothing, and the rows come in blocks: 30 at once (first paint after about 10 ms),
+  then 60 per event-loop turn, about 25 ms each, all 623 in about 300 ms. A grab of the sheet
+  matches the one before the change pixel for pixel, apart from the footer's time.
+- Host notes: `uv` is gone from `~/.local/bin` (tests ran with the copy inside
+  `org.flatpak.Builder`); clang-tidy is now LLVM 23, whose new checks
+  (`readability-trailing-comma` and others) fail `make lint` across files this change does not
+  touch; `tst_sheets` fails `settingsExplainTheCustomShortcutWhereTheDesktopHasNoGlobalOnes`
+  here with or without the change.
+
 ## 2026-09-30 - Quick lookup, AppImage
 
 - Quick lookup (owner approved the mock, Ctrl+Alt+D, launcher search later): research in

@@ -55,6 +55,10 @@ constexpr int kIconSize = 18;
 constexpr int kGripSize = 16;
 constexpr int kLanguageComboVisibleItems = 12;
 constexpr int kAvailableTab = 1;
+/// Available rows built at once, enough to fill the sheet; the rest follow in batches
+/// between event-loop turns, so the sheet shows and scrolls while they are made.
+constexpr int kFirstRows = 30;
+constexpr int kRowsPerBatch = 60;
 constexpr int kFilterTypingPauseMs = 150;
 constexpr int kActionSpacing = 6;
 constexpr int kConfirmWidth = 380;
@@ -361,6 +365,8 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     , m_installed(std::move(installed))
     , m_dictionariesRoot(std::move(dictionariesRoot))
     , m_tabs(new QTabWidget(this))
+    , m_rowsDark(Tokens::currentIsDark())
+    , m_catalogShown(m_manager.catalog().dictionaries)
 {
     setWindowTitle(titleWithApp(tr("Dictionaries")));
     setModal(true);
@@ -390,9 +396,14 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
 
     connect(&m_manager, &services::DictionaryManager::catalogChanged, this, [this] {
         m_catalogFailure.clear();
-        refreshFilters();
-        rebuildInstalledRows();
-        rebuildAvailableRows();
+        // The read on opening usually brings the catalogue already shown: rebuilding
+        // hundreds of rows for it would only make the list flicker.
+        if (m_manager.catalog().dictionaries != m_catalogShown) {
+            m_catalogShown = m_manager.catalog().dictionaries;
+            refreshFilters();
+            rebuildInstalledRows();
+            rebuildAvailableRows();
+        }
         updateAvailableFooter();
         finishUpdateCheck({});
     });
@@ -465,7 +476,9 @@ bool DictionariesDialog::eventFilter(QObject* watched, QEvent* event)
 void DictionariesDialog::changeEvent(QEvent* event)
 {
     QDialog::changeEvent(event);
-    if (event->type() == QEvent::PaletteChange) {
+    // Showing the sheet sends a PaletteChange too; only a scheme switch needs new rows.
+    if (event->type() == QEvent::PaletteChange && Tokens::currentIsDark() != m_rowsDark) {
+        m_rowsDark = Tokens::currentIsDark();
         // Icons, pills and the progress ring paint from Tokens::current() at
         // build time; a full rebuild is the simplest way to repaint them all.
         rebuildInstalledRows();
@@ -1108,14 +1121,15 @@ void DictionariesDialog::rebuildAvailableRows()
 
     // Hundreds of row widgets take a noticeable moment: they are built only while the
     // Available tab is showing, and on switching to it when something changed meanwhile.
+    ++m_buildGeneration; // batches still pending from an earlier rebuild stop
     m_availableRowsStale = m_tabs->currentIndex() != kAvailableTab;
     if (m_availableRowsStale) {
         return;
     }
 
     // Keep the reader's place: rebuilding (a filter, a new catalogue) must not jump to the top.
-    QScrollBar* scrollBar = m_availableScroll->verticalScrollBar();
-    const int position = scrollBar->value();
+    m_restorePosition = m_availableScroll->verticalScrollBar()->value();
+    m_positionSetByBuild = m_restorePosition;
     m_availableList->setUpdatesEnabled(false);
     m_availableStates.clear();
     m_availableEntries.clear();
@@ -1126,12 +1140,53 @@ void DictionariesDialog::rebuildAvailableRows()
         delete item;
     }
     m_actionWidth = measureActionWidth();
-    for (qsizetype i = 0; i < shown.size(); ++i) {
-        listLayout->insertWidget(static_cast<int>(i), buildAvailableRow(shown.at(i), i == shown.size() - 1));
-    }
+    m_rowsToBuild = std::move(shown);
+    m_rowsBuilt = 0;
+    appendAvailableRows(kFirstRows);
     m_availableList->setUpdatesEnabled(true);
-    // The new rows are laid out on the next pass; restore the place after it.
-    QTimer::singleShot(0, this, [scrollBar, position] { scrollBar->setValue(position); });
+    scheduleAvailableBatch();
+}
+
+void DictionariesDialog::appendAvailableRows(qsizetype count)
+{
+    const qsizetype end = std::min(m_rowsToBuild.size(), m_rowsBuilt + count);
+    if (m_rowsBuilt >= end) {
+        return;
+    }
+    // Each batch in a block of its own: the blocks already placed keep their geometry,
+    // so a batch lays out its own rows instead of every row built so far.
+    auto* block = new QWidget(m_availableList);
+    auto* blockLayout = new QVBoxLayout(block);
+    blockLayout->setContentsMargins(0, 0, 0, 0);
+    blockLayout->setSpacing(0);
+    for (; m_rowsBuilt < end; ++m_rowsBuilt) {
+        const bool isLast = m_rowsBuilt == m_rowsToBuild.size() - 1;
+        blockLayout->addWidget(buildAvailableRow(m_rowsToBuild.at(m_rowsBuilt), isLast));
+    }
+    auto* listLayout = qobject_cast<QVBoxLayout*>(m_availableList->layout());
+    listLayout->insertWidget(listLayout->count() - 1, block);
+}
+
+void DictionariesDialog::scheduleAvailableBatch()
+{
+    // After the rows built so far are laid out (the next pass), put the reader back
+    // where they were, unless they have scrolled since; then build the next batch.
+    QTimer::singleShot(0, this, [this, generation = m_buildGeneration] {
+        if (generation != m_buildGeneration) {
+            return; // a newer rebuild took over
+        }
+        QScrollBar* scrollBar = m_availableScroll->verticalScrollBar();
+        if (scrollBar->value() == m_positionSetByBuild) {
+            scrollBar->setValue(m_restorePosition);
+            m_positionSetByBuild = scrollBar->value();
+        }
+        if (m_rowsBuilt >= m_rowsToBuild.size()) {
+            m_rowsToBuild.clear();
+            return;
+        }
+        appendAvailableRows(kRowsPerBatch);
+        scheduleAvailableBatch();
+    });
 }
 
 bool DictionariesDialog::matchesFilters(const core::CatalogEntry& entry) const
