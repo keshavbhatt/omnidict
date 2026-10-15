@@ -3,6 +3,14 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-10-15
+
+The first stable version.
+
+### Changed
+- The first-run suggestions are English WordNet, English Wiktionary and Spanish-English.
+- The list of available dictionaries opens at once instead of pausing while it fills.
+
 ## [0.1.0] - 2026-09-30
 
 The first version: an offline dictionary with more than six hundred free dictionaries to

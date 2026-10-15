@@ -134,6 +134,15 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.0.0" date="2026-10-15" type="stable">
+      <description>
+        <p>The first stable version.</p>
+        <ul>
+          <li>The first-run suggestions are English WordNet, English Wiktionary and Spanish-English</li>
+          <li>The list of available dictionaries opens at once instead of pausing while it fills</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-09-30" type="stable">
       <description>
         <p>The first version: an offline dictionary with more than six hundred free dictionaries in hundreds of languages.</p>
