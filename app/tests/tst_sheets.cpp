@@ -165,6 +165,8 @@ private Q_SLOTS:
         // Changing the key: KDE's Shortcuts page from outside a sandbox, nothing from inside.
         const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
         qputenv("XDG_CURRENT_DESKTOP", "KDE");
+        qunsetenv("SNAP"); // ctest from the cmake snap runs everything with SNAP set
+        qunsetenv("FLATPAK_ID");
         QCOMPARE(SettingsDialog::shortcutSettingsCommand(),
                  (QStringList{u"systemsettings"_s, u"kcm_keys"_s}));
         QVERIFY(!SettingsDialog::shortcutSettingsUrl().isValid()); // native: the program itself
