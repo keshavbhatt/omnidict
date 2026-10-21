@@ -14,6 +14,37 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-10-21 - Quick lookup with no key (issue #1)
+
+- Issue #1 (snap, KDE Wayland: the shortcut does nothing) reproduced with the 1.0.0 snap on
+  this host: KDE registered the snap's shortcut as `snap.omnidict` with no key. KDE keeps the
+  suggested Ctrl+Alt+D as an unticked default and binds nothing until the user picks a key;
+  the app treated that as Active and Settings said only "Not set". Pressing the shortcut over
+  D-Bus (kglobalaccel `invokeShortcut`) opened the popup with the selected word, so the snap
+  works end to end once a key is set. Reply posted on the issue.
+- Mock `quick-lookup-no-key.html` approved (owner, 2026-10-21) and built: a new
+  `GlobalShortcuts::State::NoKey`; Settings shows "No key" with a mark in the warning colour, a
+  primary "Choose a key..." and the entry name KDE lists (`snap.omnidict` for the snap, among
+  the system services); the main window says so once with a toast that stays until closed
+  (`Toast::showUntilClosed`), closed early when a key arrives. Setting
+  `quickLookup/noKeyNoticeShown`.
+- Found while checking: an unsandboxed Omnidict's `Registry.Register` always failed with
+  "Connection already associated with an application ID", because Qt reads the portal's
+  colour scheme on the shared connection first. KDE then filed the shortcut under the
+  launching program (Konsole, Dolphin entries on this host, removed at the owner's request).
+  The shortcut service now uses a D-Bus connection of its own whose first call is Register.
+  Checked live: with the desktop file installed the id registers and the shortcut lands under
+  Omnidict. Without an installed desktop file (a dev build, an AppImage that is not
+  integrated) the portal still refuses the id ("App info not found") and KDE files it under
+  the launcher; nothing the app can do there.
+- Tests: `app/tests/fake_portal.h` runs a fake GlobalShortcuts portal on a private
+  `dbus-daemon` (a config with no service directories, so the real portal is never started on
+  it); `tst_global_shortcuts` covers Active, NoKey, ShortcutsChanged and registering before
+  any other call (fails against the shared connection), `tst_sheets` the Settings row,
+  `tst_smoke` the one-time notice. The tests skip without `dbus-daemon`.
+- Fixed an existing failure: `tst_sheets` assumed no `SNAP` variable, but ctest from the cmake
+  snap runs every test with `SNAP=/snap/cmake/<rev>`.
+
 ## 2026-10-15 - Flathub draft, Available tab speed
 
 - Flathub submission drafted locally (owner opens the PR): `com.ktechpit.omnidict.yaml` on the

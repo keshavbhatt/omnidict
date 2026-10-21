@@ -34,6 +34,7 @@ class ResultsModel;
 namespace omnidict::ui {
 
 class DictionariesDialog;
+class Toast;
 class EmptyState;
 class FirstRunPanel;
 class QuickLookup;
@@ -76,8 +77,9 @@ public:
     void showQuickLookup(const QString& word, const QByteArray& activationToken = {});
     /// The Quick Lookup popup, created on first use.
     [[nodiscard]] QuickLookup* quickLookup();
-    /// The global shortcut, for Settings to show its state (owned by the caller).
-    void setGlobalShortcuts(services::GlobalShortcuts* shortcuts) { m_shortcuts = shortcuts; }
+    /// The global shortcut, for Settings to show its state (owned by the caller). When the
+    /// desktop binds it without a key, says so once (mocks/quick-lookup-no-key.html).
+    void setGlobalShortcuts(services::GlobalShortcuts* shortcuts);
 
 Q_SIGNALS:
     /// The dictionaries are open (or found to be missing).
@@ -147,6 +149,7 @@ private:
     /// Below kNarrowWidth the list and the entry share one column (DOCS/DESIGN.md).
     void applyLayoutMode();
     void showEntryColumn(bool entry);
+    void onShortcutStateChanged();
 
     [[nodiscard]] QString currentDictId() const;
     [[nodiscard]] const services::DictionaryInfo* dictionary(const QString& dictId) const;
@@ -159,6 +162,7 @@ private:
     QList<services::DictionaryInfo> m_dictionaries;
     QuickLookup* m_quick = nullptr;
     services::GlobalShortcuts* m_shortcuts = nullptr;
+    QPointer<Toast> m_noKeyNotice; ///< while shown: closed once the desktop has a key
     bool m_libraryOpen = false;
 
     QBoxLayout* m_headerLayout = nullptr;

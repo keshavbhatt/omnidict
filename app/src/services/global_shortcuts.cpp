@@ -61,9 +61,20 @@ const QDBusArgument& operator>>(const QDBusArgument& argument, PortalShortcut& s
 GlobalShortcuts::GlobalShortcuts(QString appId, QObject* parent)
     : QObject(parent)
     , m_appId(std::move(appId))
+    , m_busName(u"omnidict-shortcuts-%1"_s.arg(reinterpret_cast<quintptr>(this)))
 {
     qDBusRegisterMetaType<PortalShortcut>();
     qDBusRegisterMetaType<QList<PortalShortcut>>();
+}
+
+GlobalShortcuts::~GlobalShortcuts()
+{
+    QDBusConnection::disconnectFromBus(m_busName);
+}
+
+QDBusConnection GlobalShortcuts::bus() const
+{
+    return QDBusConnection(m_busName);
 }
 
 QString GlobalShortcuts::requestPath(const QString& uniqueName, const QString& token)
@@ -78,15 +89,45 @@ QString GlobalShortcuts::requestPath(const QString& uniqueName, const QString& t
 
 void GlobalShortcuts::start()
 {
-    const QDBusConnection bus = QDBusConnection::sessionBus();
-    if (!bus.isConnected()) {
+    // The address as the environment has it now (libdbus remembers the first one it saw).
+    const QString address = qEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS");
+    const QDBusConnection connection =
+        address.isEmpty() ? QDBusConnection::connectToBus(QDBusConnection::SessionBus, m_busName)
+                          : QDBusConnection::connectToBus(address, m_busName);
+    if (!connection.isConnected()) {
         setState(State::Unavailable);
         return;
     }
+    registerHostApp();
+}
+
+void GlobalShortcuts::registerHostApp()
+{
+    // An app outside a sandbox tells the portal who it is (xdg-desktop-portal 1.19+), as
+    // the first call on its connection; sandboxed apps are identified by their sandbox.
+    if (!qEnvironmentVariableIsEmpty("FLATPAK_ID") || !qEnvironmentVariableIsEmpty("SNAP")) {
+        readVersion();
+        return;
+    }
+    QDBusMessage call = QDBusMessage::createMethodCall(
+        kService, kPath, u"org.freedesktop.host.portal.Registry"_s, u"Register"_s);
+    call << m_appId << QVariantMap();
+    const auto* watcher = new QDBusPendingCallWatcher(bus().asyncCall(call), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* reply) {
+        reply->deleteLater();
+        if (reply->isError()) { // an older portal, or none: reading the version tells which
+            qCInfo(lcShortcuts) << "global shortcuts: app id not registered:" << reply->error().message();
+        }
+        readVersion();
+    });
+}
+
+void GlobalShortcuts::readVersion()
+{
     QDBusMessage get =
         QDBusMessage::createMethodCall(kService, kPath, u"org.freedesktop.DBus.Properties"_s, u"Get"_s);
     get << kInterface << u"version"_s;
-    auto* watcher = new QDBusPendingCallWatcher(bus.asyncCall(get), this);
+    const auto* watcher = new QDBusPendingCallWatcher(bus().asyncCall(get), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* call) {
         call->deleteLater();
         const QDBusPendingReply<QDBusVariant> reply = *call;
@@ -96,26 +137,12 @@ void GlobalShortcuts::start()
             return;
         }
         m_version = reply.value().variant().toUInt();
-        QDBusConnection session = QDBusConnection::sessionBus();
+        QDBusConnection session = bus();
         session.connect(kService, kPath, kInterface, u"Activated"_s, this, SLOT(onActivated(QDBusMessage)));
         session.connect(kService, kPath, kInterface, u"ShortcutsChanged"_s, this,
                         SLOT(onShortcutsChanged(QDBusMessage)));
-        registerHostApp();
         createSession();
     });
-}
-
-void GlobalShortcuts::registerHostApp()
-{
-    // An app outside a sandbox tells the portal who it is (xdg-desktop-portal 1.19+);
-    // sandboxed apps are identified by their sandbox, and older portals lack the call.
-    if (!qEnvironmentVariableIsEmpty("FLATPAK_ID") || !qEnvironmentVariableIsEmpty("SNAP")) {
-        return;
-    }
-    QDBusMessage call = QDBusMessage::createMethodCall(
-        kService, kPath, u"org.freedesktop.host.portal.Registry"_s, u"Register"_s);
-    call << m_appId << QVariantMap();
-    QDBusConnection::sessionBus().call(call, QDBus::Block, 2000); // an error only means an older portal
 }
 
 void GlobalShortcuts::createSession()
@@ -143,7 +170,6 @@ void GlobalShortcuts::listShortcuts()
                     });
                 if (bound) {
                     takeTrigger(shortcuts);
-                    setState(State::Active);
                     return;
                 }
                 bindShortcut();
@@ -166,7 +192,6 @@ void GlobalShortcuts::bindShortcut()
                     return;
                 }
                 takeTrigger(toShortcuts(results.value(u"shortcuts"_s)));
-                setState(State::Active);
             });
 }
 
@@ -177,13 +202,13 @@ void GlobalShortcuts::configure(const QString& parentWindow)
     }
     QDBusMessage call = QDBusMessage::createMethodCall(kService, kPath, kInterface, u"ConfigureShortcuts"_s);
     call << QVariant::fromValue(QDBusObjectPath(m_session)) << parentWindow << QVariantMap();
-    QDBusConnection::sessionBus().asyncCall(call);
+    bus().asyncCall(call);
 }
 
 void GlobalShortcuts::request(const QString& method, QList<QVariant> arguments, QVariantMap options,
                               ResponseHandler onResponse)
 {
-    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusConnection bus = this->bus();
     const QString token = u"omnidict%1"_s.arg(++m_nextToken);
     options.insert(u"handle_token"_s, token);
     // Listen before calling, so a quick answer cannot arrive unheard.
@@ -194,7 +219,7 @@ void GlobalShortcuts::request(const QString& method, QList<QVariant> arguments, 
     QDBusMessage call = QDBusMessage::createMethodCall(kService, kPath, kInterface, method);
     arguments.append(options);
     call.setArguments(arguments);
-    auto* watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
+    const auto* watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
     connect(
         watcher, &QDBusPendingCallWatcher::finished, this, [this, path, method](QDBusPendingCallWatcher* w) {
             w->deleteLater();
@@ -210,8 +235,7 @@ void GlobalShortcuts::onResponse(const QDBusMessage& message)
 {
     const QString path = message.path();
     const ResponseHandler handler = m_pending.take(path);
-    QDBusConnection::sessionBus().disconnect(kService, path, kRequestInterface, u"Response"_s, this,
-                                             SLOT(onResponse(QDBusMessage)));
+    bus().disconnect(kService, path, kRequestInterface, u"Response"_s, this, SLOT(onResponse(QDBusMessage)));
     const QList<QVariant> arguments = message.arguments();
     if (!handler || arguments.size() < 2) {
         return;
@@ -236,7 +260,7 @@ void GlobalShortcuts::onShortcutsChanged(const QDBusMessage& message)
     const QList<QVariant> arguments = message.arguments();
     if (arguments.size() >= 2) {
         takeTrigger(toShortcuts(arguments.at(1)));
-        Q_EMIT stateChanged();
+        Q_EMIT stateChanged(); // the key may have changed while the state did not
     }
 }
 
@@ -244,9 +268,12 @@ void GlobalShortcuts::takeTrigger(const QList<PortalShortcut>& shortcuts)
 {
     for (const PortalShortcut& shortcut : shortcuts) {
         if (shortcut.id == QLatin1StringView(kQuickLookupId)) {
-            m_trigger = shortcut.properties.value(u"trigger_description"_s).toString();
+            m_trigger = shortcut.properties.value(u"trigger_description"_s).toString().trimmed();
         }
     }
+    // KDE keeps the suggested key as an unticked default and binds nothing until the user
+    // chooses one in System Settings (issue #1).
+    setState(m_trigger.isEmpty() ? State::NoKey : State::Active);
 }
 
 void GlobalShortcuts::setState(State state)

@@ -50,6 +50,15 @@ public:
     /// elsewhere.
     [[nodiscard]] static QUrl shortcutSettingsUrl();
 
+    /// Opens wherever the Quick Lookup key is changed: the portal's own dialog where it has
+    /// one, else KDE's Shortcuts page (as a URL from a sandbox, as a program outside one).
+    static void openShortcutSettings(services::GlobalShortcuts* shortcuts);
+    /// Whether openShortcutSettings() can open anything here.
+    [[nodiscard]] static bool canOpenShortcutSettings(const services::GlobalShortcuts* shortcuts);
+    /// The name KDE's Shortcuts page lists Omnidict's shortcut under: the snap's app id
+    /// ("snap.omnidict", among the system services) or the desktop file's "Omnidict".
+    [[nodiscard]] static QString shortcutEntryName();
+
     /// This process's environment without what points at Omnidict's own Qt and libraries,
     /// for starting a desktop program (System Settings) that must use the system's.
     [[nodiscard]] static QProcessEnvironment systemEnvironment();

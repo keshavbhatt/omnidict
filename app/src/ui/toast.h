@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QFrame>
+#include <QPointer>
 #include <QString>
 
 #include <functional>
@@ -29,9 +30,16 @@ public:
     /// Does nothing when `parent` is null.
     static void show(QWidget* parent, const QString& text, const QString& action = {},
                      std::function<void()> onAction = {});
+    /// Like show(), for something to act on rather than undo: stays until its close button
+    /// or the action is clicked, the action drawn as a primary button
+    /// (mocks/quick-lookup-no-key.html note 1). The caller may close it earlier.
+    static QPointer<Toast> showUntilClosed(QWidget* parent, const QString& text, const QString& action,
+                                           std::function<void()> onAction);
 
 private:
     explicit Toast(QWidget* parent);
+    [[nodiscard]] static Toast* create(QWidget* parent, const QString& text, const QString& action,
+                                       std::function<void()> onAction);
     void reposition();
 
     QLabel* m_label = nullptr;

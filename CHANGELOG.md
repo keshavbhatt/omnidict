@@ -3,6 +3,12 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- When the desktop accepts the quick lookup shortcut but gives it no key (KDE does this, for example for the snap), Omnidict now says so once and shows where to choose one. Settings shows "No key" and names the entry to look for in System Settings.
+- An installed Omnidict started from a terminal or a file manager now lists its quick lookup shortcut under Omnidict, not under the program that started it.
+
 ## [1.0.0] - 2026-10-15
 
 The first stable version.

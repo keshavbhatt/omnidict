@@ -3,6 +3,7 @@
 #include "core/settings.h"
 #include "models/results_model.h"
 #include "services/dictionary_manager.h"
+#include "services/global_shortcuts.h"
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
@@ -971,6 +972,39 @@ QuickLookup* MainWindow::quickLookup()
 void MainWindow::showQuickLookup(const QString& word, const QByteArray& activationToken)
 {
     quickLookup()->present(word, activationToken);
+}
+
+void MainWindow::setGlobalShortcuts(services::GlobalShortcuts* shortcuts)
+{
+    if (m_shortcuts != nullptr) {
+        disconnect(m_shortcuts, nullptr, this, nullptr);
+    }
+    m_shortcuts = shortcuts;
+    if (shortcuts != nullptr) {
+        connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
+                &MainWindow::onShortcutStateChanged);
+        onShortcutStateChanged();
+    }
+}
+
+void MainWindow::onShortcutStateChanged()
+{
+    using State = services::GlobalShortcuts::State;
+    const State state = m_shortcuts->state();
+    if (state != State::NoKey) {
+        if (m_noKeyNotice != nullptr) {
+            m_noKeyNotice->close(); // a key arrived (mocks/quick-lookup-no-key.html note 1)
+        }
+        return;
+    }
+    if (m_noKeyNotice != nullptr || m_settings.quickLookupNoKeyNoticeShown()) {
+        return;
+    }
+    m_settings.setQuickLookupNoKeyNoticeShown(true);
+    services::GlobalShortcuts* shortcuts = m_shortcuts;
+    m_noKeyNotice = Toast::showUntilClosed(
+        this, tr("Quick lookup has no key yet: the desktop did not assign one."), tr("Choose a key..."),
+        [shortcuts] { SettingsDialog::openShortcutSettings(shortcuts); });
 }
 
 void MainWindow::showSettings()

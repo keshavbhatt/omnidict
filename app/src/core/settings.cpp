@@ -172,6 +172,16 @@ void Settings::setDisabledDictionaries(const QStringList& dictIds)
     }
 }
 
+bool Settings::quickLookupNoKeyNoticeShown() const
+{
+    return boolValue(keys::kQuickLookupNoKeyNoticeShown, false);
+}
+
+void Settings::setQuickLookupNoKeyNoticeShown(bool shown)
+{
+    store(keys::kQuickLookupNoKeyNoticeShown, shown, false);
+}
+
 bool Settings::rememberHistory() const
 {
     return boolValue(keys::kRememberHistory, kDefaultRememberHistory);

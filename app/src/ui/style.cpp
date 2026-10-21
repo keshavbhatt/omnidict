@@ -106,6 +106,7 @@ QLabel[keycap="true"] {
 QFrame[quickPopup="true"] { background: {{bg}}; border: 1px solid {{border}}; border-radius: 12px; }
 QLabel[tone="accent"] { color: {{accent}}; }
 QLabel[tone="danger"] { color: {{danger}}; }
+QLabel[tone="warning"] { color: {{warning}}; font-weight: 600; }
 
 QFrame[bar="true"] { background: {{bar}}; border: none; border-bottom: 1px solid {{border}}; }
 QFrame[card="true"] { background: {{panel}}; border: 1px solid {{border}}; border-radius: 12px; }
@@ -367,6 +368,7 @@ QString styleSheetFor(const Tokens& t)
         {u"text"_s, t.text},
         {u"muted"_s, t.muted},
         {u"link"_s, t.link},
+        {u"warning"_s, t.warning},
         {u"danger"_s, t.danger},
     };
     QString sheet = QString::fromUtf8(kSheet);

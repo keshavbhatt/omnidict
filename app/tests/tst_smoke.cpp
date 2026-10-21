@@ -1,11 +1,14 @@
 #include "core/settings.h"
+#include "fake_portal.h"
 #include "models/results_model.h"
 #include "services/dictionary_manager.h"
+#include "services/global_shortcuts.h"
 #include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/main_window.h"
 #include "ui/quick_lookup.h"
 #include "ui/style.h"
+#include "ui/toast.h"
 
 #include <QAbstractItemModel>
 #include <QApplication>
@@ -113,6 +116,55 @@ private Q_SLOTS:
         QVERIFY(shown.wait());
         QCOMPARE(shown.last().at(1).toString(), u"book"_s);
         QVERIFY(star->isChecked());
+    }
+
+    void theMainWindowSaysOnceThatTheShortcutHasNoKey()
+    {
+        // mocks/quick-lookup-no-key.html note 1; issue #1.
+        omnidict::tests::PrivateBus bus;
+        if (bus.address().isEmpty()) {
+            QSKIP("no private D-Bus daemon for the fake portal");
+        }
+        omnidict::tests::FakePortal portal(bus.address());
+        QVERIFY(portal.isRegistered());
+        const QByteArray address = qgetenv("DBUS_SESSION_BUS_ADDRESS");
+        qputenv("DBUS_SESSION_BUS_ADDRESS", bus.address().toUtf8());
+        qunsetenv("SNAP");
+        qunsetenv("FLATPAK_ID");
+
+        omnidict::core::Settings settings(m_profile.filePath(u"no-key.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"no-key-dicts"_s),
+                                                      m_profile.filePath(u"no-key-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        {
+            MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"no-key.sqlite"_s));
+            omnidict::services::GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+            window.setGlobalShortcuts(&shortcuts);
+            window.show();
+            shortcuts.start();
+            QTRY_VERIFY(window.findChild<omnidict::ui::Toast*>() != nullptr);
+            QVERIFY(window.findChild<omnidict::ui::Toast*>()->isVisible());
+            QVERIFY(settings.quickLookupNoKeyNoticeShown());
+
+            // A key chosen in the desktop's settings closes it.
+            portal.changeTrigger(u"Meta+Shift+O"_s);
+            QTRY_VERIFY(window.findChild<omnidict::ui::Toast*>() == nullptr);
+            window.setGlobalShortcuts(nullptr);
+        }
+        {
+            // Said once: the next start with no key stays quiet.
+            portal.setTrigger({});
+            MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"no-key.sqlite"_s));
+            omnidict::services::GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+            window.setGlobalShortcuts(&shortcuts);
+            window.show();
+            shortcuts.start();
+            QTRY_COMPARE(shortcuts.state(), omnidict::services::GlobalShortcuts::State::NoKey);
+            QCoreApplication::processEvents();
+            QVERIFY(window.findChild<omnidict::ui::Toast*>() == nullptr);
+            window.setGlobalShortcuts(nullptr);
+        }
+        qputenv("DBUS_SESSION_BUS_ADDRESS", address);
     }
 
     void quickLookupShowsTheBestMatchAndOpensItInTheMainWindow()

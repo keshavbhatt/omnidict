@@ -78,6 +78,7 @@ are sheets over the window.
 | `main-no-dictionaries.html` | First run with nothing installed | M3 |
 | `dictionaries.html` | Manage dictionaries: installed, order, updates | M3 |
 | `dictionaries-available.html` | Manage dictionaries: catalogue and downloads | M3 |
+| `quick-lookup-no-key.html` | Quick lookup when the desktop bound no key: one-time notice, Settings row | M3 |
 
 ## 4. Rules that survive the mocks
 

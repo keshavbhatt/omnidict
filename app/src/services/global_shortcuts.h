@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDBusArgument>
+#include <QDBusConnection>
 #include <QHash>
 #include <QObject>
 #include <QString>
@@ -41,6 +42,7 @@ public:
         Checking,    ///< asking the portal
         Unavailable, ///< no GlobalShortcuts portal on this desktop
         Active,      ///< bound; trigger() says which key
+        NoKey,       ///< accepted, but the desktop bound no key: the user has to choose one
         Declined,    ///< the user or the desktop refused the shortcut
     };
 
@@ -49,16 +51,19 @@ public:
     static constexpr auto kPreferredTrigger = "CTRL+ALT+d";
 
     explicit GlobalShortcuts(QString appId, QObject* parent = nullptr);
-    ~GlobalShortcuts() override = default;
+    ~GlobalShortcuts() override;
 
     /// Registers the shortcut, asynchronously; stateChanged() reports the outcome.
     void start();
 
     [[nodiscard]] State state() const { return m_state; }
-    /// The key as the desktop describes it ("Ctrl+Alt+D"); empty until Active.
+    /// The key as the desktop describes it ("Ctrl+Alt+D"); empty unless Active.
     [[nodiscard]] QString trigger() const { return m_trigger; }
     /// Whether the desktop can open its own dialog to change the key (portal version 2).
-    [[nodiscard]] bool canConfigure() const { return m_state == State::Active && m_version >= 2; }
+    [[nodiscard]] bool canConfigure() const
+    {
+        return (m_state == State::Active || m_state == State::NoKey) && m_version >= 2;
+    }
     /// Opens the desktop's dialog to change the key; `parentWindow` per the portal
     /// spec ("x11:<xid>", "wayland:<handle>" or empty).
     void configure(const QString& parentWindow = {});
@@ -82,16 +87,24 @@ private:
     using ResponseHandler = std::function<void(uint response, const QVariantMap& results)>;
 
     void registerHostApp();
+    void readVersion();
     void createSession();
     void listShortcuts();
     void bindShortcut();
     void setState(State state);
+    /// Takes the key from the portal's list and becomes Active, or NoKey without one.
     void takeTrigger(const QList<PortalShortcut>& shortcuts);
+    [[nodiscard]] QDBusConnection bus() const;
     /// Calls a portal method that answers through a Request object.
     void request(const QString& method, QList<QVariant> arguments, QVariantMap options,
                  ResponseHandler onResponse);
 
     QString m_appId;
+    /// A connection of its own: the portal ties an app id to a connection on its first
+    /// call, and Qt's own portal calls (colour scheme, file dialogs) come first on the
+    /// shared one, so registering there fails and KDE files the shortcut under whatever
+    /// started the app (issue #1).
+    QString m_busName;
     State m_state = State::Checking;
     QString m_session;
     QString m_trigger;

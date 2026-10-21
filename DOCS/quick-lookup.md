@@ -11,8 +11,12 @@ and the snap: look a word up from anywhere without switching to the full window.
 - **Global shortcut.** The only sandbox-friendly way is the xdg-desktop-portal
   `GlobalShortcuts` portal (xdg-desktop-portal 1.16+). Implemented by KDE Plasma (since 5.27),
   GNOME 48+ (not 46 or 47), and Hyprland; not by wlroots desktops (sway, niri). Works from a
-  Flatpak with no extra permission; a snap's `desktop` plug allows the calls (end to end in a
-  snap: unverified). Qt has no API for it, and KDE's KGlobalAccel is KDE-only: the app calls
+  Flatpak with no extra permission; a snap's `desktop` plug allows the calls (end to end in the
+  1.0.0 snap on KDE Plasma: verified 2026-10-21, issue #1). KDE binds no key on its own: it
+  keeps the suggested one as an unticked default, so the app has a NoKey state and says so
+  (mocks/quick-lookup-no-key.html). Outside a sandbox the app registers its id on a D-Bus
+  connection of its own before any other portal call; the portal also needs an installed
+  `com.ktechpit.omnidict.desktop`. Qt has no API for it, and KDE's KGlobalAccel is KDE-only: the app calls
   the portal's D-Bus interface itself (Qt DBus).
 - **Reading the word the user selected** (the PRIMARY selection) from a background app: works on
   X11 (native and sandboxed). On Wayland it needs the data-control protocol: KDE has it (from

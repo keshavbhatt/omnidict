@@ -73,6 +73,11 @@ public:
     [[nodiscard]] QStringList disabledDictionaries() const;
     void setDisabledDictionaries(const QStringList& dictIds);
 
+    // quickLookup/
+    /// The main window already said that the desktop gave Quick Lookup no key; it says so once.
+    [[nodiscard]] bool quickLookupNoKeyNoticeShown() const;
+    void setQuickLookupNoKeyNoticeShown(bool shown);
+
     // history/
     [[nodiscard]] bool rememberHistory() const;
     void setRememberHistory(bool enabled);

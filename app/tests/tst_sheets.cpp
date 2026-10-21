@@ -1,4 +1,6 @@
 #include "core/settings.h"
+#include "fake_portal.h"
+#include "services/global_shortcuts.h"
 #include "services/lookup_service.h"
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
@@ -7,6 +9,7 @@
 #include "ui/shortcuts_dialog.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
+#include "ui/toast.h"
 #include "ui/whats_new_dialog.h"
 
 #include <QApplication>
@@ -15,6 +18,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -77,6 +81,28 @@ private:
     QTemporaryDir m_dir;
 
     [[nodiscard]] QString iniPath(const QString& name) const { return m_dir.filePath(name + u".ini"_s); }
+
+    /// The no-key Settings row and the main window's notice, in both schemes, for review
+    /// against mocks/quick-lookup-no-key.html.
+    static void grabNoKey(SettingsDialog& dialog, QWidget* row)
+    {
+        for (const bool dark : {false, true}) {
+            Tokens::setCurrentScheme(dark);
+            qApp->setPalette(paletteFor(Tokens::current()));
+            qApp->setStyleSheet(styleSheetFor(Tokens::current()));
+            const QString suffix = dark ? u"-dark"_s : u"-light"_s;
+            dialog.findChild<QScrollArea*>()->ensureWidgetVisible(row);
+            grab(&dialog, u"settings-no-key"_s + suffix);
+            dialog.show();
+
+            QWidget window;
+            window.resize(900, 300);
+            omnidict::ui::Toast::showUntilClosed(
+                &window, u"Quick lookup has no key yet: the desktop did not assign one."_s,
+                u"Choose a key..."_s, [] {});
+            grab(&window, u"no-key-notice"_s + suffix);
+        }
+    }
 
 private Q_SLOTS:
     void windowTitlesEndWithTheAppNameSoQtAddsNoDash()
@@ -186,6 +212,54 @@ private Q_SLOTS:
         QVERIFY(!environment.contains(u"LD_LIBRARY_PATH"_s));
         QVERIFY(!environment.contains(u"QT_PLUGIN_PATH"_s));
         QVERIFY(environment.contains(u"PATH"_s));
+    }
+
+    void settingsSayWhenTheDesktopGaveTheShortcutNoKey()
+    {
+        // mocks/quick-lookup-no-key.html notes 2 and 3; issue #1 (KDE, the snap).
+        omnidict::tests::PrivateBus bus;
+        if (bus.address().isEmpty()) {
+            QSKIP("no private D-Bus daemon for the fake portal");
+        }
+        omnidict::tests::FakePortal portal(bus.address());
+        QVERIFY(portal.isRegistered());
+        const QByteArray address = qgetenv("DBUS_SESSION_BUS_ADDRESS");
+        const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
+        qputenv("DBUS_SESSION_BUS_ADDRESS", bus.address().toUtf8());
+        qputenv("XDG_CURRENT_DESKTOP", "KDE");
+        qputenv("SNAP", "/snap/omnidict/5");
+        qputenv("SNAP_NAME", "omnidict");
+        omnidict::services::GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.start();
+        QTRY_COMPARE(shortcuts.state(), omnidict::services::GlobalShortcuts::State::NoKey);
+
+        Settings settings(iniPath(u"no-key"_s));
+        SettingsDialog dialog(settings, u"/tmp/omnidict-dicts"_s, nullptr, &shortcuts);
+        dialog.show();
+        auto* status = dialog.findChild<QLabel*>(u"quickLookupNoKey"_s);
+        auto* change = dialog.findChild<QPushButton*>(u"quickLookupChange"_s);
+        auto* hint = dialog.findChild<QLabel*>(u"quickLookupHint"_s);
+        QVERIFY(status != nullptr && change != nullptr && hint != nullptr);
+        QCOMPARE(status->text(), u"No key"_s); // in words, not colour alone
+        QVERIFY(status->isVisible());
+        QCOMPARE(change->text(), u"Choose a key..."_s);
+        QVERIFY(change->property("primary").toBool());
+        QVERIFY(hint->text().contains(u"snap.omnidict"_s)); // where KDE lists the snap
+        QVERIFY(hint->text().contains(u"Ctrl+Alt+D"_s));    // the suggested key to tick
+        if (!qEnvironmentVariableIsEmpty("OMNIDICT_GRAB_DIR")) {
+            grabNoKey(dialog, change);
+        }
+
+        // The user chose a key in System Settings: the row shows it.
+        portal.changeTrigger(u"Meta+Shift+O"_s);
+        QTRY_COMPARE(change->text(), u"Change..."_s);
+        QVERIFY(!change->property("primary").toBool());
+        QVERIFY(dialog.findChild<QLabel*>(u"quickLookupNoKey"_s) == nullptr);
+
+        qputenv("DBUS_SESSION_BUS_ADDRESS", address);
+        qputenv("XDG_CURRENT_DESKTOP", desktop);
+        qunsetenv("SNAP");
+        qunsetenv("SNAP_NAME");
     }
 
     void shortcutsFilterHidesRowsAndEmptyGroups()

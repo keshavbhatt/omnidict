@@ -24,6 +24,9 @@ inline constexpr QLatin1StringView kDictionaryFilter{"search/dictionaryFilter"};
 inline constexpr QLatin1StringView kDictionaryOrder{"dictionaries/order"};
 inline constexpr QLatin1StringView kDisabledDictionaries{"dictionaries/disabled"};
 
+// quickLookup/
+inline constexpr QLatin1StringView kQuickLookupNoKeyNoticeShown{"quickLookup/noKeyNoticeShown"};
+
 // history/
 inline constexpr QLatin1StringView kRememberHistory{"history/remember"};
 

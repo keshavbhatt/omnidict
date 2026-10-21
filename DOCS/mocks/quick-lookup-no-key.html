@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Quick lookup, no key</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  .stage { position: relative; }
+  .stage .window { height: 520px; min-height: 0; }
+  .stage .body { display: grid; place-items: center; color: var(--muted); }
+  .warn { color: var(--warning); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .warn::before { content: "!"; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; font-size: 11px; }
+  .sets { max-width: 760px; margin: 24px auto 0; padding: 0 24px; position: relative; }
+  .sets h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 0 6px; }
+</style></head>
+<body>
+<div class="stage">
+  <div class="window">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+    <div class="header">
+      <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input focus" placeholder="Search"></div>
+      <span class="chip" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+      <span class="grow"></span>
+      <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+      <button class="btn flat icon" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+    </div>
+    <div class="body"><span>(main window as usual)</span></div>
+    <div class="toast">
+      <span>Quick lookup has no key yet: the desktop did not assign one.</span>
+      <button class="btn small primary">Choose a key...</button>
+      <button class="btn flat icon small" title="Dismiss"><svg class="ic s"><use href="#i-x"/></svg></button>
+    </div>
+  </div>
+  <span class="pin" style="left:24px;bottom:58px">1</span>
+</div>
+
+<div class="sets">
+  <h3>Settings, Quick lookup row today (no key)</h3>
+  <div class="card">
+    <div class="set">
+      <div class="t"><div>Quick lookup shortcut</div><div class="d">Select a word in any app and press it. Change it in System Settings, Keyboard, Shortcuts, Omnidict.</div></div>
+      <span class="muted">Not set</span>
+      <button class="btn small">Change...</button>
+    </div>
+  </div>
+  <h3>Proposed</h3>
+  <div class="card" style="position:relative">
+    <div class="set">
+      <div class="t"><div>Quick lookup shortcut</div><div class="d">The desktop accepted the shortcut but gave it no key. Choose one in System Settings, Keyboard, Shortcuts, <b>snap.omnidict</b>: tick the suggested Ctrl+Alt+D or add your own.</div></div>
+      <span class="warn">No key</span>
+      <button class="btn small primary">Choose a key...</button>
+    </div>
+    <span class="pin" style="right:-10px;top:14px">2</span>
+    <span class="pin" style="left:-10px;top:40px">3</span>
+  </div>
+</div>
+
+<section class="notes"><h2>Notes</h2><ol>
+  <li><b>Toast, once</b>: when the desktop's global-shortcut service accepts Quick lookup but binds no key (KDE does this: it keeps the suggested Ctrl+Alt+D only as an unticked default), the main window shows this toast once. "Choose a key..." does what Settings' "Change..." does (the desktop's dialog, or KDE's Shortcuts page). Dismissing it, or a key arriving later, hides it for good. Seen in issue #1: KDE stored <code>quick-lookup=none</code> for the snap and nothing told the user.</li>
+  <li><b>State in words</b>: "No key" in the warning colour with a mark, replacing the muted "Not set", so colour is not the only signal. The button becomes primary and reads "Choose a key..." in this state only.</li>
+  <li><b>Where to look</b>: the hint names the entry as the desktop lists it. KDE lists the snap as <b>snap.omnidict</b> with a blank icon, near the bottom of the list among the system services rather than under Applications, and a native install as <b>Omnidict</b> under Applications (both seen on Plasma, 2026-10-21); the Flatpak's name is still to be checked. Ctrl+Alt+D in the text is the key Omnidict suggests.</li>
+</ol></section>
+</body></html>

@@ -29,6 +29,7 @@ private Q_SLOTS:
         QVERIFY(settings.dictionaryFilter().isEmpty());
         QVERIFY(settings.whatsNewSeenVersion().isEmpty());
         QVERIFY(settings.windowGeometry().isEmpty());
+        QVERIFY(!settings.quickLookupNoKeyNoticeShown());
     }
 
     void valuesSurviveARestart()
@@ -40,6 +41,7 @@ private Q_SLOTS:
             settings.setSuggestSpellings(false);
             settings.setDictionaryFilter(u"wikt-es-en"_s);
             settings.setWhatsNewSeenVersion(u"0.1.0"_s);
+            settings.setQuickLookupNoKeyNoticeShown(true);
         }
         const Settings settings(iniPath(u"restart"_s));
         QCOMPARE(settings.theme(), Theme::Dark);
@@ -47,6 +49,7 @@ private Q_SLOTS:
         QVERIFY(!settings.suggestSpellings());
         QCOMPARE(settings.dictionaryFilter(), u"wikt-es-en"_s);
         QCOMPARE(settings.whatsNewSeenVersion(), u"0.1.0"_s);
+        QVERIFY(settings.quickLookupNoKeyNoticeShown());
     }
 
     void settersSignalOnlyRealChanges()

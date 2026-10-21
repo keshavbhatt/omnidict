@@ -2,6 +2,7 @@
 
 #include "core/settings.h"
 #include "services/global_shortcuts.h"
+#include "ui/icons.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
 
@@ -12,11 +13,13 @@
 #include <QFrame>
 #include <QGuiApplication>
 #include <QHBoxLayout>
+#include <QKeySequence>
 #include <QLabel>
 #include <QProcess>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSignalBlocker>
+#include <QStyle>
 #include <QToolButton>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -26,6 +29,13 @@ using namespace Qt::StringLiterals;
 namespace omnidict::ui {
 
 namespace {
+
+/// The key Omnidict suggests to the desktop, as people write it ("Ctrl+Alt+D").
+QString suggestedKey()
+{
+    return QKeySequence(QString::fromLatin1(services::GlobalShortcuts::kPreferredTrigger).toUpper())
+        .toString(QKeySequence::NativeText);
+}
 
 QLabel* makeSectionLabel(QWidget* parent, const QString& text, bool first)
 {
@@ -317,6 +327,33 @@ QStringList SettingsDialog::shortcutSettingsCommand()
     return {u"systemsettings"_s, u"kcm_keys"_s};
 }
 
+void SettingsDialog::openShortcutSettings(services::GlobalShortcuts* shortcuts)
+{
+    if (shortcuts != nullptr && shortcuts->canConfigure()) {
+        shortcuts->configure(); // the portal's own dialog (interface version 2)
+        return;
+    }
+    if (const QUrl url = shortcutSettingsUrl(); url.isValid()) {
+        QDesktopServices::openUrl(url); // from the Flatpak or snap, through the portal
+        return;
+    }
+    startWithSystemEnvironment(shortcutSettingsCommand());
+}
+
+bool SettingsDialog::canOpenShortcutSettings(const services::GlobalShortcuts* shortcuts)
+{
+    return shortcuts != nullptr && (shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty() ||
+                                    shortcutSettingsUrl().isValid());
+}
+
+QString SettingsDialog::shortcutEntryName()
+{
+    if (const QString snap = qEnvironmentVariable("SNAP_NAME"); !snap.isEmpty()) {
+        return u"snap."_s + snap;
+    }
+    return u"Omnidict"_s;
+}
+
 void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
                                       services::GlobalShortcuts* shortcuts)
 {
@@ -327,17 +364,7 @@ void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
     body->addWidget(buildQuickLookupShortcutRow(content));
     body->addWidget(buildQuickLookupFallbackRow(content));
     if (shortcuts != nullptr) {
-        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] {
-            if (shortcuts->canConfigure()) {
-                shortcuts->configure(); // the portal's own dialog (interface version 2)
-                return;
-            }
-            if (const QUrl url = shortcutSettingsUrl(); url.isValid()) {
-                QDesktopServices::openUrl(url); // from the Flatpak or snap, through the portal
-                return;
-            }
-            startWithSystemEnvironment(shortcutSettingsCommand());
-        });
+        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] { openShortcutSettings(shortcuts); });
         connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
                 &SettingsDialog::refreshQuickLookup);
     }
@@ -369,6 +396,7 @@ QWidget* SettingsDialog::buildQuickLookupShortcutRow(QWidget* content)
         }
     }
     m_quickShortcutHint->setObjectName(u"quickLookupHint"_s);
+    m_quickShortcutHint->setTextFormat(Qt::RichText); // the entry name in bold (no key)
     return m_quickShortcutRow;
 }
 
@@ -402,8 +430,19 @@ void SettingsDialog::refreshQuickLookup()
         delete item->widget();
         delete item;
     }
-    if (state == State::Active && !m_shortcuts->trigger().isEmpty()) {
+    const bool noKey = state == State::NoKey;
+    if (state == State::Active) {
         keysLayout->addWidget(makeKeyCaps(m_shortcuts->trigger(), m_quickKeys));
+    } else if (noKey) {
+        // mocks/quick-lookup-no-key.html note 2: in words and with a mark, not colour alone.
+        auto* mark = new QLabel(m_quickKeys);
+        const int size = mark->fontMetrics().height();
+        mark->setPixmap(icons::pixmap(u"alert"_s, Tokens::current().warning, size, devicePixelRatioF()));
+        auto* status = new QLabel(tr("No key"), m_quickKeys);
+        status->setObjectName(u"quickLookupNoKey"_s);
+        status->setProperty("tone", u"warning"_s);
+        keysLayout->addWidget(mark);
+        keysLayout->addWidget(status);
     } else {
         auto* status = new QLabel(state == State::Checking ? tr("Checking...") : tr("Not set"), m_quickKeys);
         status->setProperty("muted", true);
@@ -411,17 +450,30 @@ void SettingsDialog::refreshQuickLookup()
     }
     // Change... where it can do something: the portal's dialog, else KDE's Shortcuts page;
     // a sandboxed copy on KDE says where to go instead (mocks/quick-lookup.html note 4).
-    const bool canChange =
-        m_shortcuts != nullptr && (m_shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty() ||
-                                   shortcutSettingsUrl().isValid());
+    const bool canChange = canOpenShortcutSettings(m_shortcuts);
     m_quickChange->setVisible(canChange);
+    m_quickChange->setText(noKey ? tr("Choose a key...") : tr("Change..."));
+    m_quickChange->setProperty("primary", noKey);
+    m_quickChange->style()->unpolish(m_quickChange);
+    m_quickChange->style()->polish(m_quickChange);
     const bool kde = qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s);
-    m_quickShortcutHint->setText(
-        !canChange && kde
-            ? tr("Select a word in any app and press it. Change it in System Settings, Keyboard, "
-                 "Shortcuts, Omnidict.")
-            : tr("Select a word in any app and press it. Change it in the desktop's keyboard settings."));
-    m_quickShortcutRow->setVisible(state == State::Active || state == State::Checking);
+    QString hint;
+    if (noKey) {
+        hint = kde ? tr("The desktop accepted the shortcut but gave it no key. Choose one in System "
+                        "Settings, Keyboard, Shortcuts, <b>%1</b>: tick the suggested %2 or add your own.")
+                         .arg(shortcutEntryName().toHtmlEscaped(), suggestedKey())
+                   : tr("The desktop accepted the shortcut but gave it no key. Choose one in the "
+                        "desktop's keyboard settings.");
+    } else if (!canChange && kde) {
+        hint = tr("Select a word in any app and press it. Change it in System Settings, Keyboard, "
+                  "Shortcuts, %1.")
+                   .arg(shortcutEntryName());
+    } else {
+        hint = tr("Select a word in any app and press it. Change it in the desktop's keyboard settings.");
+    }
+    m_quickShortcutHint->setText(hint);
+    m_quickShortcutRow->setVisible(state == State::Active || state == State::NoKey ||
+                                   state == State::Checking);
     m_quickFallbackRow->setVisible(state == State::Unavailable || state == State::Declined);
 }
 
