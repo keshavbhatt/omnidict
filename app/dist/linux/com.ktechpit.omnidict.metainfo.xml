@@ -134,6 +134,15 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.0.1" date="2026-10-21" type="stable">
+      <description>
+        <p>Quick lookup fixes.</p>
+        <ul>
+          <li>When the desktop accepts the quick lookup shortcut but gives it no key, Omnidict now says so once and shows where to choose one; Settings shows "No key" and names the entry to look for in System Settings</li>
+          <li>An installed Omnidict started from a terminal or a file manager now lists its quick lookup shortcut under Omnidict, not under the program that started it</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-10-15" type="stable">
       <description>
         <p>The first stable version.</p>

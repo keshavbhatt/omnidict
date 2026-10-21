@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(omnidict
-    VERSION 1.0.0
+    VERSION 1.0.1
     DESCRIPTION "Offline dictionary with a catalog of downloadable dictionaries"
     HOMEPAGE_URL "https://github.com/keshavbhatt/omnidict"
     LANGUAGES CXX

@@ -14,6 +14,14 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-10-21 - Release 1.0.1
+
+- Release checklist: changelog section dated 2026-10-21, metainfo release added (appstreamcli
+  validate passes), `project(VERSION)` 1.0.1. Snap description unchanged: it lists features,
+  and this release only fixes the quick lookup shortcut. Tag `v1.0.1` pushed at the owner's
+  request (release, snap to candidate, AppImage by the workflows); Flathub update waits for the
+  owner.
+
 ## 2026-10-21 - Quick lookup with no key (issue #1)
 
 - Issue #1 (snap, KDE Wayland: the shortcut does nothing) reproduced with the 1.0.0 snap on
