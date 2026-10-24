@@ -52,6 +52,9 @@ apps:
     command: usr/bin/omnidict
     desktop: usr/share/applications/com.ktechpit.omnidict.desktop
     common-id: com.ktechpit.omnidict
+    # Start at login (ADR-020): the app writes this file into
+    # $SNAP_USER_DATA/.config/autostart when the user asks; snapd starts it from there.
+    autostart: com.ktechpit.omnidict.desktop
     extensions:
       - kde-neon-6
     plugs:
@@ -75,6 +78,7 @@ parts:
     build-packages:
       # Headers the SDK snap also carries (ADR-015); the libraries themselves come from
       # the core24 base (SQLite, zstd) and the kf6-core24 runtime (ICU) at run time.
+      - git # the edge version names the commit
       - libsqlite3-dev
       - libzstd-dev
       - libicu-dev
@@ -84,8 +88,13 @@ parts:
       - -DOMNIDICT_BUILD_TESTS=OFF
     override-build: |
       craftctl default
-      # The version comes from the CMake project, the one source of truth.
-      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${CRAFT_PART_BUILD}/CMakeCache.txt" | cut -d= -f2)
+      # The version comes from the CMake project, the one source of truth. A build that is
+      # not exactly a version tag (the edge channel) carries the commit: 1.0.1+git1a2b3c4.
+      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${CRAFT_PART_BUILD}/CMakeCache.txt" | cut -d= -f2 | tr -d '[:space:]')
+      if ! git -c safe.directory="*" -C "${CRAFT_PART_SRC}" describe --exact-match --tags --match "v${VER}" >/dev/null 2>&1; then
+        HASH=$(git -c safe.directory="*" -C "${CRAFT_PART_SRC}" rev-parse --short=7 HEAD 2>/dev/null || true)
+        [ -n "${HASH}" ] && VER="${VER}+git${HASH}"
+      fi
       craftctl set version="${VER}"
       # Store icon
       mkdir -p "${CRAFT_PART_INSTALL}/meta/gui"

@@ -5,5 +5,6 @@ namespace omnidict::services {
 Q_LOGGING_CATEGORY(lcLookup, "omnidict.services.lookup")
 Q_LOGGING_CATEGORY(lcDownloads, "omnidict.downloads")
 Q_LOGGING_CATEGORY(lcShortcuts, "omnidict.services.shortcuts")
+Q_LOGGING_CATEGORY(lcBackground, "omnidict.services.background")
 
 } // namespace omnidict::services

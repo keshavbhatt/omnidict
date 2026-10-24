@@ -30,6 +30,9 @@ private Q_SLOTS:
         QVERIFY(settings.whatsNewSeenVersion().isEmpty());
         QVERIFY(settings.windowGeometry().isEmpty());
         QVERIFY(!settings.quickLookupNoKeyNoticeShown());
+        QVERIFY(settings.keepInTray()); // mocks/tray.html note 4
+        QVERIFY(!settings.startAtLogin());
+        QVERIFY(!settings.trayNoticeShown());
     }
 
     void valuesSurviveARestart()
@@ -42,6 +45,9 @@ private Q_SLOTS:
             settings.setDictionaryFilter(u"wikt-es-en"_s);
             settings.setWhatsNewSeenVersion(u"0.1.0"_s);
             settings.setQuickLookupNoKeyNoticeShown(true);
+            settings.setKeepInTray(false);
+            settings.setStartAtLogin(true);
+            settings.setTrayNoticeShown(true);
         }
         const Settings settings(iniPath(u"restart"_s));
         QCOMPARE(settings.theme(), Theme::Dark);
@@ -50,6 +56,9 @@ private Q_SLOTS:
         QCOMPARE(settings.dictionaryFilter(), u"wikt-es-en"_s);
         QCOMPARE(settings.whatsNewSeenVersion(), u"0.1.0"_s);
         QVERIFY(settings.quickLookupNoKeyNoticeShown());
+        QVERIFY(!settings.keepInTray());
+        QVERIFY(settings.startAtLogin());
+        QVERIFY(settings.trayNoticeShown());
     }
 
     void settersSignalOnlyRealChanges()

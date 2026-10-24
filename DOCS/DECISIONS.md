@@ -380,7 +380,8 @@ AppImage has no ready Qt 6.11 runtime to build against.
 **Decision.**
 - **Snap** `omnidict` (owner registers the name), core24, kde-neon-6 extension, built by
   `.github/workflows/snap.yml` for amd64 and arm64; store publishing is opt-in by repo variable
-  (main to edge, tags to candidate), promotion to stable by hand.
+  (main to edge, tags to candidate), promotion to stable by hand. Superseded on 2026-10-24
+  by ADR-021: tags go straight to stable.
 - **Flatpak** `com.ktechpit.omnidict` on `org.kde.Platform` 6.11, built from source by
   Flathub; SQLite (FTS5), zstd and ICU come from the runtime, so no extra modules.
 - **AppImage** deferred until after the first release (FEATURES F3). The option on the table
@@ -445,3 +446,46 @@ running `omnidict --popup`. No X11 key grab (the portal covers KDE on X11; GNOME
 **Consequences.** Qt DBus joins the app's Qt modules (`THIRD_PARTY.md`). The shortcut works
 only while Omnidict runs. The service is never started headless, so tests and screenshots
 cannot put the desktop's approval dialog on a real session.
+
+## ADR-020: Tray icon and start at login (2026-10-24)
+
+**Status.** Accepted (owner, 2026-10-24: asked for the tray, approved `mocks/tray.html`).
+
+**Context.** Quick lookup works only while Omnidict runs (ADR-019), and closing the window
+ended the app, so the key stopped working with it. `DOCS/quick-lookup.md` had left a tray out
+because GNOME shows tray icons only with the AppIndicator extension.
+
+**Decision.** `ui::Tray` shows a `QSystemTrayIcon` (StatusNotifierItem on Linux, so KDE,
+Cinnamon, Xfce and GNOME with the extension show it) with Open, Quick lookup (an empty field;
+the key the desktop bound beside it), Dictionaries, Settings and Quit. While it shows, closing
+the window hides it; the first time, the desktop shows a notification. `MainWindow::quit()`
+(Ctrl+Q, the tray's Quit) and the session ending close for real, since
+`QApplication::quit()` gives up when a window refuses to close. Settings has a Background
+group: "Keep running in the tray" (on by default) and "Start at login, in the tray" (off by
+default). Start at login runs `omnidict --background` (no window, only the tray icon):
+`services::Autostart` writes `~/.config/autostart/com.ktechpit.omnidict.desktop`, or
+`$SNAP_USER_DATA/.config/autostart/` for the snap, whose `autostart:` key makes snapd start
+it; a Flatpak asks the Background portal. Where the desktop has no tray, both switches are
+greyed with the reason and nothing changes from 1.0.
+
+**Consequences.** No new dependency (`QSystemTrayIcon` is Qt Widgets). The Flatpak manifest
+gains `--talk-name=org.kde.StatusNotifierWatcher`; the Flathub copy needs the same line,
+which waits for the owner. The tray's quick lookup and quit paths are checked by tests with
+a forced tray, and by hand on KDE Plasma 6.7 (2026-10-24).
+
+## ADR-021: Snap tags go straight to stable; edge builds name the commit (2026-10-24)
+
+**Status.** Accepted (owner, 2026-10-24: "similar to glate", whose ADR-007 does this).
+
+**Context.** ADR-017 sent version tags to candidate and left the promotion to stable to the
+owner by hand; edge builds carried the same version as the release they led to.
+
+**Decision.** `.github/workflows/snap.yml`: a push to `main` publishes to edge with the
+version `X.Y.Z+git<hash>` (set in `snap/snapcraft.yaml` when the build is not exactly the
+version's tag); a `vX.Y.Z` tag publishes `X.Y.Z` straight to stable, after checking the tag
+against `project(VERSION)`. Edge is where a build is checked before it is tagged. Every build
+is kept as a workflow artifact for 14 days; a newer push to a branch cancels its older build,
+never a tag's. Publishing stays gated by `PUBLISH_TO_STORE` and `SNAPCRAFT_STORE_CREDENTIALS`.
+
+**Consequences.** Tagging is the decision to ship to every snap user. ADR-017's "tags to
+candidate, promotion by hand" no longer holds.

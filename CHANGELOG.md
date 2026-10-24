@@ -5,6 +5,10 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Omnidict can keep running in the tray when its window is closed, so the quick lookup shortcut keeps working. On by default where the desktop shows tray icons; Settings turns it off.
+- Settings can start Omnidict at login, in the tray, ready for quick lookup.
+
 ### Fixed
 - The quick lookup shortcut works again after Omnidict is restarted. On KDE Plasma it only worked the first time Omnidict ran.
 

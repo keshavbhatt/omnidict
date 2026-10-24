@@ -5,6 +5,7 @@
 #include "ui/icons.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
+#include "ui/tray.h"
 
 #include <QButtonGroup>
 #include <QClipboard>
@@ -76,7 +77,7 @@ QFrame* makeSeparator(QWidget* parent)
 } // namespace
 
 SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictionaryFolder, QWidget* parent,
-                               services::GlobalShortcuts* shortcuts)
+                               services::GlobalShortcuts* shortcuts, Tray* tray)
     : QDialog(parent)
     , m_settings(settings)
 {
@@ -105,6 +106,7 @@ SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictiona
 
     setupAppearance(body, content);
     setupSearch(body, content);
+    setupBackground(body, content, tray);
     setupQuickLookup(body, content, shortcuts);
     setupHistory(body, content);
     setupStorage(body, content, dictionaryFolder);
@@ -246,6 +248,42 @@ void SettingsDialog::setupSearch(QVBoxLayout* body, QWidget* content)
                 searchDefinitions->setChecked(m_settings.searchDefinitions());
                 suggestSpellings->setChecked(m_settings.suggestSpellings());
             });
+}
+
+void SettingsDialog::setupBackground(QVBoxLayout* body, QWidget* content, Tray* tray)
+{
+    // Background (mocks/tray.html notes 4 to 6): both rows need a tray.
+    const bool available = tray != nullptr && tray->isAvailable();
+    body->addWidget(makeSectionLabel(content, tr("Background"), false));
+    auto* keep = new SwitchButton(tr("Keep running in the tray when the window is closed"), content);
+    keep->setObjectName(u"keepInTraySwitch"_s);
+    keep->setChecked(available && m_settings.keepInTray());
+    keep->setEnabled(available);
+    connect(keep, &SwitchButton::toggled, this, [this](bool on) { m_settings.setKeepInTray(on); });
+    body->addWidget(makeRow(content, tr("Keep running in the tray when the window is closed"),
+                            available ? tr("Quick lookup works only while Omnidict runs")
+                                      : tr("This desktop shows no tray icons. On GNOME, the AppIndicator "
+                                           "extension adds them."),
+                            keep));
+    body->addWidget(makeSeparator(content));
+
+    auto* login = new SwitchButton(tr("Start at login, in the tray"), content);
+    login->setObjectName(u"startAtLoginSwitch"_s);
+    login->setChecked(available && m_settings.startAtLogin());
+    login->setEnabled(available);
+    if (available) {
+        connect(login, &SwitchButton::toggled, tray, &Tray::setStartAtLogin);
+        // The desktop may refuse (the portal's dialog): the switch shows what is in effect.
+        connect(tray, &Tray::startAtLoginSettled, login, [login](bool enabled) {
+            const QSignalBlocker blocker(login);
+            login->setChecked(enabled);
+        });
+    }
+    body->addWidget(makeRow(content, tr("Start at login, in the tray"),
+                            available ? tr("Ready for quick lookup without opening the window")
+                                      : tr("Needs a tray, as above"),
+                            login));
+    body->addWidget(makeSeparator(content));
 }
 
 void SettingsDialog::setupHistory(QVBoxLayout* body, QWidget* content)

@@ -38,9 +38,10 @@ public:
     void setDictionaries(const QList<services::DictionaryInfo>& dictionaries);
 
     /// Shows the popup with `word`; with no word, the selected text (or the clipboard,
-    /// where the system gives no selection) once the popup is active. `activationToken`
-    /// (Wayland) lets it come to the front when a shortcut or a launch opened it.
-    void present(const QString& word, const QByteArray& activationToken = {});
+    /// where the system gives no selection) once the popup is active, or an empty field
+    /// when `pickSelection` is false (the tray menu). `activationToken` (Wayland) lets it
+    /// come to the front when a shortcut or a launch opened it.
+    void present(const QString& word, const QByteArray& activationToken = {}, bool pickSelection = true);
 
     /// Looks `word` up in the popup.
     void lookUp(const QString& word);

@@ -27,6 +27,11 @@ inline constexpr QLatin1StringView kDisabledDictionaries{"dictionaries/disabled"
 // quickLookup/
 inline constexpr QLatin1StringView kQuickLookupNoKeyNoticeShown{"quickLookup/noKeyNoticeShown"};
 
+// background/
+inline constexpr QLatin1StringView kKeepInTray{"background/keepInTray"};
+inline constexpr QLatin1StringView kStartAtLogin{"background/startAtLogin"};
+inline constexpr QLatin1StringView kTrayNoticeShown{"background/trayNoticeShown"};
+
 // history/
 inline constexpr QLatin1StringView kRememberHistory{"history/remember"};
 

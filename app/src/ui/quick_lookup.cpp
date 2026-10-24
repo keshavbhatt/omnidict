@@ -172,12 +172,14 @@ void QuickLookup::setDictionaries(const QList<services::DictionaryInfo>& diction
     m_dictionaries = dictionaries;
 }
 
-void QuickLookup::present(const QString& word, const QByteArray& activationToken)
+void QuickLookup::present(const QString& word, const QByteArray& activationToken, bool pickSelection)
 {
     m_wasActive = false;
-    m_pickWordOnActivation = word.trimmed().isEmpty();
-    if (!m_pickWordOnActivation) {
+    m_pickWordOnActivation = word.trimmed().isEmpty() && pickSelection;
+    if (!word.trimmed().isEmpty()) {
         lookUp(word.trimmed());
+    } else if (!pickSelection) {
+        lookUp({}); // an empty field, ready for typing
     }
     if (!activationToken.isEmpty()) {
         // Qt reads it once when the window asks to be activated (Wayland xdg-activation).

@@ -2,6 +2,8 @@
 # dictionary library on its worker thread. No widgets.
 
 qt_add_library(omnidict_services STATIC
+    autostart.cpp
+    autostart.h
     dictionary_manager.cpp
     dictionary_manager.h
     global_shortcuts.cpp

@@ -1,14 +1,18 @@
 #include "core/settings.h"
 #include "fake_portal.h"
 #include "models/results_model.h"
+#include "services/autostart.h"
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
 #include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/main_window.h"
 #include "ui/quick_lookup.h"
+#include "ui/settings_dialog.h"
 #include "ui/style.h"
+#include "ui/switch_button.h"
 #include "ui/toast.h"
+#include "ui/tray.h"
 
 #include <QAbstractItemModel>
 #include <QApplication>
@@ -19,6 +23,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListView>
+#include <QMenu>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -235,6 +240,75 @@ private Q_SLOTS:
         QTest::keyClick(quick, Qt::Key_Escape);
         QVERIFY(!quick->isVisible());
         QVERIFY(window.isVisible()); // closing the popup leaves the main window alone
+    }
+
+    void closingTheWindowKeepsTheAppInTheTray()
+    {
+        // mocks/tray.html notes 3 and 4.
+        omnidict::core::Settings settings(m_profile.filePath(u"tray.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"tray-dicts"_s),
+                                                      m_profile.filePath(u"tray-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"tray.sqlite"_s));
+        omnidict::services::Autostart autostart(u"com.ktechpit.omnidict-test"_s);
+        omnidict::ui::Tray tray(window, settings, autostart, true);
+        QVERIFY(tray.keepsRunning());
+        QVERIFY(tray.icon()->isVisible());
+        QVERIFY(!QApplication::quitOnLastWindowClosed());
+
+        window.show();
+        QVERIFY(!window.close()); // refused: hidden instead
+        QVERIFY(!window.isVisible());
+        QVERIFY(settings.trayNoticeShown());
+
+        // The tray menu's Open brings it back.
+        QAction* open = tray.menu()->findChild<QAction*>(u"trayOpen"_s);
+        QVERIFY(open != nullptr);
+        open->trigger();
+        QVERIFY(window.isVisible());
+
+        // Quick lookup from the tray: an empty field, not the clipboard (note 2).
+        QGuiApplication::clipboard()->setText(u"bookshelf"_s);
+        tray.menu()->findChild<QAction*>(u"trayQuickLookup"_s)->trigger();
+        omnidict::ui::QuickLookup* quick = window.quickLookup();
+        QVERIFY(quick->isVisible());
+        QTest::qWait(400); // past the wait for the popup to become active
+        QVERIFY(quick->findChild<QLineEdit*>(u"quickSearch"_s)->text().isEmpty());
+        quick->close();
+
+        // Switched off: the icon goes and closing the window closes it.
+        settings.setKeepInTray(false);
+        QVERIFY(!tray.icon()->isVisible());
+        QVERIFY(QApplication::quitOnLastWindowClosed());
+        QVERIFY(window.close());
+        QApplication::setQuitOnLastWindowClosed(false); // the rest of the tests
+    }
+
+    void withoutATrayNothingChanges()
+    {
+        // mocks/tray.html note 6: GNOME without the AppIndicator extension.
+        omnidict::core::Settings settings(m_profile.filePath(u"notray.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"notray-dicts"_s),
+                                                      m_profile.filePath(u"notray-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"notray.sqlite"_s));
+        omnidict::services::Autostart autostart(u"com.ktechpit.omnidict-test"_s);
+        omnidict::ui::Tray tray(window, settings, autostart, false);
+        QVERIFY(settings.keepInTray());
+        QVERIFY(!tray.keepsRunning());
+        QVERIFY(!tray.icon()->isVisible());
+
+        omnidict::ui::SettingsDialog dialog(settings, m_profile.path(), &window, nullptr, &tray);
+        auto* keep = dialog.findChild<omnidict::ui::SwitchButton*>(u"keepInTraySwitch"_s);
+        auto* login = dialog.findChild<omnidict::ui::SwitchButton*>(u"startAtLoginSwitch"_s);
+        QVERIFY(keep != nullptr && login != nullptr);
+        QVERIFY(!keep->isEnabled() && !keep->isChecked());
+        QVERIFY(!login->isEnabled() && !login->isChecked());
+
+        window.show();
+        QVERIFY(window.close());
+        QVERIFY(!settings.trayNoticeShown());
+        QApplication::setQuitOnLastWindowClosed(false);
     }
 
     void quickLookupTakesOnlySomethingThatLooksLikeAWord()

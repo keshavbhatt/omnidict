@@ -20,6 +20,7 @@
 #include "ui/shortcuts_dialog.h"
 #include "ui/style.h"
 #include "ui/toast.h"
+#include "ui/tray.h"
 #include "ui/whats_new_dialog.h"
 
 #include <QAction>
@@ -107,6 +108,11 @@ MainWindow::MainWindow(core::Settings& settings, services::DictionaryManager& ma
     setupUi();
     connectLookup();
     connectSettings();
+    // Logging out closes the windows too: with the tray they would only hide, and the
+    // session would wait for the app.
+    if (auto* app = qobject_cast<QGuiApplication*>(QCoreApplication::instance())) {
+        connect(app, &QGuiApplication::commitDataRequest, this, [this] { m_quitting = true; });
+    }
     m_empty->setContent(u"book"_s, tr("Opening dictionaries..."), {});
     QMetaObject::invokeMethod(m_lookup, &services::LookupService::openUserData, Qt::QueuedConnection,
                               userDataPath);
@@ -345,9 +351,8 @@ void MainWindow::buildMainMenu()
     add(tr("Report a bug..."), u"bug"_s, {}, &MainWindow::showBugReport);
     add(tr("About Omnidict"), u"info"_s, {}, &MainWindow::showAbout)->setObjectName(u"aboutAction"_s);
     m_mainMenu->addSeparator();
-    add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, [] {
-        QApplication::quit();
-    })->setObjectName(u"quitAction"_s);
+    add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, &MainWindow::quit)
+        ->setObjectName(u"quitAction"_s);
     m_menuButton->setMenu(m_mainMenu);
 }
 
@@ -474,7 +479,33 @@ void MainWindow::showEntryColumn(bool entry)
 void MainWindow::closeEvent(QCloseEvent* event)
 {
     m_settings.setWindowGeometry(saveGeometry());
+    if (!m_quitting && m_tray != nullptr && m_tray->keepsRunning()) {
+        // The app stays in the tray, so the quick lookup key keeps working.
+        event->ignore();
+        hide();
+        m_tray->showFirstCloseNotice();
+        return;
+    }
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::bringToFront()
+{
+    showNormal();
+    raise();
+    activateWindow();
+}
+
+void MainWindow::quit()
+{
+    // QApplication::quit() closes every window first and gives up if one refuses.
+    m_quitting = true;
+    QApplication::quit();
+}
+
+void MainWindow::setTray(Tray* tray)
+{
+    m_tray = tray;
 }
 
 void MainWindow::connectLookup()
@@ -969,9 +1000,9 @@ QuickLookup* MainWindow::quickLookup()
     return m_quick;
 }
 
-void MainWindow::showQuickLookup(const QString& word, const QByteArray& activationToken)
+void MainWindow::showQuickLookup(const QString& word, const QByteArray& activationToken, bool pickSelection)
 {
-    quickLookup()->present(word, activationToken);
+    quickLookup()->present(word, activationToken, pickSelection);
 }
 
 void MainWindow::setGlobalShortcuts(services::GlobalShortcuts* shortcuts)
@@ -1009,7 +1040,7 @@ void MainWindow::onShortcutStateChanged()
 
 void MainWindow::showSettings()
 {
-    SettingsDialog dialog(m_settings, m_roots.constLast(), this, m_shortcuts);
+    SettingsDialog dialog(m_settings, m_roots.constLast(), this, m_shortcuts, m_tray);
     connect(&dialog, &SettingsDialog::clearHistoryRequested, this, &MainWindow::clearHistory);
     dialog.exec();
 }

@@ -22,6 +22,8 @@ class GlobalShortcuts;
 
 namespace omnidict::ui {
 
+class Tray;
+
 /// Settings (settings.html): every control here applies through core::Settings
 /// immediately, there is no Apply or OK to remember. "Clear history" only
 /// asks; it never clears anything itself, so the caller can show the actual
@@ -34,8 +36,10 @@ class SettingsDialog : public QDialog
 public:
     /// `shortcuts`: the Quick Lookup global shortcut, whose state the Quick lookup
     /// section shows; none (tests) shows the custom-shortcut route.
+    /// `tray`: the tray, whose availability the Background section shows; none (tests,
+    /// a desktop without one) greys that section out with the reason.
     SettingsDialog(core::Settings& settings, const QString& dictionaryFolder, QWidget* parent = nullptr,
-                   services::GlobalShortcuts* shortcuts = nullptr);
+                   services::GlobalShortcuts* shortcuts = nullptr, Tray* tray = nullptr);
 
     /// The command a desktop's custom shortcut should run to open Quick Lookup, for the
     /// way this copy was installed (Flatpak, snap, AppImage or a plain install).
@@ -74,6 +78,7 @@ private:
     [[nodiscard]] QWidget* buildThemeSegment(QWidget* content);
     [[nodiscard]] QWidget* buildTextSizeRow(QWidget* content);
     void setupSearch(QVBoxLayout* body, QWidget* content);
+    void setupBackground(QVBoxLayout* body, QWidget* content, Tray* tray);
     void setupQuickLookup(QVBoxLayout* body, QWidget* content, services::GlobalShortcuts* shortcuts);
     [[nodiscard]] QWidget* buildQuickLookupShortcutRow(QWidget* content);
     [[nodiscard]] QWidget* buildQuickLookupFallbackRow(QWidget* content);

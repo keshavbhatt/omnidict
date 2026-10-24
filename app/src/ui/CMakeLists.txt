@@ -39,6 +39,8 @@ qt_add_library(omnidict_ui STATIC
     theme_applier.h
     toast.cpp
     toast.h
+    tray.cpp
+    tray.h
     whats_new_dialog.cpp
     whats_new_dialog.h
 )

@@ -37,9 +37,22 @@ Newest first. One entry per working session.
   (fails on the old code). Checked live with the dev build and a temporary desktop file: the
   component is active while it runs. glate-ng's other fix (show the window anew for focus) is
   not needed: the popup closes when it loses focus, so it always appears anew.
-- Tray (owner, 2026-10-24): mock `tray.html` awaiting approval; nothing coded.
-- Host: `cmake` fails to start (`libnettle.so.8` missing after a system update), so `make
-  lint` and `make test` stop at the app build; `ctest` from the existing build still runs.
+- Tray (owner, 2026-10-24): mock `tray.html` approved and built (ADR-020): `ui::Tray`,
+  `services::Autostart`, `--background`, a Background group in Settings, close hides the
+  window while the tray shows, `MainWindow::quit()` for Ctrl+Q, the tray's Quit and logout.
+  Tests: `tst_autostart` (file, AppImage quoting, snap path, Flatpak portal choice) and two
+  smoke tests with a forced tray (close hides, notice once, empty quick lookup from the tray,
+  switch off; no tray changes nothing). Checked live on KDE Plasma 6.7.5 Wayland with the dev
+  build: the tray item registers, its menu matches the mock, closing the window (a KWin
+  script) leaves the app running, `--background` opens no window, Quit from the menu ends
+  the app. The snap's `autostart:` and the Flatpak's StatusNotifierWatcher permission are in
+  the repo; the Flathub copy waits for the owner.
+- Snap publishing as in glate-ng (owner, 2026-10-24; ADR-021): tags to stable, edge versions
+  `X.Y.Z+git<hash>`, the tag checked against `project(VERSION)`, artifacts kept 14 days,
+  older branch builds cancelled.
+- Host: Arch's `/usr/bin/cmake` fails to start (`libnettle.so.8` gone with nettle 4); the
+  build directory uses the cmake snap, so run `make test`/`make lint` with
+  `PATH=/var/lib/snapd/snap/bin:$PATH`.
 
 ## 2026-10-21 - Release 1.0.1
 

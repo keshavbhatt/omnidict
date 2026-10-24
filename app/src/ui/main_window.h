@@ -38,6 +38,7 @@ class Toast;
 class EmptyState;
 class FirstRunPanel;
 class QuickLookup;
+class Tray;
 class EntryView;
 class SearchField;
 
@@ -73,8 +74,17 @@ public:
     /// After an update, shows What's new once; always remembers the running version.
     void showWhatsNewIfUpdated();
     /// Opens the Quick Lookup popup (DOCS/quick-lookup.md) with `word`, or with the
-    /// selected text when empty; `activationToken` brings it to the front on Wayland.
-    void showQuickLookup(const QString& word, const QByteArray& activationToken = {});
+    /// selected text when empty (an empty field when `pickSelection` is false);
+    /// `activationToken` brings it to the front on Wayland.
+    void showQuickLookup(const QString& word, const QByteArray& activationToken = {},
+                         bool pickSelection = true);
+    /// Shows the window, restored and in front.
+    void bringToFront();
+    /// Ends the app, past the tray: closing the window would only hide it.
+    void quit();
+    /// The tray (owned by the caller): while it keeps the app running, closing the window
+    /// hides it (mocks/tray.html note 3).
+    void setTray(Tray* tray);
     /// The Quick Lookup popup, created on first use.
     [[nodiscard]] QuickLookup* quickLookup();
     /// The global shortcut, for Settings to show its state (owned by the caller). When the
@@ -162,6 +172,8 @@ private:
     QList<services::DictionaryInfo> m_dictionaries;
     QuickLookup* m_quick = nullptr;
     services::GlobalShortcuts* m_shortcuts = nullptr;
+    Tray* m_tray = nullptr;
+    bool m_quitting = false;       ///< quit() or the session ending: the window closes for real
     QPointer<Toast> m_noKeyNotice; ///< while shown: closed once the desktop has a key
     bool m_libraryOpen = false;
 

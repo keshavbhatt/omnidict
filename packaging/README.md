@@ -15,10 +15,13 @@ binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
 
 - Store name **`omnidict`**, registered and published by the owner (snapcraft.io/omnidict;
   0.1.0 revision 4 on stable since 2026-09-28). `PUBLISH_TO_STORE` and the credentials secret
-  are set, so every push to `main` goes to edge and every version tag to candidate; the owner
-  promotes to stable.
+  are set, so every push to `main` goes to edge and every version tag straight to stable
+  (ADR-021).
   App id `com.ktechpit.omnidict`; `adopt-info` takes summary and description from the
-  metainfo, the version comes from `project(VERSION)`.
+  metainfo, the version comes from `project(VERSION)`; an edge build adds the commit
+  (`1.0.1+git1a2b3c4`), a build of the version's own tag does not.
+- Start at login (ADR-020): the app's `autostart: com.ktechpit.omnidict.desktop` names the
+  file the app writes into `$SNAP_USER_DATA/.config/autostart`; snapd starts it at login.
 - SQLite and zstd come from the core24 base at run time, ICU from the KDE runtime; their
   `-dev` packages are only build dependencies.
 - Plugs: the desktop set (desktop, wayland, x11, opengl, unity7) and `network`, for the
@@ -26,8 +29,9 @@ binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
   `network-bind` itself.
 - **CI**: `.github/workflows/snap.yml` builds amd64 and arm64 on pushes to `main` and on
   version tags. With the repo variable `PUBLISH_TO_STORE=true` and the
-  `SNAPCRAFT_STORE_CREDENTIALS` secret, `main` goes to **edge** and tags to **candidate**;
-  promoting to stable is done by hand.
+  `SNAPCRAFT_STORE_CREDENTIALS` secret, `main` goes to **edge** and tags to **stable**. A tag
+  that does not match `project(VERSION)` stops the build; every build is kept as a workflow
+  artifact for 14 days; a newer push to the same branch cancels the older build (tags never).
 
 ### Store listing text
 

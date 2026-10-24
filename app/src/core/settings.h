@@ -78,6 +78,18 @@ public:
     [[nodiscard]] bool quickLookupNoKeyNoticeShown() const;
     void setQuickLookupNoKeyNoticeShown(bool shown);
 
+    // background/ (mocks/tray.html)
+    /// Closing the window keeps the app running in the tray, where the desktop has one.
+    [[nodiscard]] bool keepInTray() const;
+    void setKeepInTray(bool enabled);
+    /// The user asked for Omnidict to start at login, in the tray (the desktop holds the
+    /// actual autostart entry; services::Autostart writes it).
+    [[nodiscard]] bool startAtLogin() const;
+    void setStartAtLogin(bool enabled);
+    /// The desktop already said once that closing the window left the app in the tray.
+    [[nodiscard]] bool trayNoticeShown() const;
+    void setTrayNoticeShown(bool shown);
+
     // history/
     [[nodiscard]] bool rememberHistory() const;
     void setRememberHistory(bool enabled);
@@ -89,6 +101,8 @@ Q_SIGNALS:
     void searchOptionsChanged();
     void dictionaryFilterChanged(const QString& dictId);
     void rememberHistoryChanged(bool enabled);
+    void keepInTrayChanged(bool enabled);
+    void startAtLoginChanged(bool enabled);
     /// The order or the switched-off set changed.
     void dictionaryPreferencesChanged();
 

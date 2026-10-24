@@ -17,6 +17,8 @@ constexpr bool kDefaultShowBestMatch = true;
 constexpr bool kDefaultSearchDefinitions = true;
 constexpr bool kDefaultSuggestSpellings = true;
 constexpr bool kDefaultRememberHistory = true;
+constexpr bool kDefaultKeepInTray = true;
+constexpr bool kDefaultStartAtLogin = false;
 
 } // namespace
 
@@ -180,6 +182,40 @@ bool Settings::quickLookupNoKeyNoticeShown() const
 void Settings::setQuickLookupNoKeyNoticeShown(bool shown)
 {
     store(keys::kQuickLookupNoKeyNoticeShown, shown, false);
+}
+
+bool Settings::keepInTray() const
+{
+    return boolValue(keys::kKeepInTray, kDefaultKeepInTray);
+}
+
+void Settings::setKeepInTray(bool enabled)
+{
+    if (store(keys::kKeepInTray, enabled, kDefaultKeepInTray)) {
+        Q_EMIT keepInTrayChanged(enabled);
+    }
+}
+
+bool Settings::startAtLogin() const
+{
+    return boolValue(keys::kStartAtLogin, kDefaultStartAtLogin);
+}
+
+void Settings::setStartAtLogin(bool enabled)
+{
+    if (store(keys::kStartAtLogin, enabled, kDefaultStartAtLogin)) {
+        Q_EMIT startAtLoginChanged(enabled);
+    }
+}
+
+bool Settings::trayNoticeShown() const
+{
+    return boolValue(keys::kTrayNoticeShown, false);
+}
+
+void Settings::setTrayNoticeShown(bool shown)
+{
+    store(keys::kTrayNoticeShown, shown, false);
 }
 
 bool Settings::rememberHistory() const

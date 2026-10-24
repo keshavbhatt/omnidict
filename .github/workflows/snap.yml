@@ -1,7 +1,11 @@
-# Builds the snap on GitHub's CI for both architectures (the snap is never built on a
-# developer machine). Publishing to the store is opt-in: set the repo variable
-# PUBLISH_TO_STORE=true and the SNAPCRAFT_STORE_CREDENTIALS secret; pushes on main then go
-# to edge and version tags (v*) to candidate. Promoting to stable is done by hand.
+# Builds the snap on GitHub's CI for amd64 and arm64 (never on a developer machine) and
+# publishes it (DOCS/DECISIONS.md ADR-021):
+#   push to main        -> edge      (version 1.0.1+git<hash>)
+#   version tag v1.2.3  -> stable    (version 1.2.3; the tag must match project(VERSION))
+# Edge is where a build is checked before it is tagged.
+#
+# Publishing needs the SNAPCRAFT_STORE_CREDENTIALS secret and the repo variable
+# PUBLISH_TO_STORE=true; without them the snap is still built and kept as a workflow artifact.
 name: snap
 
 on:
@@ -17,6 +21,10 @@ on:
       - '.github/workflows/snap.yml'
   workflow_dispatch:
 
+concurrency:
+  group: snap-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
 jobs:
   build:
     strategy:
@@ -31,9 +39,26 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Check that the tag matches the CMake version
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          project=$(awk '/^project\(omnidict/ {on = 1} on && $1 == "VERSION" {print $2; exit}' app/CMakeLists.txt)
+          if [ "${TAG#v}" != "$project" ]; then
+            echo "tag $TAG does not match project(VERSION) $project in app/CMakeLists.txt" >&2
+            exit 1
+          fi
+
       - name: Build snap (${{ matrix.arch }})
         uses: snapcore/action-build@v1
         id: build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: omnidict-snap-${{ matrix.arch }}
+          path: ${{ steps.build.outputs.snap }}
+          retention-days: 14
 
       - name: Publish to the Snap Store
         if: >-
@@ -44,4 +69,4 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         with:
           snap: ${{ steps.build.outputs.snap }}
-          release: ${{ startsWith(github.ref, 'refs/tags/v') && 'candidate' || 'edge' }}
+          release: ${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'edge' }}

@@ -13,6 +13,8 @@ finish-args:
   - --socket=fallback-x11
   - --socket=wayland
   - --device=dri
+  # the tray icon (ADR-020): StatusNotifierItem, as KDE and the AppIndicator extension read it
+  - --talk-name=org.kde.StatusNotifierWatcher
 
 cleanup:
   - /include

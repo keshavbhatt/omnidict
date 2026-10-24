@@ -4,11 +4,13 @@
 #include "app/version.h"
 #include "core/log_sink.h"
 #include "core/settings.h"
+#include "services/autostart.h"
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
 #include "ui/theme_applier.h"
+#include "ui/tray.h"
 
 #include <QApplication>
 #include <QCommandLineOption>
@@ -49,6 +51,9 @@ struct Options
     QCommandLineOption popup{
         u"popup"_s, QCoreApplication::translate(
                         "main", "Open the quick lookup popup, with [word] or else the selected text.")};
+    QCommandLineOption background{
+        u"background"_s,
+        QCoreApplication::translate("main", "Start with no window, only the tray icon (used at login).")};
 };
 
 /// What a second launch hands to the running one: the word, whether it wants the
@@ -128,9 +133,12 @@ void handleCommand(omnidict::ui::MainWindow& window, const QJsonObject& command)
 }
 
 /// The main window, or with `--popup` only the Quick Lookup popup; the main window then
-/// waits for "Open in Omnidict".
-void showFirstWindow(omnidict::ui::MainWindow& window, const QString& query, bool popupOnly)
+/// waits for "Open in Omnidict". With `--background` and a tray, no window at all.
+void showFirstWindow(omnidict::ui::MainWindow& window, const QString& query, bool popupOnly, bool inTray)
 {
+    if (inTray) {
+        return;
+    }
     if (popupOnly) {
         QObject::connect(
             &window, &omnidict::ui::MainWindow::libraryReady, &window,
@@ -198,9 +206,13 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     }
     omnidict::app::installDebugHooks(window, dictionaries);
 
+    omnidict::services::Autostart autostart(QString::fromLatin1(version::kDesktopId));
+    omnidict::ui::Tray tray(window, settings, autostart, omnidict::ui::Tray::systemTrayAvailable());
     omnidict::services::GlobalShortcuts shortcuts(QString::fromLatin1(version::kDesktopId));
     connectQuickLookupShortcut(shortcuts, window);
-    showFirstWindow(window, query, parser.isSet(options.popup));
+    tray.setGlobalShortcuts(&shortcuts);
+    showFirstWindow(window, query, parser.isSet(options.popup),
+                    parser.isSet(options.background) && tray.keepsRunning());
     QObject::connect(&instance, &omnidict::app::SingleInstance::commandReceived, &window,
                      [&window](const QJsonObject& command) { handleCommand(window, command); });
     return QCoreApplication::exec();
@@ -225,6 +237,7 @@ int main(int argc, char* argv[])
     parser.addOption(options.bundles);
     parser.addOption(options.profile);
     parser.addOption(options.popup);
+    parser.addOption(options.background);
     parser.addPositionalArgument(u"word"_s, QCoreApplication::translate("main", "The word to look up."),
                                  u"[word]"_s);
     parser.process(*app);
