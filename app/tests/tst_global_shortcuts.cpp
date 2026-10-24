@@ -91,6 +91,24 @@ private Q_SLOTS:
         QCOMPARE(portal->registeredAppIds().values(), QStringList{u"com.ktechpit.omnidict"_s});
     }
 
+    void aSavedShortcutIsBoundAgain()
+    {
+        // KDE lists a shortcut saved by an earlier run but fires only keys bound in this
+        // session: skipping BindShortcuts left the key dead after a restart.
+        auto portal = makePortal();
+        if (!portal) {
+            QSKIP("no private D-Bus daemon for the fake portal");
+        }
+        portal->setTrigger(u"Ctrl+Alt+D"_s);
+        portal->setSaved(true); // an earlier run bound it
+        GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        const QSignalSpy activated(&shortcuts, &GlobalShortcuts::activated);
+        shortcuts.start();
+        QTRY_COMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
+        QVERIFY(portal->press());
+        QTRY_COMPARE(activated.count(), 1);
+    }
+
     void noKeyFromTheDesktopIsItsOwnState()
     {
         // KDE binds the shortcut but keeps the suggested key unticked (issue #1).

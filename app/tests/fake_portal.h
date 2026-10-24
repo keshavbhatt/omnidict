@@ -80,7 +80,9 @@ private:
 /// org.freedesktop.portal.Desktop with the GlobalShortcuts interface (version 2) and the
 /// host app registry. Like the real portal, it refuses Register from a connection that
 /// already made another portal call. BindShortcuts answers with `trigger` as the key the
-/// desktop chose; an empty one is what KDE does when it binds no key.
+/// desktop chose; an empty one is what KDE does when it binds no key. Like KDE 6.7.4+,
+/// ListShortcuts reports shortcuts saved by earlier runs, but press() fires only a shortcut
+/// bound in the current session.
 class FakePortal : public QDBusVirtualObject
 {
 public:
@@ -108,6 +110,23 @@ public:
     [[nodiscard]] QHash<QString, QString> registeredAppIds() const { return m_appIds; }
     /// Register calls refused because the connection had already called the portal.
     [[nodiscard]] int refusedRegistrations() const { return m_refused; }
+    /// The shortcut was bound by an earlier run, so the desktop has it saved.
+    void setSaved(bool saved) { m_saved = saved; }
+
+    /// The user pressed the key: Activated, if the shortcut is bound in this session.
+    bool press()
+    {
+        if (!m_bound) {
+            return false;
+        }
+        QDBusMessage signal = QDBusMessage::createSignal(
+            QStringLiteral("/org/freedesktop/portal/desktop"),
+            QStringLiteral("org.freedesktop.portal.GlobalShortcuts"), QStringLiteral("Activated"));
+        signal << QVariant::fromValue(QDBusObjectPath(m_session))
+               << QString::fromLatin1(services::GlobalShortcuts::kQuickLookupId)
+               << QVariant::fromValue(qulonglong{0}) << QVariantMap{};
+        return m_bus.send(signal);
+    }
 
     /// The desktop's settings changed the key (ShortcutsChanged).
     void changeTrigger(const QString& trigger)
@@ -159,10 +178,13 @@ public:
         if (member == QStringLiteral("CreateSession")) {
             m_session = QStringLiteral("/org/freedesktop/portal/desktop/session/test/omnidict");
             results.insert(QStringLiteral("session_handle"), m_session);
+            m_bound = false;
         } else if (member == QStringLiteral("ListShortcuts")) {
             results.insert(QStringLiteral("shortcuts"),
-                           QVariant::fromValue(QList<services::PortalShortcut>()));
+                           QVariant::fromValue(m_saved ? shortcuts() : QList<services::PortalShortcut>()));
         } else if (member == QStringLiteral("BindShortcuts")) {
+            m_saved = true;
+            m_bound = true;
             results.insert(QStringLiteral("shortcuts"), QVariant::fromValue(shortcuts()));
         } else {
             return true; // ConfigureShortcuts: nothing to answer
@@ -190,6 +212,8 @@ private:
     QSet<QString> m_identified;
     QHash<QString, QString> m_appIds;
     int m_refused = 0;
+    bool m_saved = false;
+    bool m_bound = false;
 };
 
 } // namespace omnidict::tests

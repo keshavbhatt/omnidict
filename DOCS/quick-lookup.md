@@ -64,7 +64,8 @@ New dependency: Qt DBus (part of Qt, already in both runtimes), with an ADR and 
 installs (snap cannot): typing a word in the desktop's search lists definitions. A separate
 decision after phase 1.
 
-**Not proposed**: a tray icon (GNOME needs an extension), an X11 key grab (the portal covers
+**Not proposed** (2026-09-30): a tray icon (GNOME needs an extension; the owner asked for one
+on 2026-10-24, see `mocks/tray.html`), an X11 key grab (the portal covers
 KDE X11; GNOME X11 is gone from GNOME 49), clipboard watching (not possible on Wayland, and a
 privacy concern).
 

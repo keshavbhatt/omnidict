@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Tray</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  /* The desktop with another app open and the panel at the top. */
+  .desk { position: relative; height: 100vh; min-height: 720px; background: #3b4252; overflow: hidden; }
+  .other { position: absolute; left: 40px; top: 74px; width: 620px; height: 190px; background: #fbfbfa; color: #2e3440; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.35); font: 15px/1.7 Georgia, serif; }
+  .other .bar { height: 34px; border-bottom: 1px solid #e2e2e0; font: 12px sans-serif; color: #777; display: grid; place-items: center; }
+  .other p { margin: 22px 34px; }
+  .panel { position: absolute; left: 0; right: 0; top: 0; height: 44px; background: #20242b; border-bottom: 1px solid #2f343d; display: flex; align-items: center; padding: 0 10px; gap: 6px; color: #dfe3ea; font: 13px var(--font); }
+  .panel .launcher { width: 30px; height: 30px; border-radius: 8px; background: #2f343d; }
+  .panel .tray { display: flex; gap: 4px; align-items: center; margin-left: auto; }
+  .panel .tray i { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: #cfd5de; }
+  .panel .tray i.on { background: #39404b; }
+  .panel .tray i svg { width: 18px; height: 18px; }
+  .panel .clock { margin-left: 8px; font-variant-numeric: tabular-nums; }
+  /* The tray menu, opened from Omnidict's icon. */
+  .traymenu { position: absolute; right: 58px; top: 50px; width: 260px; }
+  .traymenu .head { display: flex; gap: 8px; align-items: center; padding: 8px 10px 6px; font-weight: 600; }
+  .traymenu .head img { width: 20px; height: 20px; }
+  /* The desktop's notification after the first close. */
+  .notice { position: absolute; right: 16px; top: 330px; width: 360px; background: #2b3039; color: #e8ebf0; border: 1px solid #3a404b; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.4); padding: 12px 14px; display: flex; gap: 12px; }
+  .notice img { width: 32px; height: 32px; flex: none; }
+  .notice b { display: block; margin-bottom: 2px; }
+  .notice span { font-size: 13px; color: #b9c0cb; }
+  /* The Settings rows, beside it. */
+  .setsheet { position: absolute; left: 40px; top: 290px; width: 620px; }
+  .setsheet .set.disabled .t, .setsheet .set.disabled .switch { opacity: .5; }
+</style></head>
+<body>
+<div class="desk">
+  <div class="other">
+    <div class="bar">notes.txt - Text Editor</div>
+    <p>The Omnidict window is closed. Its icon stays in the panel, so the quick lookup key still works over this editor.</p>
+  </div>
+
+  <div class="notice">
+    <img src="../../app/src/resources/icons/hicolor/scalable/apps/com.ktechpit.omnidict.svg" alt="">
+    <div><b>Omnidict is still running</b><span>Quick lookup keeps working. Open or quit Omnidict from its icon in the panel.</span></div>
+  </div>
+
+  <div class="popup traymenu">
+    <div class="head"><img src="../../app/src/resources/icons/hicolor/scalable/apps/com.ktechpit.omnidict.svg" alt="">Omnidict</div>
+    <div class="sep"></div>
+    <div class="mi"><svg class="ic"><use href="#i-book"/></svg>Open Omnidict</div>
+    <div class="mi"><svg class="ic"><use href="#i-search"/></svg>Quick lookup<span class="sc">Ctrl+Alt+D</span></div>
+    <div class="sep"></div>
+    <div class="mi"><svg class="ic"><use href="#i-books"/></svg>Dictionaries...</div>
+    <div class="mi"><svg class="ic"><use href="#i-settings"/></svg>Settings...</div>
+    <div class="sep"></div>
+    <div class="mi"><svg class="ic"><use href="#i-power"/></svg>Quit Omnidict</div>
+  </div>
+
+  <div class="setsheet">
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:6px">Settings: Background (new group, after Search)</div>
+      <div class="group-title">Background</div>
+      <div class="set">
+        <div class="t"><div>Keep running in the tray when the window is closed</div><div class="d">Quick lookup works only while Omnidict runs</div></div>
+        <span class="switch on"></span>
+      </div>
+      <div class="set">
+        <div class="t"><div>Start at login, in the tray</div><div class="d">Ready for quick lookup without opening the window</div></div>
+        <span class="switch"></span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div style="font-weight:600;margin-bottom:6px">The same rows where the desktop has no tray</div>
+      <div class="group-title">Background</div>
+      <div class="set disabled">
+        <div class="t"><div>Keep running in the tray when the window is closed</div><div class="d">This desktop shows no tray icons. On GNOME, the AppIndicator extension adds them.</div></div>
+        <span class="switch"></span>
+      </div>
+      <div class="set disabled">
+        <div class="t"><div>Start at login, in the tray</div><div class="d">Needs a tray, as above</div></div>
+        <span class="switch"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <span class="launcher"></span>
+    <div class="tray">
+      <i><svg class="ic"><use href="#i-wifi-off"/></svg></i>
+      <i><svg class="ic"><use href="#i-sun"/></svg></i>
+      <i class="on" title="Omnidict"><img src="../../app/src/resources/icons/hicolor/symbolic/apps/com.ktechpit.omnidict-symbolic.svg" alt="" style="width:18px;height:18px;filter:invert(.85)"></i>
+      <span class="clock">14:32</span>
+    </div>
+  </div>
+
+  <span class="pin" style="right:96px;top:12px">1</span>
+  <span class="pin" style="right:326px;top:60px">2</span>
+  <span class="pin" style="right:384px;top:338px">3</span>
+  <span class="pin" style="left:668px;top:362px">4</span>
+  <span class="pin" style="left:668px;top:420px">5</span>
+  <span class="pin" style="left:668px;top:510px">6</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+  <li><b>Tray icon.</b>The app's symbolic icon, so the panel tints it like its neighbours. A left click shows the main window, or hides it when it is already in front; a right click opens the menu. Hovering shows "Omnidict".</li>
+  <li><b>Tray menu.</b>Open Omnidict; Quick lookup, which opens the popup with an empty field and names the key the desktop bound (no key text when there is none); Dictionaries and Settings, which open over the main window; Quit Omnidict, which ends the app and its quick lookup key. Ctrl+Q in the window quits as well.</li>
+  <li><b>Closing the window.</b>With the tray switch on, the close button hides the window and the app keeps running. The first time only, the desktop shows this notification; it never repeats.</li>
+  <li><b>Keep running in the tray.</b>On by default wherever the desktop has a tray (KDE Plasma, Cinnamon, Xfce, GNOME with the AppIndicator extension). Off: the tray icon goes away and closing the window quits, as in 1.0.</li>
+  <li><b>Start at login (optional, owner to decide).</b>Off by default. When on, Omnidict starts with the session with no window, only the tray icon. Snap and Flatpak ask the desktop's Background portal; other installs write <code>~/.config/autostart/com.ktechpit.omnidict.desktop</code>.</li>
+  <li><b>No tray.</b>Where the desktop shows no tray icons, both switches are off and greyed with the reason, and closing the window quits as today.</li>
+</ol></section>
+</body></html>

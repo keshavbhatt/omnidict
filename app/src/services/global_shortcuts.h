@@ -89,7 +89,6 @@ private:
     void registerHostApp();
     void readVersion();
     void createSession();
-    void listShortcuts();
     void bindShortcut();
     void setState(State state);
     /// Takes the key from the portal's list and becomes Active, or NoKey without one.

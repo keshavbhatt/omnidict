@@ -3,6 +3,11 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- The quick lookup shortcut works again after Omnidict is restarted. On KDE Plasma it only worked the first time Omnidict ran.
+
 ## [1.0.1] - 2026-10-21
 
 Quick lookup fixes.

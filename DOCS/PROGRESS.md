@@ -14,6 +14,33 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-10-24 - Simple English Wiktionary, README banner
+
+- README: banner (`screenshots/readme/banner.svg`, rendered with Inkscape to `banner.png`,
+  1280x640, also fits GitHub's social preview), store badges, the four store screenshots
+  and the feature list; the stale pre-release status replaced.
+- New dictionary `wikt-simple-en`, Simple English (Wiktionary), asked for by a user for a
+  young reader (owner, 2026-10-24). Kaikki converter: a dictionary now has an edition
+  (`dictionary` or `simplewiktionary`), which sets its URL and cache folder;
+  `simple_records` reshapes that edition's records (DOCS/sources.md "Simple English").
+  Built locally: 25,682 entries, 6.9 MB `.odict`; `tst_real_bundles` passes with its new
+  `tests/known_headwords.json` row, and the app shows it (headless grab of "dog").
+  Not published: the dictionaries workflow builds it alone with `dicts: wikt-simple-en`
+  when the owner starts it, and merges it into the published catalogue.
+- Quick lookup key dead after a restart (owner report, KDE Plasma 6.7.5 Wayland, snap 1.0.1):
+  on start the service skipped `BindShortcuts` when `ListShortcuts` already had the shortcut
+  from an earlier run, but xdg-desktop-portal-kde 6.7.4+ only fires keys bound in the current
+  session (found first in glate-ng, its commit 31b02a2). Seen live: with the snap running,
+  kglobalaccel's `snap_omnidict` component was inactive though `kglobalshortcutsrc` holds
+  Ctrl+Alt+D and Meta+Shift+O. Now it binds on every start; the fake portal behaves like KDE
+  (saved shortcuts listed, only bound ones fire) and `aSavedShortcutIsBoundAgain` covers it
+  (fails on the old code). Checked live with the dev build and a temporary desktop file: the
+  component is active while it runs. glate-ng's other fix (show the window anew for focus) is
+  not needed: the popup closes when it loses focus, so it always appears anew.
+- Tray (owner, 2026-10-24): mock `tray.html` awaiting approval; nothing coded.
+- Host: `cmake` fails to start (`libnettle.so.8` missing after a system update), so `make
+  lint` and `make test` stop at the app build; `ctest` from the existing build still runs.
+
 ## 2026-10-21 - Release 1.0.1
 
 - Release checklist: changelog section dated 2026-10-21, metainfo release added (appstreamcli
