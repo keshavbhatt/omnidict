@@ -43,7 +43,8 @@ WhatsNewDialog::WhatsNewDialog(QString runningVersion, QWidget* parent)
 {
     disableWheelZoom(m_notes);
     setWindowTitle(titleWithApp(tr("What's new")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     setMinimumWidth(560);
     resize(600, 520);
 

@@ -4,6 +4,7 @@
 
 #include <QAbstractScrollArea>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QHash>
@@ -321,11 +322,20 @@ QWidget* makeKeyCaps(const QString& keys, QWidget* parent)
     auto* layout = new QHBoxLayout(row);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(4);
-    for (const QString& key : keys.split(u'+', Qt::SkipEmptyParts)) {
-        auto* cap = new QLabel(key.trimmed(), row);
-        cap->setProperty("keycap", true);
-        cap->setAlignment(Qt::AlignCenter);
-        layout->addWidget(cap);
+    // KDE lists every key bound to a shortcut, ", " between them: "Meta+Shift+O, Ctrl+Alt+D".
+    const QStringList alternatives = keys.split(u", "_s, Qt::SkipEmptyParts);
+    for (qsizetype i = 0; i < alternatives.size(); ++i) {
+        if (i > 0) {
+            auto* orLabel = new QLabel(QCoreApplication::translate("KeyCaps", "or"), row);
+            orLabel->setProperty("muted", true);
+            layout->addWidget(orLabel);
+        }
+        for (const QString& key : alternatives.at(i).split(u'+', Qt::SkipEmptyParts)) {
+            auto* cap = new QLabel(key.trimmed(), row);
+            cap->setProperty("keycap", true);
+            cap->setAlignment(Qt::AlignCenter);
+            layout->addWidget(cap);
+        }
     }
     return row;
 }

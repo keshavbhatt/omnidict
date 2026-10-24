@@ -1,8 +1,12 @@
 #pragma once
 
+#include <QList>
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <QSystemTrayIcon>
+
+#include <utility>
 
 class QAction;
 class QMenu;
@@ -54,12 +58,16 @@ public:
     [[nodiscard]] QSystemTrayIcon* icon() const { return m_icon; }
     [[nodiscard]] QMenu* menu() const { return m_menu; }
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 Q_SIGNALS:
     /// The start-at-login request is answered; `enabled` is what is now in effect.
     void startAtLoginSettled(bool enabled);
 
 private:
     void buildMenu();
+    void refreshIcons();
     void update();
     void updateQuickLookupKey();
     void onActivated(QSystemTrayIcon::ActivationReason reason);
@@ -71,6 +79,7 @@ private:
     QSystemTrayIcon* m_icon = nullptr;
     QMenu* m_menu = nullptr;
     QAction* m_quickLookup = nullptr;
+    QList<std::pair<QAction*, QString>> m_glyphs; ///< menu actions and their glyphs
     QPointer<services::GlobalShortcuts> m_shortcuts;
 };
 

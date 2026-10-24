@@ -53,6 +53,14 @@ Newest first. One entry per working session.
   script) leaves the app running, `--background` opens no window, Quit from the menu ends
   the app. The snap's `autostart:` and the Flatpak's StatusNotifierWatcher permission are in
   the repo; the Flathub copy waits for the owner.
+- Owner's check of the 1.1.0 edge snap (`1.1.0+gite270d53`): (1) no tray icon: the snap
+  registered its item but sent only the icon name `com.ktechpit.omnidict-symbolic`, which
+  Plasma cannot find outside the sandbox; it now sends the colour icon as pixels (checked
+  over D-Bus: no IconName, IconPixmap 16 to 64 px). (2) No icons in the tray menu: the main
+  menu's glyphs added. (3) Settings showed "Meta | Shift | O, Ctrl | Alt | D" for two keys:
+  key caps split alternatives on ", " with "or" between. (4) The popup could not be used
+  while Settings was open: every sheet was application modal; now window modal, with a test.
+  CI's clang-tidy 22.1.8 also flagged `tst_smoke.cpp:265` (use auto), fixed.
 - Snap publishing as in glate-ng (owner, 2026-10-24; ADR-021): tags to stable, edge versions
   `X.Y.Z+git<hash>`, the tag checked against `project(VERSION)`, artifacts kept 14 days,
   older branch builds cancelled.

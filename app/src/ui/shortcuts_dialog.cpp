@@ -53,7 +53,8 @@ ShortcutsDialog::ShortcutsDialog(const QList<ShortcutRow>& rows, QWidget* parent
     , m_filter(new QLineEdit(this))
 {
     setWindowTitle(titleWithApp(tr("Keyboard shortcuts")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     setMinimumWidth(640);
 
     auto* root = new QVBoxLayout(this);

@@ -82,7 +82,8 @@ SettingsDialog::SettingsDialog(core::Settings& settings, const QString& dictiona
     , m_settings(settings)
 {
     setWindowTitle(titleWithApp(tr("Settings")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     setMinimumSize(560, 480);
 
     auto* root = new QVBoxLayout(this);

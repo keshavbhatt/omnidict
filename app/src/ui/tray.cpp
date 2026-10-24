@@ -5,9 +5,11 @@
 #include "services/global_shortcuts.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
+#include "ui/style.h"
 
 #include <QAction>
 #include <QApplication>
+#include <QEvent>
 #include <QKeySequence>
 #include <QMenu>
 
@@ -19,11 +21,12 @@ namespace {
 
 constexpr int kNoticeMs = 8000;
 
-/// The symbolic icon, which the panel tints like its neighbours; the colour icon where the
-/// icon theme has no symbolic one (a build that is not installed).
+/// The colour app icon, sent to the panel as pixels: a theme icon goes as a name, which the
+/// desktop cannot find for a snap or a Flatpak (their icons are inside the sandbox), and the
+/// panel then shows nothing.
 QIcon trayIcon()
 {
-    return QIcon::fromTheme(u"com.ktechpit.omnidict-symbolic"_s, icons::brand());
+    return icons::brand();
 }
 
 } // namespace
@@ -41,6 +44,8 @@ Tray::Tray(MainWindow& window, core::Settings& settings, services::Autostart& au
     m_icon->setToolTip(u"Omnidict"_s);
     buildMenu();
     m_icon->setContextMenu(m_menu);
+    refreshIcons();
+    qApp->installEventFilter(this); // the theme changed: the menu's glyphs follow
     connect(m_icon, &QSystemTrayIcon::activated, this, &Tray::onActivated);
     connect(&m_settings, &core::Settings::keepInTrayChanged, this, [this] {
         update();
@@ -85,22 +90,47 @@ void Tray::buildMenu()
     auto* title = m_menu->addAction(icons::brand(), u"Omnidict"_s);
     title->setEnabled(false);
     m_menu->addSeparator();
-    m_menu->addAction(tr("Open Omnidict"), &m_window, &MainWindow::bringToFront)
-        ->setObjectName(u"trayOpen"_s);
+    QAction* open = m_menu->addAction(tr("Open Omnidict"), &m_window, &MainWindow::bringToFront);
+    open->setObjectName(u"trayOpen"_s);
+    m_glyphs.append({open, u"book"_s});
     m_quickLookup =
         m_menu->addAction(tr("Quick lookup"), &m_window, [this] { m_window.showQuickLookup({}, {}, false); });
     m_quickLookup->setObjectName(u"trayQuickLookup"_s);
+    m_glyphs.append({m_quickLookup, u"search"_s});
     m_menu->addSeparator();
-    m_menu->addAction(tr("Dictionaries..."), &m_window, [this] {
-        m_window.bringToFront();
-        m_window.showDictionaries();
-    });
-    m_menu->addAction(tr("Settings..."), &m_window, [this] {
-        m_window.bringToFront();
-        m_window.showSettings();
-    });
+    m_glyphs.append({m_menu->addAction(tr("Dictionaries..."), &m_window,
+                                       [this] {
+                                           m_window.bringToFront();
+                                           m_window.showDictionaries();
+                                       }),
+                     u"books"_s});
+    m_glyphs.append({m_menu->addAction(tr("Settings..."), &m_window,
+                                       [this] {
+                                           m_window.bringToFront();
+                                           m_window.showSettings();
+                                       }),
+                     u"settings"_s});
     m_menu->addSeparator();
-    m_menu->addAction(tr("Quit Omnidict"), &m_window, &MainWindow::quit)->setObjectName(u"trayQuit"_s);
+    QAction* quit = m_menu->addAction(tr("Quit Omnidict"), &m_window, &MainWindow::quit);
+    quit->setObjectName(u"trayQuit"_s);
+    m_glyphs.append({quit, u"power"_s});
+}
+
+void Tray::refreshIcons()
+{
+    // The main menu's glyphs, in the same colour (mocks/tray.html).
+    const QColor color = Tokens::current().muted;
+    for (const auto& [action, glyph] : std::as_const(m_glyphs)) {
+        action->setIcon(icons::themed(glyph, color));
+    }
+}
+
+bool Tray::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == qApp && event->type() == QEvent::ApplicationPaletteChange) {
+        refreshIcons();
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void Tray::update()
@@ -130,7 +160,8 @@ void Tray::updateQuickLookupKey()
     QKeySequence key;
     if (const services::GlobalShortcuts* shortcuts = m_shortcuts.data();
         shortcuts != nullptr && shortcuts->state() == services::GlobalShortcuts::State::Active) {
-        key = QKeySequence::fromString(shortcuts->trigger(), QKeySequence::NativeText);
+        // The first key when the desktop bound several ("Meta+Shift+O, Ctrl+Alt+D").
+        key = QKeySequence::fromString(shortcuts->trigger().section(u", "_s, 0, 0), QKeySequence::NativeText);
     }
     m_quickLookup->setShortcut(key);
     m_quickLookup->setShortcutContext(Qt::WidgetShortcut);

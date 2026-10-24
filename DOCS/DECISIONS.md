@@ -456,7 +456,10 @@ ended the app, so the key stopped working with it. `DOCS/quick-lookup.md` had le
 because GNOME shows tray icons only with the AppIndicator extension.
 
 **Decision.** `ui::Tray` shows a `QSystemTrayIcon` (StatusNotifierItem on Linux, so KDE,
-Cinnamon, Xfce and GNOME with the extension show it) with Open, Quick lookup (an empty field;
+Cinnamon, Xfce and GNOME with the extension show it), drawn with the colour app icon sent as
+pixels: a theme icon goes to the panel as a name, which the desktop cannot resolve for a snap
+or a Flatpak (the 1.1.0 edge snap showed an empty slot), so the mock's tinted symbolic icon
+is not used. Its menu has Open, Quick lookup (an empty field;
 the key the desktop bound beside it), Dictionaries, Settings and Quit. While it shows, closing
 the window hides it; the first time, the desktop shows a notification. `MainWindow::quit()`
 (Ctrl+Q, the tray's Quit) and the session ending close for real, since

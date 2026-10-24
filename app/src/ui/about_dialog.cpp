@@ -94,7 +94,8 @@ AboutDialog::AboutDialog(const QList<services::DictionaryInfo>& dictionaries, QW
     , m_dictionaries(dictionaries)
 {
     setWindowTitle(titleWithApp(tr("About Omnidict")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     setMinimumWidth(600);
 
     // The footer spans the sheet edge to edge (mock.css .sheet-foot); only the body is inset.

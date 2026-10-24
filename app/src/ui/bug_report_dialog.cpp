@@ -47,7 +47,8 @@ BugReportDialog::BugReportDialog(QString diagnostics, QWidget* parent)
 {
     disableWheelZoom(m_description);
     setWindowTitle(titleWithApp(tr("Report a bug")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     setMinimumWidth(560);
 
     auto* root = new QVBoxLayout(this);

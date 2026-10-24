@@ -28,6 +28,7 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTimer>
 #include <QToolButton>
 #include <QWheelEvent>
 
@@ -262,7 +263,7 @@ private Q_SLOTS:
         QVERIFY(settings.trayNoticeShown());
 
         // The tray menu's Open brings it back.
-        QAction* open = tray.menu()->findChild<QAction*>(u"trayOpen"_s);
+        auto* open = tray.menu()->findChild<QAction*>(u"trayOpen"_s);
         QVERIFY(open != nullptr);
         open->trigger();
         QVERIFY(window.isVisible());
@@ -282,6 +283,48 @@ private Q_SLOTS:
         QVERIFY(QApplication::quitOnLastWindowClosed());
         QVERIFY(window.close());
         QApplication::setQuitOnLastWindowClosed(false); // the rest of the tests
+    }
+
+    void thePopupStaysUsableWhileASheetIsOpen()
+    {
+        // Settings over the main window blocked the popup too (owner, 1.1.0 edge snap): sheets
+        // are modal to the main window only.
+        omnidict::core::Settings settings(m_profile.filePath(u"modal.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"modal-dicts"_s),
+                                                      m_profile.filePath(u"modal-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"modal.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        window.show();
+        QVERIFY(ready.wait());
+
+        bool checked = false;
+        QTimer::singleShot(0, &window, [&] {
+            QWidget* sheet = QApplication::activeModalWidget();
+            QVERIFY(sheet != nullptr);
+            QCOMPARE(sheet->windowModality(), Qt::WindowModal);
+            window.showQuickLookup(u"perhaps"_s);
+            omnidict::ui::QuickLookup* quick = window.quickLookup();
+            QVERIFY(QTest::qWaitForWindowExposed(quick));
+            QTest::keyClick(quick, Qt::Key_Escape); // reaches the popup: it closes
+            QVERIFY(!quick->isVisible());
+            checked = true;
+            sheet->close();
+        });
+        window.showSettings();
+        QVERIFY(checked);
+    }
+
+    void severalKeysShowWithOrBetweenThem()
+    {
+        // KDE lists both keys when the user added one (owner, 1.1.0 edge snap).
+        QWidget parent;
+        QWidget* caps = omnidict::ui::makeKeyCaps(u"Meta+Shift+O, Ctrl+Alt+D"_s, &parent);
+        QStringList texts;
+        for (const QLabel* label : caps->findChildren<QLabel*>(Qt::FindDirectChildrenOnly)) {
+            texts << label->text();
+        }
+        QCOMPARE(texts, (QStringList{u"Meta"_s, u"Shift"_s, u"O"_s, u"or"_s, u"Ctrl"_s, u"Alt"_s, u"D"_s}));
     }
 
     void withoutATrayNothingChanges()

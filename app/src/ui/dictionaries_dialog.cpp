@@ -369,7 +369,8 @@ DictionariesDialog::DictionariesDialog(services::DictionaryManager& manager, cor
     , m_catalogShown(m_manager.catalog().dictionaries)
 {
     setWindowTitle(titleWithApp(tr("Dictionaries")));
-    setModal(true);
+    // Over the main window only: the quick lookup popup stays usable meanwhile.
+    setWindowModality(Qt::WindowModal);
     resize(kSheetWidth, 560);
     setMinimumWidth(kSheetWidth);
 
@@ -795,7 +796,7 @@ void DictionariesDialog::confirmRemove(const QString& dictId, const QString& nam
 {
     QDialog confirm(this);
     confirm.setWindowTitle(titleWithApp(tr("Remove dictionary")));
-    confirm.setModal(true);
+    confirm.setWindowModality(Qt::WindowModal);
     confirm.setObjectName(u"confirmRemoveDialog"_s);
     // The footer spans the sheet edge to edge (mock.css .sheet-foot); only the message is inset.
     auto* layout = new QVBoxLayout(&confirm);

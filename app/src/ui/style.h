@@ -59,7 +59,8 @@ void makeSectionLabel(QLabel* label);
 [[nodiscard]] QString titleWithApp(const QString& title);
 
 /// Key caps for a key sequence as the desktop writes it ("Ctrl+Alt+D"), one label
-/// per key (the app sheet's `keycap` look), in a row.
+/// per key (the app sheet's `keycap` look), in a row; several keys ("Meta+Shift+O,
+/// Ctrl+Alt+D") with "or" between them.
 [[nodiscard]] QWidget* makeKeyCaps(const QString& keys, QWidget* parent);
 
 /// Gives a drop-down's list the app's item style (row height, padding, hover) and

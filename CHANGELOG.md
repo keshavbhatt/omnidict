@@ -13,6 +13,8 @@ Quick lookup keeps working with the window closed.
 
 ### Fixed
 - The quick lookup shortcut works again after Omnidict is restarted. On KDE Plasma it only worked the first time Omnidict ran.
+- The quick lookup popup can be used while Settings or another Omnidict window is open.
+- When the desktop gives quick lookup two keys, Settings shows both.
 
 ## [1.0.1] - 2026-10-21
 
