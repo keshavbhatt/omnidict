@@ -16,6 +16,12 @@ Newest first. One entry per working session.
 
 ## 2026-10-24 - Simple English Wiktionary, README banner
 
+- Release 1.1.0 prepared (owner, 2026-10-24): changelog dated, metainfo release
+  (appstreamcli validate passes), `project(VERSION)` 1.1.0, a tray line in the metainfo and
+  snap descriptions (the Snap Store listing text is edited by hand). Flathub manifest in the
+  owner's flathub clone: tag v1.1.0, its commit, and `--talk-name=org.kde.StatusNotifierWatcher`,
+  committed locally; pushing it and opening the PR wait for the owner.
+
 - README: banner (`screenshots/readme/banner.svg`, rendered with Inkscape to `banner.png`,
   1280x640, also fits GitHub's social preview), store badges, the four store screenshots
   and the feature list; the stale pre-release status replaced.

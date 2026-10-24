@@ -3,7 +3,9 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - 2026-10-24
+
+Quick lookup keeps working with the window closed.
 
 ### Added
 - Omnidict can keep running in the tray when its window is closed, so the quick lookup shortcut keeps working. On by default where the desktop shows tray icons; Settings turns it off.
