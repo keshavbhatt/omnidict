@@ -3,6 +3,7 @@
 #include "services/lookup_service.h"
 
 #include <QDialog>
+#include <QUrl>
 
 QT_BEGIN_NAMESPACE
 class QLayout;
@@ -28,6 +29,9 @@ public:
     /// The dialog's dictionary credits as HTML. Pure, tested; kept for the
     /// text form of the attribution even though the dialog itself now shows
     /// it as cards.
+    /// The donation page: the About window's Donate button, the main menu's Donate item and
+    /// the metainfo's donation link.
+    [[nodiscard]] static QUrl donateUrl();
     [[nodiscard]] static QString aboutHtml(const QList<services::DictionaryInfo>& dictionaries);
 
 Q_SIGNALS:

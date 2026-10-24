@@ -28,6 +28,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
+#include <QDesktopServices>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
@@ -349,6 +350,10 @@ void MainWindow::buildMainMenu()
         {QKeySequence(Qt::Key_F1), QKeySequence(Qt::CTRL | Qt::Key_Slash)}, &MainWindow::showShortcuts);
     add(tr("What's new"), u"sparkles"_s, {}, &MainWindow::showWhatsNew);
     add(tr("Report a bug..."), u"bug"_s, {}, &MainWindow::showBugReport);
+    // mocks/menu.html note 3: the donation page, in the browser.
+    add(tr("Donate"), u"heart"_s, {}, [] {
+        QDesktopServices::openUrl(AboutDialog::donateUrl());
+    })->setObjectName(u"donateAction"_s);
     add(tr("About Omnidict"), u"info"_s, {}, &MainWindow::showAbout)->setObjectName(u"aboutAction"_s);
     m_mainMenu->addSeparator();
     add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, &MainWindow::quit)

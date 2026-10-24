@@ -58,7 +58,7 @@ target_link_libraries(omnidict_ui
 
 # UI glyphs (Lucide, tinted at runtime by ui::icons) and the app icon.
 set(OMNIDICT_ICON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../resources/icons")
-file(GLOB OMNIDICT_UI_ICONS "${OMNIDICT_ICON_DIR}/ui/*.svg")
+file(GLOB OMNIDICT_UI_ICONS CONFIGURE_DEPENDS "${OMNIDICT_ICON_DIR}/ui/*.svg")
 qt_add_resources(omnidict_ui "icons"
     PREFIX "/icons"
     BASE "${OMNIDICT_ICON_DIR}"

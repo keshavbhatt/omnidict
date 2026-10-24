@@ -38,6 +38,7 @@ path = [
     "app/src/resources/icons/ui/down.svg",
     "app/src/resources/icons/ui/download.svg",
     "app/src/resources/icons/ui/forward.svg",
+    "app/src/resources/icons/ui/heart.svg",
     "app/src/resources/icons/ui/info.svg",
     "app/src/resources/icons/ui/more.svg",
     "app/src/resources/icons/ui/power.svg",

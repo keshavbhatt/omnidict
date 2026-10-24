@@ -61,6 +61,9 @@ Newest first. One entry per working session.
   key caps split alternatives on ", " with "or" between. (4) The popup could not be used
   while Settings was open: every sheet was application modal; now window modal, with a test.
   CI's clang-tidy 22.1.8 also flagged `tst_smoke.cpp:265` (use auto), fixed.
+- Donate in the main menu (owner, 2026-10-24): `menu.html` note 3 approved and built, a
+  Lucide heart glyph (`REUSE.toml` row), `AboutDialog::donateUrl()` shared with the About
+  window, test `donateOpensTheDonationPage`; in the 1.1.0 notes.
 - Snap publishing as in glate-ng (owner, 2026-10-24; ADR-021): tags to stable, edge versions
   `X.Y.Z+git<hash>`, the tag checked against `project(VERSION)`, artifacts kept 14 days,
   older branch builds cancelled.

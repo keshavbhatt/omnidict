@@ -17,6 +17,7 @@
 #include <QAbstractItemModel>
 #include <QApplication>
 #include <QClipboard>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QGuiApplication>
@@ -49,6 +50,18 @@ QStringList rows(const QAbstractItemModel* model)
     }
     return out;
 }
+
+/// Stands in for the browser: QDesktopServices hands it the URLs it would open.
+class UrlCatcher : public QObject
+{
+    Q_OBJECT
+
+public:
+    QList<QUrl> urls;
+
+public Q_SLOTS:
+    void open(const QUrl& url) { urls.append(url); }
+};
 
 } // namespace
 
@@ -313,6 +326,24 @@ private Q_SLOTS:
         });
         window.showSettings();
         QVERIFY(checked);
+    }
+
+    void donateOpensTheDonationPage()
+    {
+        // mocks/menu.html note 3.
+        omnidict::core::Settings settings(m_profile.filePath(u"donate.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"donate-dicts"_s),
+                                                      m_profile.filePath(u"donate-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"donate.sqlite"_s));
+        auto* donate = window.findChild<QAction*>(u"donateAction"_s);
+        QVERIFY(donate != nullptr);
+        QVERIFY(!donate->icon().pixmap(16).isNull()); // the heart glyph is in the resources
+        UrlCatcher browser;
+        QDesktopServices::setUrlHandler(u"https"_s, &browser, "open");
+        donate->trigger();
+        QDesktopServices::unsetUrlHandler(u"https"_s);
+        QCOMPARE(browser.urls, QList<QUrl>{omnidict::ui::AboutDialog::donateUrl()});
     }
 
     void severalKeysShowWithOrBetweenThem()

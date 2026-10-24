@@ -10,6 +10,7 @@ Quick lookup keeps working with the window closed.
 ### Added
 - Omnidict can keep running in the tray when its window is closed, so the quick lookup shortcut keeps working. On by default where the desktop shows tray icons; Settings turns it off.
 - Settings can start Omnidict at login, in the tray, ready for quick lookup.
+- A Donate item in the main menu.
 
 ### Fixed
 - The quick lookup shortcut works again after Omnidict is restarted. On KDE Plasma it only worked the first time Omnidict ran.

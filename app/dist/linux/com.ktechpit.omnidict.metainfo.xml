@@ -141,6 +141,7 @@
         <ul>
           <li>Omnidict can keep running in the tray when its window is closed, so the quick lookup shortcut keeps working. On by default where the desktop shows tray icons; Settings turns it off</li>
           <li>Settings can start Omnidict at login, in the tray, ready for quick lookup</li>
+          <li>A Donate item in the main menu</li>
           <li>The quick lookup shortcut works again after Omnidict is restarted; on KDE Plasma it only worked the first time Omnidict ran</li>
           <li>The quick lookup popup can be used while Settings or another Omnidict window is open</li>
           <li>When the desktop gives quick lookup two keys, Settings shows both</li>

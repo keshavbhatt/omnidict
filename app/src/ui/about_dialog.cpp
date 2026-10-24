@@ -29,7 +29,6 @@ namespace {
 
 constexpr int kIconSize = 88;
 const QString kWebsiteUrl = u"https://ktechpit.com"_s;
-const QString kDonateUrl = u"https://www.paypal.com/paypalme/keshavnrj/10"_s;
 const QString kMoreAppsUrl = u"https://ktechpit.com/USS/public/products.php"_s;
 const QString kContactUrl = u"mailto:connect@ktechpit.com"_s;
 
@@ -88,6 +87,11 @@ QPushButton* makeLinkButton(QWidget* parent, const QString& text, const QString&
 }
 
 } // namespace
+
+QUrl AboutDialog::donateUrl()
+{
+    return {u"https://www.paypal.com/paypalme/keshavnrj/10"_s};
+}
 
 AboutDialog::AboutDialog(const QList<services::DictionaryInfo>& dictionaries, QWidget* parent)
     : QDialog(parent)
@@ -162,7 +166,7 @@ QLayout* AboutDialog::buildLinks()
     connect(reportBug, &QPushButton::clicked, this, &AboutDialog::bugReportRequested);
     links->addWidget(reportBug);
     links->addWidget(makeLinkButton(this, tr("Contact"), kContactUrl));
-    links->addWidget(makeLinkButton(this, tr("Donate"), kDonateUrl));
+    links->addWidget(makeLinkButton(this, tr("Donate"), donateUrl().toString()));
     links->addWidget(makeLinkButton(this, tr("More apps"), kMoreAppsUrl));
     links->addStretch(1);
     return links;
