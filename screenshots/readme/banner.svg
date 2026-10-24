@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- README banner. Render: inkscape banner.svg -o banner.png (rsvg-convert will not load ../store images). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1a5fb4"/>
+      <stop offset="1" stop-color="#0b2d5c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="1040" cy="120" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#62a0ea" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#62a0ea" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="odCover" x1="0" y1="20" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#62a0ea"/>
+      <stop offset="1" stop-color="#3584e4"/>
+    </linearGradient>
+    <linearGradient id="odBadge" x1="0" y1="58" x2="0" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffbe6f"/>
+      <stop offset="1" stop-color="#ffa348"/>
+    </linearGradient>
+    <clipPath id="shotClip">
+      <rect x="0" y="0" width="1200" height="760" rx="22"/>
+    </clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22"/>
+      <feOffset dy="18" result="blur"/>
+      <feFlood flood-color="#000814" flood-opacity="0.45"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+
+  <!-- app window, bleeding off the right edge -->
+  <g transform="translate(668 132) scale(0.62)">
+    <rect width="1200" height="760" rx="22" fill="#ffffff" filter="url(#shadow)"/>
+    <image width="1200" height="760" xlink:href="../store/00-lookup.png" clip-path="url(#shotClip)"/>
+  </g>
+
+  <!-- app icon (same drawing as the scalable hicolor icon) -->
+  <g transform="translate(76 96) scale(0.9)">
+    <rect x="16" y="24" width="96" height="88" rx="12" fill="#0f3a75"/>
+    <rect x="24" y="92" width="84" height="14" rx="4" fill="#f6f5f4"/>
+    <rect x="24" y="98" width="84" height="3" fill="#c0bfbc"/>
+    <rect x="16" y="20" width="96" height="78" rx="12" fill="url(#odCover)"/>
+    <path d="M28 20 h8 v78 h-8 a12 12 0 0 1 -12 -12 v-54 a12 12 0 0 1 12 -12 z" fill="#1c71d8"/>
+    <rect x="46" y="36" width="50" height="8" rx="4" fill="#ffffff"/>
+    <rect x="46" y="52" width="26" height="8" rx="4" fill="#ffffff" fill-opacity="0.75"/>
+    <circle cx="88" cy="77" r="23" fill="#3584e4"/>
+    <circle cx="88" cy="80" r="20" fill="#c64600"/>
+    <circle cx="88" cy="77" r="20" fill="url(#odBadge)"/>
+    <circle cx="85" cy="74" r="8" fill="none" stroke="#1a5fb4" stroke-width="5"/>
+    <path d="M91 80 L97 86" stroke="#1a5fb4" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <g font-family="Noto Sans, Cantarell, sans-serif" fill="#ffffff">
+    <text x="88" y="318" font-size="86" font-weight="800" letter-spacing="-1.5">Omnidict</text>
+    <text x="90" y="370" font-size="31" font-weight="600" fill="#e4eefb">Offline dictionary for any language</text>
+    <text x="90" y="414" font-size="22" fill="#b9d3f5">600+ free dictionaries, hundreds of languages.</text>
+    <text x="90" y="444" font-size="22" fill="#b9d3f5">Download once, look words up instantly.</text>
+  </g>
+
+  <!-- words in several scripts -->
+  <g font-family="Noto Sans, Noto Sans CJK SC, Noto Sans Devanagari, Noto Sans Arabic, sans-serif"
+     font-size="21" font-weight="600" fill="#ffffff">
+    <rect x="90" y="486" width="82" height="42" rx="21" fill="#ffffff" fill-opacity="0.14"/>
+    <text x="131" y="514" text-anchor="middle">book</text>
+    <rect x="182" y="486" width="88" height="42" rx="21" fill="#ffffff" fill-opacity="0.14"/>
+    <text x="226" y="514" text-anchor="middle">perro</text>
+    <rect x="280" y="486" width="56" height="42" rx="21" fill="#ffa348"/>
+    <text x="308" y="514" text-anchor="middle" fill="#3a1d00">水</text>
+    <rect x="346" y="486" width="92" height="42" rx="21" fill="#ffffff" fill-opacity="0.14"/>
+    <text x="392" y="514" text-anchor="middle">किताब</text>
+    <rect x="448" y="486" width="86" height="42" rx="21" fill="#ffffff" fill-opacity="0.14"/>
+    <text x="491" y="514" text-anchor="middle">livre</text>
+    <rect x="544" y="486" width="76" height="42" rx="21" fill="#ffffff" fill-opacity="0.14"/>
+    <text x="582" y="514" text-anchor="middle">كتاب</text>
+  </g>
+</svg>
