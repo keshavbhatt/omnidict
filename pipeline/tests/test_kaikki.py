@@ -536,3 +536,189 @@ def test_possessive_forms_are_left_out() -> None:
     ]
     [entry] = convert([record("talo", "noun", [sense("house")], forms=forms)])
     assert [f.form for f in entry.forms] == ["talossa", "taloja"]
+
+
+# --- Simple English edition ---------------------------------------------------
+
+
+def simple(word: str, pos: str, senses: Sequence[Record], **extra: object) -> Record:
+    return {
+        "word": word,
+        "pos": pos,
+        "lang_code": "en",
+        "lang": "English",
+        "senses": list(senses),
+        **extra,
+    }
+
+
+def verb_table(lemma: str, *inflected: str) -> list[Record]:
+    canonical: Record = {"form": lemma, "tags": ["canonical"]}
+    inflections: list[Record] = [{"form": f, "tags": ["past"]} for f in inflected]
+    return [canonical, *inflections]
+
+
+def convert_simple(records: Sequence[Record]) -> list[Entry]:
+    return list(convert_records(kaikki.simple_records(records), "en"))
+
+
+def test_simple_raw_labels_become_grammar_and_usage_tags() -> None:
+    entries = convert_simple(
+        [
+            simple(
+                "book",
+                "noun",
+                [
+                    sense(
+                        "A book is a lot of paper joined together.",
+                        raw_tags=["countable & uncountable"],
+                    ),
+                    sense("Old word for a list.", raw_tags=["old, no longer used", "law"]),
+                    sense("Many books.", raw_tags=["Plural only", "slang"]),
+                ],
+            )
+        ]
+    )
+    patterns = [(s.pattern, s.label) for s in entries[0].senses]
+    assert patterns == [
+        ("countable, uncountable", None),
+        (None, "obsolete"),
+        ("plural only", "slang"),
+    ]
+
+
+def test_simple_inflection_records_are_skipped_and_the_lemma_keeps_the_forms() -> None:
+    stats = ConversionStats()
+    records = [
+        simple(
+            "search",
+            "verb",
+            [sense("If you search, you look for something.")],
+            forms=verb_table("search", "searched"),
+        ),
+        simple(
+            "searched",
+            "verb",
+            [sense("The past tense and past participle of search.")],
+            forms=verb_table("search", "searched"),
+        ),
+    ]
+    entries = list(convert_records(kaikki.simple_records(records), "en", stats=stats))
+    assert [e.headword for e in entries] == ["search"]
+    assert [f.form for f in entries[0].forms] == ["searched"]
+    assert stats.skipped_form_of == 1
+
+
+def test_simple_inflection_with_its_own_meaning_stays_without_the_lemma_table() -> None:
+    entries = convert_simple(
+        [
+            simple(
+                "hidden",
+                "verb",
+                [
+                    sense("The past participle of hide."),
+                    sense("If something is hidden, it is hard to see or find."),
+                ],
+                forms=verb_table("hide", "hid", "hidden"),
+            ),
+            # A real word whose gloss mentions another one is not an inflection.
+            simple(
+                "feeling",
+                "verb",
+                [sense("A form of the verb feel used about touch.")],
+                forms=verb_table("feel", "felt"),
+            ),
+        ]
+    )
+    assert [e.headword for e in entries] == ["hidden", "feeling"]
+    assert len(entries[0].senses) == 2
+    assert entries[0].forms == () and entries[1].forms == ()
+
+
+def test_simple_english_has_its_own_url_cache_folder_and_attribution() -> None:
+    simple_english = kaikki.SIMPLE_ENGLISH
+    assert simple_english in kaikki.DICTIONARIES
+    assert simple_english.url == (
+        "https://kaikki.org/simplewiktionary/English/kaikki.org-dictionary-English.jsonl.gz"
+    )
+    assert simple_english.dump_path(Path("c")) == Path("c/simplewiktionary/English.jsonl.gz")
+    assert kaikki.find_dictionary("wikt-en").dump_path(Path("c")) == Path("c/English.jsonl.gz")
+    spec = simple_english.spec("2026.10.1")
+    assert (spec.dict_id, spec.name, spec.kind) == (
+        "wikt-simple-en",
+        "Simple English (Wiktionary)",
+        "monolingual",
+    )
+    assert "Simple English Wiktionary" in spec.attribution
+    assert spec.source_url == simple_english.url
+
+
+def test_the_converter_reads_simple_english_from_its_folder(tmp_path: Path) -> None:
+    dump = kaikki.SIMPLE_ENGLISH.dump_path(tmp_path)
+    dump.parent.mkdir()
+    write_dump(
+        dump,
+        [
+            simple(
+                "run",
+                "verb",
+                [sense("If you run, you go quickly.", raw_tags=["intransitive"])],
+                forms=verb_table("run", "ran"),
+            ),
+            simple(
+                "ran", "verb", [sense("The simple past of run.")], forms=verb_table("run", "ran")
+            ),
+        ],
+    )
+    info = {
+        "url": kaikki.SIMPLE_ENGLISH.url,
+        "last_modified": None,
+        "dump_date": "2026-10-20",
+        "fetched_at": "2026-10-24T00:00:00Z",
+    }
+    dump.with_name(dump.name + ".json").write_text(json.dumps(info), encoding="utf-8")
+    converter = KaikkiConverter(tmp_path)
+    specs = [s for s in converter.dictionaries() if s.dict_id == "wikt-simple-en"]
+    assert [s.version for s in specs] == ["2026.10.1"]
+    entries = list(converter.iter_records(specs[0]))
+    assert [e.headword for e in entries] == ["run"]
+    assert entries[0].senses[0].pattern == "intransitive"
+    assert [f.form for f in entries[0].forms] == ["ran"]
+
+
+def test_simple_plural_and_comparative_records_are_skipped_too() -> None:
+    stats = ConversionStats()
+    records = [
+        simple(
+            "children",
+            "noun",
+            [sense("The plural form of child; more than one (kind of) child.")],
+            forms=[
+                {"form": "child", "raw_tags": ["Singular"]},
+                {"form": "children", "tags": ["plural"]},
+            ],
+        ),
+        simple(
+            "happier",
+            "adj",
+            [sense("The comparative form of happy; more happy.")],
+            forms=[
+                {"form": "happy", "tags": ["positive"]},
+                {"form": "happier", "tags": ["comparative"]},
+            ],
+        ),
+        # The lemma's own record names itself as the singular: it stays.
+        simple(
+            "child",
+            "noun",
+            [sense("A child is a young person.")],
+            forms=[
+                {"form": "child", "raw_tags": ["Singular"]},
+                {"form": "children", "tags": ["plural"]},
+            ],
+        ),
+    ]
+    entries = list(convert_records(kaikki.simple_records(records), "en", stats=stats))
+    assert [e.headword for e in entries] == ["child"]
+    assert [f.form for f in entries[0].forms] == ["children"]
+    assert stats.skipped_form_of == 2

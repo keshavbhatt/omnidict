@@ -16,6 +16,10 @@ Mapping decisions (DOCS/sources.md):
 - wiki links inside a gloss become `lex:` links;
 - romanizations are kept as forms, so Latin-script input finds the entry.
 
+The Simple English edition of Wiktionary (`wikt-simple-en`) comes from the same
+site and is read by the same code, after `simple_records` has given its
+records the English edition's shape.
+
 Run: `python -m omnipipe.converters.kaikki --dict wikt-hi-en --out out/`
 """
 
@@ -58,7 +62,11 @@ from omnipipe.schema import (
 
 logger = logging.getLogger(__name__)
 
-KAIKKI_BASE_URL = "https://kaikki.org/dictionary"
+KAIKKI_ROOT_URL = "https://kaikki.org"
+# The English Wiktionary edition, Kaikki's main one.
+MAIN_EDITION = "dictionary"
+SIMPLE_EDITION = "simplewiktionary"
+KAIKKI_BASE_URL = f"{KAIKKI_ROOT_URL}/{MAIN_EDITION}"
 USER_AGENT = "omnipipe/0.1 (+https://github.com/keshavbhatt/omnidict)"
 
 _PUBLISHER = "Wiktionary contributors"
@@ -66,6 +74,10 @@ _LICENSE = "CC-BY-SA-4.0"
 _LICENSE_URL = "https://creativecommons.org/licenses/by-sa/4.0/"
 _ATTRIBUTION = (
     "Data from Wiktionary via kaikki.org (wiktextract), © Wiktionary contributors, CC BY-SA 4.0"
+)
+_SIMPLE_ATTRIBUTION = (
+    "Data from Simple English Wiktionary via kaikki.org (wiktextract), "
+    "© Wiktionary contributors, CC BY-SA 4.0"
 )
 
 _POS_MAP: Mapping[str, str] = {
@@ -197,10 +209,18 @@ class KaikkiDict:
     language: str  # the Kaikki language name in the URL, e.g. "Hindi"
     lang_code: str  # BCP-47 of the headwords, e.g. "hi"
     name: str
+    edition: str = MAIN_EDITION  # Kaikki's folder for the Wiktionary edition
 
     @property
     def kind(self) -> str:
         return "monolingual" if self.lang_code == "en" else "bilingual"
+
+    @property
+    def url(self) -> str:
+        return dump_url(self.language, self.edition)
+
+    def dump_path(self, cache_dir: Path) -> Path:
+        return dump_path(cache_dir, self.language, self.edition)
 
     def spec(self, version: str) -> DictSpec:
         return DictSpec(
@@ -212,11 +232,11 @@ class KaikkiDict:
             publisher=_PUBLISHER,
             license=_LICENSE,
             license_url=_LICENSE_URL,
-            attribution=_ATTRIBUTION,
+            attribution=_ATTRIBUTION if self.edition == MAIN_EDITION else _SIMPLE_ATTRIBUTION,
             kind=self.kind,
             source_lang_name=self.language,
             target_lang_name="English",
-            source_url=dump_url(self.language),
+            source_url=self.url,
         )
 
 
@@ -271,7 +291,14 @@ def read_languages(path: Path = LANGUAGES_FILE) -> list[KaikkiDict]:
     return dictionaries
 
 
-DICTIONARIES: Sequence[KaikkiDict] = read_languages()
+# Simple English Wiktionary: definitions in plain words, asked for by a parent for a young
+# reader (DOCS/sources.md "Simple English"). Not in the languages file, which `--discover`
+# rewrites from the main edition's index.
+SIMPLE_ENGLISH = KaikkiDict(
+    "wikt-simple-en", "English", "en", "Simple English (Wiktionary)", edition=SIMPLE_EDITION
+)
+
+DICTIONARIES: Sequence[KaikkiDict] = [*read_languages(), SIMPLE_ENGLISH]
 
 
 def find_dictionary(dict_id: str) -> KaikkiDict:
@@ -315,14 +342,16 @@ def file_stem(language: str) -> str:
     return _NON_WORD_RE.sub("", language)
 
 
-def dump_url(language: str) -> str:
+def dump_url(language: str, edition: str = MAIN_EDITION) -> str:
     folder = urllib.parse.quote(language)
     stem = urllib.parse.quote(file_stem(language))
-    return f"{KAIKKI_BASE_URL}/{folder}/kaikki.org-dictionary-{stem}.jsonl.gz"
+    return f"{KAIKKI_ROOT_URL}/{edition}/{folder}/kaikki.org-dictionary-{stem}.jsonl.gz"
 
 
-def dump_path(cache_dir: Path, language: str) -> Path:
-    return cache_dir / f"{file_stem(language)}.jsonl.gz"
+def dump_path(cache_dir: Path, language: str, edition: str = MAIN_EDITION) -> Path:
+    """The cached dump; another edition's files sit in a folder of their own."""
+    folder = cache_dir if edition == MAIN_EDITION else cache_dir / edition
+    return folder / f"{file_stem(language)}.jsonl.gz"
 
 
 def read_dump_info(dump: Path) -> DumpInfo:
@@ -335,16 +364,18 @@ def read_dump_info(dump: Path) -> DumpInfo:
     return DumpInfo.from_json(obj)
 
 
-def fetch_dump(cache_dir: Path, language: str, *, timeout: float = 300.0) -> Path:
+def fetch_dump(
+    cache_dir: Path, language: str, *, edition: str = MAIN_EDITION, timeout: float = 300.0
+) -> Path:
     """Download the language's dump into `cache_dir` unless the copy there is current.
 
     Sends If-Modified-Since when a previous copy exists, so a refresh that
     finds nothing new costs one request.
     """
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    target = dump_path(cache_dir, language)
+    target = dump_path(cache_dir, language, edition)
+    target.parent.mkdir(parents=True, exist_ok=True)
     info_path = target.with_name(target.name + ".json")
-    url = dump_url(language)
+    url = dump_url(language, edition)
     headers = {"User-Agent": USER_AGENT}
     previous = read_dump_info(target) if target.exists() and info_path.exists() else None
     if previous is not None and previous.last_modified:
@@ -780,6 +811,76 @@ class _Accumulator:
         )
 
 
+# ---------------------------------------------------------------------------
+# Simple English edition. Its extractor leaves a sense's labels in `raw_tags`
+# as written ("countable & uncountable", "old, no longer used") and does not
+# mark inflections: "searches" is a verb whose only sense is "The
+# third-person singular form of search." and whose forms are the lemma's
+# table, with the lemma tagged "canonical" ("positive" for an adjective,
+# "Singular" for a noun).
+# ---------------------------------------------------------------------------
+
+_SIMPLE_TAG_ALIASES: Mapping[str, str] = {
+    "old, no longer used": "obsolete",
+    "figurative": "figuratively",
+}
+
+
+def _simple_tags(raw_tags: Iterable[str]) -> list[str]:
+    """Raw labels as the English edition's tags: "plural only" -> "plural-only"."""
+    tags: list[str] = []
+    for raw in raw_tags:
+        label = raw.strip().lower()
+        parts = [label] if label in _SIMPLE_TAG_ALIASES else label.split(" & ")
+        for part in parts:
+            tag = _SIMPLE_TAG_ALIASES.get(part.strip(), part.strip().replace(" ", "-"))
+            if tag and tag not in tags:
+                tags.append(tag)
+    return tags
+
+
+def _lemma_form(record: Json) -> str:
+    """The form a record's table names as its base: the verb's "canonical" form, the
+    adjective's "positive" one, the noun's "Singular" one (a raw label)."""
+    for form in _objects(record, "forms"):
+        labels = {*_strings(form, "tags"), *(t.lower() for t in _strings(form, "raw_tags"))}
+        if labels & {"canonical", "positive", "singular"}:
+            return _str(form, "form").strip()
+    return ""
+
+
+def _inflection_gloss(lemma: str) -> re.Pattern[str]:
+    """ "The past tense and past participle of <lemma>." and the like, with an
+    optional tail: "The plural form of dog; more than one (kind of) dog." """
+    return re.compile(rf"^(?:The|A|An) [^.;]*\bof {re.escape(lemma)}(?:[.;]|$)")
+
+
+def simple_records(records: Iterable[Json]) -> Iterator[Json]:
+    """Simple English records in the English edition's shape.
+
+    Labels in `raw_tags` join `tags`. When a record's base form is another
+    word, it belongs to that lemma: its senses that only say so ("The present
+    participle of fill.") are tagged form-of, and its forms (the lemma's table)
+    are dropped, since the lemma lists the same forms.
+    """
+    for record in records:
+        word = _str(record, "word").strip()
+        lemma = _lemma_form(record)
+        inflection = _inflection_gloss(lemma) if lemma and lemma != word else None
+        senses: list[Json] = []
+        for sense in _objects(record, "senses"):
+            tags = _strings(sense, "tags")
+            tags += [t for t in _simple_tags(_strings(sense, "raw_tags")) if t not in tags]
+            glosses = [g.strip() for g in _strings(sense, "glosses") if g.strip()]
+            if inflection is not None and glosses and inflection.match(glosses[-1]):
+                tags.append("form-of")
+            senses.append({**sense, "tags": tags})
+        shaped = {**record, "senses": senses}
+        if inflection is not None:
+            shaped["forms"] = []
+        yield shaped
+
+
 def convert_records(
     records: Iterable[Json],
     lang_code: str,
@@ -839,22 +940,24 @@ class KaikkiConverter(Converter):
 
     def fetch(self, cache_dir: Path) -> Path:
         for dictionary in DICTIONARIES:
-            fetch_dump(cache_dir, dictionary.language)
+            fetch_dump(cache_dir, dictionary.language, edition=dictionary.edition)
         return cache_dir
 
     def dictionaries(self) -> list[DictSpec]:
         specs: list[DictSpec] = []
         for dictionary in DICTIONARIES:
-            dump = dump_path(self.cache_dir, dictionary.language)
+            dump = dictionary.dump_path(self.cache_dir)
             if dump.exists():
                 specs.append(dictionary.spec(bundle_version(read_dump_info(dump).dump_date)))
         return specs
 
     def iter_records(self, spec: DictSpec) -> Iterator[Entry]:
         dictionary = find_dictionary(spec.dict_id)
-        dump = dump_path(self.cache_dir, dictionary.language)
+        records = read_records(dictionary.dump_path(self.cache_dir))
+        if dictionary.edition == SIMPLE_EDITION:
+            records = simple_records(records)
         return convert_records(
-            read_records(dump),
+            records,
             dictionary.lang_code,
             include_form_of=self.include_form_of,
             stats=self.stats,
@@ -908,7 +1011,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.ids_only:
                 print(dictionary.dict_id)
             else:
-                print(f"{dictionary.dict_id}\t{dictionary.name}\t{dump_url(dictionary.language)}")
+                print(f"{dictionary.dict_id}\t{dictionary.name}\t{dictionary.url}")
         return 0
     if not args.dict_id:
         print("error: --dict is required (see --list)", file=sys.stderr)
@@ -916,9 +1019,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         dictionary = find_dictionary(args.dict_id)
-        dump = dump_path(args.cache, dictionary.language)
+        dump = dictionary.dump_path(args.cache)
         if not (args.no_fetch and dump.exists()):
-            fetch_dump(args.cache, dictionary.language)
+            fetch_dump(args.cache, dictionary.language, edition=dictionary.edition)
         if args.fetch_only:
             return 0
         info = read_dump_info(dump)
@@ -960,6 +1063,7 @@ def main(argv: list[str] | None = None) -> int:
 __all__ = [
     "DICTIONARIES",
     "LANGUAGES_FILE",
+    "SIMPLE_ENGLISH",
     "ConversionStats",
     "DumpInfo",
     "IndexedLanguage",
@@ -980,6 +1084,7 @@ __all__ = [
     "parse_index",
     "read_languages",
     "read_records",
+    "simple_records",
     "write_languages",
 ]
 

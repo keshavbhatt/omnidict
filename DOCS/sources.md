@@ -6,6 +6,7 @@ without a documented licence in this file.** Kaikki is first, in M1; the rest fo
 | Source | Format | Yields | Licence | Dump URL | Status |
 |---|---|---|---|---|---|
 | Kaikki (kaikki.org) | gzipped JSONL per language of English Wiktionary | Hundreds of `X to en` pairs from English Wiktionary; `en to X` and `X to X` pairs from other Wiktionary editions | CC BY-SA 4.0 | `https://kaikki.org/dictionary/<Language>/kaikki.org-dictionary-<LanguageWithoutSpaces>.jsonl.gz` | in use: 328 languages listed in `pipeline/kaikki-languages.tsv` (see "Wiktionary languages") |
+| Kaikki, Simple English edition | gzipped JSONL, the Simple English Wiktionary's English words | `en` monolingual entries with definitions in plain words | CC BY-SA 4.0 (Wiktionary contributors, same terms as the main edition) | `https://kaikki.org/simplewiktionary/English/kaikki.org-dictionary-English.jsonl.gz` | in use: `wikt-simple-en` (see "Simple English") |
 | FreeDict | TEI XML (P5) | 291 bilingual pairs (of 305 listed), good coverage for `en to X` and `X to en` | per dictionary, free licences only, see notes | `https://freedict.org/freedict-database.json` | in use (M4): 291 dictionaries |
 | WordNet (Open English WordNet) | XML / LMF (WN-LMF) | `en` monolingual entries plus synonym/antonym/hypernym relations | CC BY 4.0 | `https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025.xml.gz` | in use (M4): `oewn-en` |
 | CC-CEDICT | plain text, one line per entry | `zh to en` | CC BY-SA 4.0 | `https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz` | in use (M4): `cedict-zh-en` |
@@ -94,6 +95,33 @@ headwords carry no asterisk in Kaikki; a leading asterisk on a form ("*aba") is 
   carries the languages' English names (`source_lang_name`, `target_lang_name`; the Kaikki
   language name here), and the Available tab's language filters show those where Qt has
   none (owner, 2026-09-28).
+
+### Simple English
+
+Requested by a user for a young reader (2026-10-08 chat; owner asked for it 2026-10-24): the
+Simple English Wiktionary (simple.wiktionary.org) explains words in plain language ("A dog is
+a domestic mammal, related to wolves and foxes, that is often kept as a pet."). Kaikki
+extracts it as a separate edition, `https://kaikki.org/simplewiktionary/`.
+
+- **Identity.** `wikt-simple-en`, "Simple English (Wiktionary)", monolingual `en`. It is the
+  `SIMPLE_ENGLISH` constant in the converter, not a row of `kaikki-languages.tsv` (which
+  `--discover` rewrites from the main edition); the Makefile adds it to `DICTS_kaikki`.
+  Its dump is cached under `sources/kaikki/simplewiktionary/`, since the main edition's
+  English dump has the same file name. Attribution names the Simple English Wiktionary.
+- **Record shape.** Wiktextract's Simple English extractor differs from the English one, so
+  `simple_records` reshapes its records before the usual conversion: sense labels arrive in
+  `raw_tags` as written ("countable & uncountable", "plural only", "old, no longer used") and
+  become tags (split on " & ", spaces to hyphens, two aliases); a record whose form table
+  names another word as its base ("canonical" for verbs, "positive" for adjectives, a raw
+  "Singular" for nouns) belongs to that lemma, so its senses that only say so ("The plural
+  form of dog; more than one (kind of) dog.") are tagged form-of and its forms, the lemma's
+  table, are dropped. Records with a meaning of their own ("hidden", "feeling") stay.
+- **Size (dump of 2026-10-02, fetched 2026-10-24).** 61,751 records, 31,891 inflection-only
+  ones skipped, 25,682 entries; 29 MB installed, 6.9 MB `.odict`. There are no in-gloss
+  links in this edition, so definitions carry no `lex:` links; synonyms and antonyms do.
+- **Content.** Like the main edition it has slang and sexual terms (165 entries carry a
+  vulgar, offensive or derogatory label, and some sexual terms carry none). Nothing is
+  filtered; whether to is the owner's call.
 
 ## Open English WordNet notes
 

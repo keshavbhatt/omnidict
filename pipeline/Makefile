@@ -17,6 +17,8 @@ PORT ?= 8000
 # "Wiktionary languages"); regenerate it with:
 #   uv run python -m omnipipe.converters.kaikki --discover
 DICTS_kaikki := $(shell awk -F'\t' 'NR > 1 { print $$1 }' kaikki-languages.tsv)
+# Simple English Wiktionary is another edition, so it is not in that file.
+DICTS_kaikki += wikt-simple-en
 DICTS_oewn := oewn-en
 DICTS_jmdict := jmdict-ja-en
 DICTS_cedict := cedict-zh-en

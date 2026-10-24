@@ -112,6 +112,44 @@
         "ambigous": "ambiguous"
       }
     },
+    "wikt-simple-en": {
+      "headwords": [
+        "water",
+        "house",
+        "dog",
+        "cat",
+        "eat",
+        "book",
+        "tree",
+        "sun",
+        "moon",
+        "friend",
+        "happy",
+        "school",
+        "apple",
+        "mother",
+        "play",
+        "bird",
+        "big",
+        "red",
+        "jump",
+        "run"
+      ],
+      "forms": {
+        "ran": "run",
+        "children": "child",
+        "mice": "mouse",
+        "went": "go"
+      },
+      "full_text": "pet",
+      "suggestions": {
+        "dictionery": "dictionary",
+        "beautifull": "beautiful",
+        "becuase": "because",
+        "elefant": "elephant",
+        "diffrent": "different"
+      }
+    },
     "oewn-en": {
       "headwords": [
         "water",
