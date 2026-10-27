@@ -3,8 +3,8 @@
 #
 # Where it goes: a version tag (v0.1.0) attaches it to that version's release, the one
 # release.yml creates with the changelog notes; it never goes near the rolling
-# "dictionaries" release. A manual run with no tag keeps it as a 7-day download on the run,
-# for testing between releases; a manual run with a tag (re)builds for that release.
+# "dictionaries" release. A manual run with no tag only builds and checks it; a manual run
+# with a tag (re)builds for that release.
 name: appimage
 
 on:
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to build and attach to (e.g. v0.1.0); empty: keep it on the run'
+        description: 'Release tag to build and attach to (e.g. v0.1.0); empty: build and check only'
         required: false
         default: ''
 
@@ -115,14 +115,6 @@ jobs:
           need libqsvg.so
           # It starts, answers --version and exits, with nothing but the AppImage.
           QT_QPA_PLATFORM=offscreen "./$APPIMAGE" --version
-
-      - name: Keep it on the run (no tag)
-        if: ${{ steps.ver.outputs.tag == '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.APPIMAGE }}
-          path: ${{ env.APPIMAGE }}
-          retention-days: 7
 
       - name: Attach to the version's release
         if: ${{ steps.ver.outputs.tag != '' }}

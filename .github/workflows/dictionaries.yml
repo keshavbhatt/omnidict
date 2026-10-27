@@ -123,11 +123,12 @@ jobs:
             rm "$asset"
           done
 
+      # Handed to the catalog job below, which runs right after: one day is enough.
       - uses: actions/upload-artifact@v4
         with:
           name: manifests-${{ strategy.job-index }}
           path: pipeline/out/publish/dicts
-          retention-days: 7
+          retention-days: 1
 
   catalog:
     needs: [plan, build]

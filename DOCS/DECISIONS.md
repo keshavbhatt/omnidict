@@ -486,9 +486,9 @@ owner by hand; edge builds carried the same version as the release they led to.
 **Decision.** `.github/workflows/snap.yml`: a push to `main` publishes to edge with the
 version `X.Y.Z+git<hash>` (set in `snap/snapcraft.yaml` when the build is not exactly the
 version's tag); a `vX.Y.Z` tag publishes `X.Y.Z` straight to stable, after checking the tag
-against `project(VERSION)`. Edge is where a build is checked before it is tagged. Every build
-is kept as a workflow artifact for 14 days; a newer push to a branch cancels its older build,
-never a tag's. Publishing stays gated by `PUBLISH_TO_STORE` and `SNAPCRAFT_STORE_CREDENTIALS`.
+against `project(VERSION)`. Edge is where a build is checked before it is tagged. Builds are
+not kept as workflow artifacts (owner, 2026-10-27: the store channels are the download); a
+newer push to a branch cancels its older build, never a tag's. Publishing stays gated by `PUBLISH_TO_STORE` and `SNAPCRAFT_STORE_CREDENTIALS`.
 
 **Consequences.** Tagging is the decision to ship to every snap user. ADR-017's "tags to
 candidate, promotion by hand" no longer holds.

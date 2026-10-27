@@ -5,7 +5,7 @@
 # Edge is where a build is checked before it is tagged.
 #
 # Publishing needs the SNAPCRAFT_STORE_CREDENTIALS secret and the repo variable
-# PUBLISH_TO_STORE=true; without them the snap is still built and kept as a workflow artifact.
+# PUBLISH_TO_STORE=true; without them the snap is only built.
 name: snap
 
 on:
@@ -53,12 +53,6 @@ jobs:
       - name: Build snap (${{ matrix.arch }})
         uses: snapcore/action-build@v1
         id: build
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: omnidict-snap-${{ matrix.arch }}
-          path: ${{ steps.build.outputs.snap }}
-          retention-days: 14
 
       - name: Publish to the Snap Store
         if: >-
