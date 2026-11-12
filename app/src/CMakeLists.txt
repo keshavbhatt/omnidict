@@ -11,9 +11,12 @@ add_subdirectory(models)
 add_subdirectory(ui)
 add_subdirectory(app)
 
-qt_add_executable(omnidict
+qt_add_executable(omnidict WIN32
     app/main.cpp
 )
+if(WIN32)
+    target_sources(omnidict PRIVATE ${PROJECT_SOURCE_DIR}/dist/windows/omnidict.rc)
+endif()
 omnidict_set_warnings(omnidict)
 target_link_libraries(omnidict PRIVATE omnidict_app)
 

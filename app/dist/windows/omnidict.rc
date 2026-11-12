@@ -1,0 +1,3 @@
+// The program's icon in Explorer and on the taskbar outside the MSIX (ADR-022), drawn by
+// scripts/windows-store-assets.py.
+IDI_ICON1 ICON "omnidict.ico"

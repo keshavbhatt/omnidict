@@ -1,0 +1,13 @@
+{
+  "$comment": "Windows only (ADR-022): the libraries Linux builds take from the system, the snap runtime or the Flatpak runtime. The baseline is the one PixelFx builds with. SQLite needs FTS5 for the suggester's trigram index (ADR-013).",
+  "name": "omnidict",
+  "dependencies": [
+    "icu",
+    {
+      "name": "sqlite3",
+      "features": ["fts5"]
+    },
+    "zstd"
+  ],
+  "builtin-baseline": "65886d79ccce671dc24ffbf9a348836beacb7f6f"
+}
