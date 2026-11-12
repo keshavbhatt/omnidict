@@ -22,6 +22,10 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | Qt (AppImage build) | 6.11.x | LGPL-3.0 | official Qt installer through `jurplel/install-qt-action` (aqtinstall), bundled into the AppImage with its ICU (ADR-018) | AppImage |
 | linuxdeploy, linuxdeploy-plugin-qt | continuous | MIT | downloaded in CI, not shipped (ADR-018) | AppImage build |
 | SQLite, zstd, ICU (AppImage) | as in Ubuntu 22.04 (SQLite 3.37, ICU 70) | Public domain, BSD-3-Clause, Unicode-3.0 | Ubuntu 22.04 packages, bundled into the AppImage by linuxdeploy (ADR-018) | AppImage |
+| SQLite, zstd, ICU (Windows) | SQLite 3.54.1, zstd 1.5.7, ICU 79.1 | Public domain, BSD-3-Clause, Unicode-3.0 | vcpkg ports at the baseline in `app/vcpkg.json`, built in CI and shipped inside the MSIX (ADR-022) | Microsoft Store package |
+| Qt (Windows build) | 6.11.2 | LGPL-3.0 | official binaries from download.qt.io through `scripts/ci/fetch-qt.py`, deployed into the MSIX by `windeployqt` (ADR-022) | Microsoft Store package |
+| MSVC runtime (Microsoft.VC143.CRT) | as in the CI image's Visual Studio 2022 | Microsoft Visual C++ redistributable terms | copied from Visual Studio into the MSIX (ADR-022) | Microsoft Store package |
+| vcpkg | baseline commit in `app/vcpkg.json` | MIT | cloned in CI, not shipped (ADR-022) | Windows build |
 
 ## Design mocks only
 

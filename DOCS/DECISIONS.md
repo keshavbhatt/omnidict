@@ -492,3 +492,46 @@ newer push to a branch cancels its older build, never a tag's. Publishing stays 
 
 **Consequences.** Tagging is the decision to ship to every snap user. ADR-017's "tags to
 candidate, promotion by hand" no longer holds.
+
+## ADR-022: Omnidict on the Microsoft Store as an MSIX (2026-11-12)
+
+**Status.** Packaging accepted (owner, 2026-11-12: "package the application for windows and
+publish it in microsoft store similar to ../pixelfx"). The Windows quick lookup key and start
+at login are accepted in principle (owner, 2026-11-12: native versions in the first Windows
+release); their screens wait for `mocks/windows.html`.
+
+**Context.** Windows builds were F5, "v2, LATER". The owner pulled them forward for the
+Microsoft Store, the way PixelFx ships there (PixelFx ADR-018, same publisher account). The
+name "Omnidict" was reserved in Partner Center on 2026-11-12 (Store ID 9P5NP69TJVS6); a
+package must be submitted within three months or the name is released. The Linux builds take
+SQLite, ICU and zstd from the system or a runtime; Windows has none of them. Quick lookup's
+key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which Windows lacks.
+
+**Decision.**
+- An MSIX, a full-trust desktop app, built by CI's `windows` job after its tests
+  (`scripts/ci/package-windows.ps1`): the installed program, Qt by `windeployqt`, the vcpkg
+  libraries and the MSVC runtime inside the package. The Store signs what it is given, so no
+  code-signing certificate is bought. CI also signs a copy with a certificate made for that
+  run, kept with the certificate as the `omnidict-windows-msix` artifact, so the owner can
+  install and try the exact package before submitting it.
+- MSVC 2022, Qt 6.11.2 from download.qt.io through `scripts/ci/fetch-qt.py` (copied from
+  PixelFx: aqtinstall cannot read Qt 6.11's Windows repository yet). SQLite (with FTS5, for
+  the suggester's trigram index), ICU and zstd come from vcpkg (`app/vcpkg.json`, at the
+  baseline PixelFx builds with: SQLite 3.54.1, ICU 79.1, zstd 1.5.7). The shared
+  normalization vectors (`tst_normalize`) run on Windows, so ICU 79 is held to the pipeline
+  like every other build's ICU.
+- The identity in `packaging/windows/AppxManifest.xml.in` is the one Partner Center assigned:
+  `12809keshavnrj.Omnidict`, publisher `CN=4537E417-5797-495B-9457-854BBCC482B6`, display
+  name `keshavnrj`. The package version is `project(VERSION)` with a fourth number of 0. The
+  manifest asks for `internetClient` (the catalogue and downloads) and `runFullTrust`.
+- The logos and the program's `.ico` are drawn from the app icon by
+  `scripts/windows-store-assets.py` and committed.
+- Quick lookup's key on Windows: Omnidict registers it itself (`RegisterHotKey`), and
+  Settings records a new key, since Windows has no service that lets the user pick it. Start
+  at login: the package's startup task (`windows.startupTask`, `Windows.ApplicationModel.StartupTask`).
+  Both wait for the mock's approval.
+
+**Consequences.** vcpkg is a build tool on Windows only, not shipped (THIRD_PARTY.md). The
+CI run takes longer; vcpkg's binary cache keeps rebuilt libraries between runs. A release for
+the Store is the CI artifact of the tagged commit, uploaded in Partner Center by the owner.
+The Store listing text follows the rule for release text: no accounts or licensing.

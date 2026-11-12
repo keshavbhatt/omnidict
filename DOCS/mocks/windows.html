@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Windows quick lookup and start at login</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  /* A Windows desktop: the taskbar at the bottom, the notification area at its right. */
+  .desk { position: relative; height: 100vh; min-height: 540px; background: linear-gradient(160deg, #1f3b66, #0f1d33); overflow: hidden; }
+  .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: #1c1f26; border-top: 1px solid #2c313b; display: flex; align-items: center; justify-content: center; gap: 6px; color: #dfe3ea; font: 12px var(--font); }
+  .taskbar .app { width: 36px; height: 36px; border-radius: 6px; display: grid; place-items: center; }
+  .taskbar .app.on { background: #2c313b; }
+  .taskbar .app img { width: 24px; height: 24px; }
+  .taskbar .app span { width: 22px; height: 22px; border-radius: 5px; background: #3a4150; display: block; }
+  .taskbar .area { position: absolute; right: 12px; display: flex; gap: 6px; align-items: center; }
+  .taskbar .area i { width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center; color: #cfd5de; }
+  .taskbar .area i.on { background: #2c313b; }
+  .taskbar .area i svg { width: 16px; height: 16px; }
+  .taskbar .clock { text-align: right; line-height: 1.25; margin-left: 6px; }
+  /* The Settings rows, in three states side by side. */
+  .col { position: absolute; top: 24px; width: 560px; }
+  .col.a { left: 24px; }
+  .col.b { left: 608px; }
+  .col .card { margin-bottom: 16px; }
+  .state { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #c8d3e6; margin: 0 0 6px 2px; }
+  .recording { display: inline-flex; align-items: center; gap: 6px; min-width: 150px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--accent); box-shadow: 0 0 0 3px var(--accentSoft); background: var(--input); color: var(--muted); font-size: 13px; }
+  .warnline { display: flex; gap: 6px; align-items: flex-start; color: var(--warning); font-size: 13px; margin-top: 4px; }
+  .warnline svg { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+</style></head>
+<body>
+<div class="desk">
+
+  <div class="col a">
+    <div class="state">1. As installed</div>
+    <div class="card">
+      <div class="group-title">Quick lookup</div>
+      <div class="set">
+        <div class="t"><div>Quick lookup shortcut</div><div class="d">Copy a word in any app, then press it.</div></div>
+        <span class="kbd">Ctrl</span><span class="kbd">Alt</span><span class="kbd">D</span>
+        <button class="btn small">Change...</button>
+      </div>
+      <div class="group-title">Background</div>
+      <div class="set">
+        <div class="t"><div>Keep running in the tray when the window is closed</div><div class="d">Quick lookup works only while Omnidict runs</div></div>
+        <span class="switch on"></span>
+      </div>
+      <div class="set">
+        <div class="t"><div>Start at login, in the tray</div><div class="d">Ready for quick lookup without opening the window</div></div>
+        <span class="switch"></span>
+      </div>
+    </div>
+
+    <div class="state">2. Change... pressed: recording the new keys</div>
+    <div class="card">
+      <div class="group-title">Quick lookup</div>
+      <div class="set">
+        <div class="t"><div>Quick lookup shortcut</div><div class="d">Press the new keys. Escape cancels, Backspace turns the shortcut off.</div></div>
+        <span class="recording">Ctrl + Shift + ...</span>
+        <button class="btn small">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col b">
+    <div class="state">3. The keys belong to another app</div>
+    <div class="card">
+      <div class="group-title">Quick lookup</div>
+      <div class="set">
+        <div class="t"><div>Quick lookup shortcut</div>
+          <div class="warnline"><svg class="ic"><use href="#i-alert"/></svg><span>Ctrl+Alt+D is taken by another app. Choose other keys.</span></div></div>
+        <span class="kbd">Ctrl</span><span class="kbd">Alt</span><span class="kbd">D</span>
+        <button class="btn small">Change...</button>
+      </div>
+    </div>
+
+    <div class="state">4. Start at login switched off in Windows</div>
+    <div class="card">
+      <div class="group-title">Background</div>
+      <div class="set">
+        <div class="t"><div>Start at login, in the tray</div>
+          <div class="d">Turned off in Windows Settings, Apps, Startup. Turn Omnidict on there.</div>
+          <div class="d"><a href="#">Open Startup settings</a></div></div>
+        <span class="switch" style="opacity:.5"></span>
+      </div>
+    </div>
+
+    <div class="state">5. Shortcuts sheet and tray menu: unchanged</div>
+    <div class="card" style="font-size:13px;color:var(--muted)">The tray menu shows the key beside Quick lookup (<span class="kbd">Ctrl+Alt+D</span>), as on Linux; the icon sits in the notification area at the right of the taskbar, where Windows may tuck it under the arrow until the user pins it.</div>
+  </div>
+
+  <div class="taskbar">
+    <div class="app"><span></span></div>
+    <div class="app"><span></span></div>
+    <div class="app on"><img src="../../app/src/resources/icons/hicolor/scalable/apps/com.ktechpit.omnidict.svg" alt=""></div>
+    <div class="app"><span></span></div>
+    <div class="area">
+      <i><svg class="ic"><use href="#i-down"/></svg></i>
+      <i class="on"><img src="../../app/src/resources/icons/hicolor/scalable/apps/com.ktechpit.omnidict.svg" alt="" style="width:16px;height:16px"></i>
+      <div class="clock">10:42<br>12-11-2026</div>
+    </div>
+  </div>
+
+  <span class="pin" style="left:560px;top:70px">1</span>
+  <span class="pin" style="left:560px;top:320px">2</span>
+  <span class="pin" style="left:1144px;top:70px">3</span>
+  <span class="pin" style="left:1144px;top:200px">4</span>
+  <span class="pin" style="left:1144px;top:340px">5</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+  <li><b>Same rows as Linux, Windows words.</b> Windows has no global-shortcut service that lets the user pick the keys, so Omnidict registers the key itself (<code>RegisterHotKey</code>) and the row's description no longer points at the desktop's keyboard settings. The Linux fallback row ("Where the desktop has no global shortcuts", with <code>omnidict --popup</code>) is not shown: the shortcut always works on Windows. Default key <b>Ctrl+Alt+D</b>, the same as Linux. <i>Owner to decide:</i> on keyboard layouts with AltGr (German, Polish, French...), Windows treats Ctrl+Alt as AltGr, so Ctrl+Alt+D can clash with typing a character on a few layouts; an alternative default is <b>Ctrl+Shift+D</b> or <b>Win+Alt+D</b>.</li>
+  <li><b>Change...</b> turns the key caps into a field that records the next key combination, which needs Ctrl, Alt or Win plus a key. Escape or Cancel keeps the old key; Backspace turns the shortcut off (the row then reads "No key", as in quick-lookup-no-key.html). The new key is registered at once and saved in Omnidict's settings.</li>
+  <li><b>Taken by another app.</b> If Windows refuses the key (another app holds it), the row says so in words with the alert mark, not colour alone, and keeps the key caps so the user sees which one. The tray menu then shows no key beside Quick lookup.</li>
+  <li><b>Start at login</b> uses the Store package's startup task, the way Windows expects packaged apps to start with the session: it appears under Windows Settings, Apps, Startup and in Task Manager. If the user switched it off there, Windows does not let an app switch it back on, so the switch is dimmed and the row says where to turn it on, with a link that opens that page (<code>ms-settings:startupapps</code>). Turning it off in Omnidict works as on Linux.</li>
+  <li><b>The word it starts with.</b> Windows does not let an app read the text selected in another app, so the popup starts with the word on the clipboard (copy, then press the key), as on GNOME Wayland, and with an empty field when the clipboard holds no single word. Hence "Copy a word in any app, then press it" in the row's description. No simulated Ctrl+C: it would overwrite what the user copied.</li>
+</ol></section>
+</body></html>

@@ -14,6 +14,19 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-11-12 - Windows build and the Microsoft Store
+
+- Owner, 2026-11-12: package Omnidict for Windows and publish it on the Microsoft Store, as
+  PixelFx is (ADR-022). "Omnidict" reserved in Partner Center the same day (Store ID
+  9P5NP69TJVS6, identity `12809keshavnrj.Omnidict`); a package is due within three months.
+- On branch `windows-store`: CI `windows` job (MSVC 2022, Qt 6.11.2 through
+  `scripts/ci/fetch-qt.py`, SQLite/ICU/zstd from vcpkg via `app/vcpkg.json`, ctest), then
+  `scripts/ci/package-windows.ps1` builds the MSIX for Partner Center and a self-signed copy to
+  try out. Manifest `packaging/windows/AppxManifest.xml.in`; logos and `.ico` from
+  `scripts/windows-store-assets.py`; the program is a GUI (WIN32) executable with its icon.
+- Mock `mocks/windows.html` (waiting for approval): Omnidict records its own quick lookup key
+  on Windows, a key taken by another app, start at login through the package's startup task.
+
 ## 2026-10-24 - Simple English Wiktionary, README banner
 
 - Release 1.1.0 prepared (owner, 2026-10-24): changelog dated, metainfo release
