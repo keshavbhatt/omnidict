@@ -24,8 +24,22 @@ Newest first. One entry per working session.
   `scripts/ci/package-windows.ps1` builds the MSIX for Partner Center and a self-signed copy to
   try out. Manifest `packaging/windows/AppxManifest.xml.in`; logos and `.ico` from
   `scripts/windows-store-assets.py`; the program is a GUI (WIN32) executable with its icon.
-- Mock `mocks/windows.html` (waiting for approval): Omnidict records its own quick lookup key
-  on Windows, a key taken by another app, start at login through the package's startup task.
+- Mock `mocks/windows.html` approved by the owner the same day (default key Ctrl+Alt+D, as
+  on Linux), then built: `services::HotkeyBackend` (RegisterHotKey on Windows, a fake in
+  tests), `GlobalShortcuts` records its own key (`useBackend`, `setKey`, `State::Taken`,
+  `pause`/`resume` while Settings listens), `ui::KeyRecorder`, the Settings rows for each
+  state, and start at login through the startup task (`autostart_windows.cpp`, C++/WinRT;
+  the manifest declares `OmnidictStartup`). Settings states checked headlessly against the
+  mock; new tests in `tst_global_shortcuts` and `tst_sheets`.
+- First Windows CI run (the packaging commit): MSVC built everything first time, 15 of 19
+  suites passed, `tst_normalize` among them, so ICU 79 matches the pipeline. The four
+  failures were test assumptions, fixed: `/proc` as an unwritable place, golden files checked
+  out with CRLF (`.gitattributes` keeps `tests/` LF), desktop-file autostart tests (skipped on
+  Windows, a startup-task test instead), and a single-instance test sending from the primary's
+  own thread (PixelFx found the same: a named pipe needs the other side to accept). The Linux
+  job failed installing a snap (a Snap Store network error).
+- Local `make lint`: the host clang-tidy (LLVM 23) still fails on files this work does not
+  touch; the changed files pass with CI's clang-tidy 22.1.8.
 
 ## 2026-10-24 - Simple English Wiktionary, README banner
 

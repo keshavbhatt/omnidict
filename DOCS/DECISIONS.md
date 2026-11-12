@@ -498,7 +498,8 @@ candidate, promotion by hand" no longer holds.
 **Status.** Packaging accepted (owner, 2026-11-12: "package the application for windows and
 publish it in microsoft store similar to ../pixelfx"). The Windows quick lookup key and start
 at login are accepted in principle (owner, 2026-11-12: native versions in the first Windows
-release); their screens wait for `mocks/windows.html`.
+release); `mocks/windows.html` approved the same day, with the default key Ctrl+Alt+D as on
+Linux.
 
 **Context.** Windows builds were F5, "v2, LATER". The owner pulled them forward for the
 Microsoft Store, the way PixelFx ships there (PixelFx ADR-018, same publisher account). The
@@ -526,10 +527,16 @@ key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which 
   manifest asks for `internetClient` (the catalogue and downloads) and `runFullTrust`.
 - The logos and the program's `.ico` are drawn from the app icon by
   `scripts/windows-store-assets.py` and committed.
-- Quick lookup's key on Windows: Omnidict registers it itself (`RegisterHotKey`), and
-  Settings records a new key, since Windows has no service that lets the user pick it. Start
-  at login: the package's startup task (`windows.startupTask`, `Windows.ApplicationModel.StartupTask`).
-  Both wait for the mock's approval.
+- Quick lookup's key on Windows: Omnidict registers it itself (`services::HotkeyBackend`,
+  `RegisterHotKey` with no window, read through Qt's native event filter), and Settings
+  records a new key (`ui::KeyRecorder`), kept as `quickLookup/key`, since Windows has no
+  service that lets the user pick it. A key another app holds is `GlobalShortcuts::State::Taken`.
+  The popup starts with the clipboard's word, as Windows lets no app read another's selection.
+- Start at login: the package's startup task (`uap5:StartupTask` id `OmnidictStartup`,
+  `Windows.ApplicationModel.StartupTask` through C++/WinRT from the Windows SDK), which starts
+  the app without arguments, so `Autostart::launchedAtLogin()` reads the activation kind to
+  start in the tray. Switched off by the user in Windows, it cannot be switched on by the app:
+  Settings says so and links to `ms-settings:startupapps`.
 
 **Consequences.** vcpkg is a build tool on Windows only, not shipped (THIRD_PARTY.md). The
 CI run takes longer; vcpkg's binary cache keeps rebuilt libraries between runs. A release for
