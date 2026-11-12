@@ -17,6 +17,8 @@ qt_add_library(omnidict_ui STATIC
     first_run_panel.h
     icons.cpp
     icons.h
+    key_recorder.cpp
+    key_recorder.h
     logging.cpp
     logging.h
     main_window.cpp

@@ -11,7 +11,8 @@ export PATH := $(HOME)/.local/bin:$(PATH)
 
 BUILD_DIR ?= build
 CXX_SOURCES := $(shell find app/src app/tests -name '*.cpp' -o -name '*.h')
-TIDY_SOURCES := $(shell find app/src app/tests -name '*.cpp')
+# *_windows.cpp builds on Windows only, so the Linux compile database does not list it.
+TIDY_SOURCES := $(shell find app/src app/tests -name '*.cpp' ! -name '*_windows.cpp')
 
 .PHONY: all fixture build test test-pipeline test-app lint lint-pipeline lint-app format clean distclean
 

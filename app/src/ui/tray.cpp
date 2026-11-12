@@ -59,7 +59,10 @@ Tray::Tray(MainWindow& window, core::Settings& settings, services::Autostart& au
     });
     // The user may have removed the entry in the desktop's settings; a file-based entry is
     // rewritten so it runs this copy (an AppImage that moved, a new version).
-    if (services::Autostart::method() == services::Autostart::Method::DesktopFile) {
+    // The startup task's state is Windows' to tell (it may have been switched off there).
+    if (services::Autostart::method() == services::Autostart::Method::StartupTask) {
+        m_autostart.refresh();
+    } else if (services::Autostart::method() == services::Autostart::Method::DesktopFile) {
         if (m_settings.startAtLogin() && m_autostart.isEnabled()) {
             m_autostart.setEnabled(true);
         } else {
@@ -78,6 +81,11 @@ Tray::~Tray()
 bool Tray::systemTrayAvailable()
 {
     return QSystemTrayIcon::isSystemTrayAvailable();
+}
+
+bool Tray::startAtLoginBlocked() const
+{
+    return m_autostart.isBlocked();
 }
 
 bool Tray::keepsRunning() const

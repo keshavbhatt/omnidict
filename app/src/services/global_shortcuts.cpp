@@ -1,5 +1,6 @@
 #include "services/global_shortcuts.h"
 
+#include "services/hotkey_backend.h"
 #include "services/logging.h"
 
 #include <QDBusConnection>
@@ -86,8 +87,64 @@ QString GlobalShortcuts::requestPath(const QString& uniqueName, const QString& t
     return u"/org/freedesktop/portal/desktop/request/%1/%2"_s.arg(sender, token);
 }
 
+void GlobalShortcuts::useBackend(std::unique_ptr<HotkeyBackend> backend, const QString& key)
+{
+    m_backend = std::move(backend);
+    m_key = key;
+    if (m_backend != nullptr) {
+        connect(m_backend.get(), &HotkeyBackend::pressed, this, [this] { Q_EMIT activated({}); });
+    }
+}
+
+void GlobalShortcuts::setKey(const QString& key)
+{
+    if (m_backend == nullptr) {
+        return;
+    }
+    const bool changed = key != m_key;
+    m_key = key;
+    applyKey();
+    if (changed) {
+        Q_EMIT keyChanged(m_key);
+    }
+}
+
+void GlobalShortcuts::pause()
+{
+    if (m_backend != nullptr) {
+        m_backend->unregisterKey();
+    }
+}
+
+void GlobalShortcuts::resume()
+{
+    if (m_backend != nullptr) {
+        applyKey();
+    }
+}
+
+void GlobalShortcuts::applyKey()
+{
+    if (m_key.isEmpty()) {
+        m_backend->unregisterKey();
+        m_trigger.clear();
+        m_state = State::NoKey;
+    } else if (m_backend->registerKey(m_key)) {
+        m_trigger = m_key;
+        m_state = State::Active;
+    } else {
+        m_trigger.clear();
+        m_state = State::Taken;
+    }
+    Q_EMIT stateChanged(); // also when only the key changed
+}
+
 void GlobalShortcuts::start()
 {
+    if (m_backend != nullptr) {
+        applyKey();
+        return;
+    }
     // The address as the environment has it now (libdbus remembers the first one it saw).
     const QString address = qEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS");
     const QDBusConnection connection =

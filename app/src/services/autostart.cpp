@@ -51,12 +51,16 @@ Autostart::Autostart(QString appId, QObject* parent)
 
 Autostart::Method Autostart::method()
 {
+#ifdef Q_OS_WIN
+    return Method::StartupTask;
+#else
     return qEnvironmentVariableIsEmpty("FLATPAK_ID") ? Method::DesktopFile : Method::Portal;
+#endif
 }
 
 QString Autostart::desktopFilePath() const
 {
-    if (method() == Method::Portal) {
+    if (method() != Method::DesktopFile) {
         return {};
     }
     // Inside a snap, snapd reads the snap's own config directory, whatever XDG_CONFIG_HOME
@@ -101,11 +105,43 @@ QString Autostart::desktopFileContents() const
 
 bool Autostart::isEnabled() const
 {
-    return method() == Method::Portal ? m_portalEnabled : QFile::exists(desktopFilePath());
+    switch (method()) {
+    case Method::Portal:
+        return m_portalEnabled;
+    case Method::StartupTask:
+        return m_taskEnabled;
+    case Method::DesktopFile:
+        break;
+    }
+    return QFile::exists(desktopFilePath());
+}
+
+void Autostart::refresh()
+{
+    if (method() == Method::StartupTask) {
+        requestStartupTask(false, false);
+    }
+}
+
+void Autostart::takeTaskState(int state, bool requested, bool wanted)
+{
+    // StartupTaskState: Disabled 0, DisabledByUser 1, Enabled 2, DisabledByPolicy 3,
+    // EnabledByPolicy 4.
+    m_taskEnabled = state == 2 || state == 4;
+    m_blocked = state == 1 || state == 3;
+    const bool ok = state >= 0 && (!requested || m_taskEnabled == wanted);
+    if (!ok) {
+        qCInfo(lcBackground) << "autostart: startup task state" << state;
+    }
+    Q_EMIT finished(m_taskEnabled, ok);
 }
 
 void Autostart::setEnabled(bool enabled)
 {
+    if (method() == Method::StartupTask) {
+        requestStartupTask(true, enabled);
+        return;
+    }
     if (method() == Method::Portal) {
         requestPortal(enabled);
         return;
@@ -181,5 +217,18 @@ void Autostart::onPortalResponse(const QDBusMessage& message)
     }
     Q_EMIT finished(m_portalEnabled, ok && m_portalEnabled == m_portalRequested);
 }
+
+#ifndef Q_OS_WIN
+// The startup task exists only in the Windows package (autostart_windows.cpp).
+void Autostart::requestStartupTask(bool /*request*/, bool /*enabled*/)
+{
+    takeTaskState(-1, false, false);
+}
+
+bool Autostart::launchedAtLogin()
+{
+    return false;
+}
+#endif
 
 } // namespace omnidict::services

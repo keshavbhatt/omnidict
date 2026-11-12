@@ -1,5 +1,7 @@
 #pragma once
 
+#include "services/global_shortcuts.h"
+
 #include <QDialog>
 #include <QProcessEnvironment>
 #include <QString>
@@ -16,12 +18,9 @@ class QToolButton;
 class QVBoxLayout;
 QT_END_NAMESPACE
 
-namespace omnidict::services {
-class GlobalShortcuts;
-} // namespace omnidict::services
-
 namespace omnidict::ui {
 
+class SwitchButton;
 class Tray;
 
 /// Settings (settings.html): every control here applies through core::Settings
@@ -68,7 +67,7 @@ public:
     [[nodiscard]] static QProcessEnvironment systemEnvironment();
     /// Starts `command` detached with systemEnvironment(); nothing when it is empty.
     static void startWithSystemEnvironment(const QStringList& command);
-    ~SettingsDialog() override = default;
+    ~SettingsDialog() override;
 
 Q_SIGNALS:
     void clearHistoryRequested();
@@ -83,6 +82,15 @@ private:
     [[nodiscard]] QWidget* buildQuickLookupShortcutRow(QWidget* content);
     [[nodiscard]] QWidget* buildQuickLookupFallbackRow(QWidget* content);
     void refreshQuickLookup();
+    /// The key caps, or the words for no key, in the shortcut row.
+    void fillQuickLookupKeys(services::GlobalShortcuts::State state);
+    /// The shortcut row's description: how to use and change the key here.
+    [[nodiscard]] QString quickLookupHint(services::GlobalShortcuts::State state) const;
+    /// Change... where Omnidict records the key itself (mocks/windows.html note 2).
+    void startRecording();
+    void stopRecording();
+    /// The start at login row, which Windows may have switched off (mocks/windows.html note 4).
+    void refreshStartAtLogin();
     void setupHistory(QVBoxLayout* body, QWidget* content);
     void setupStorage(QVBoxLayout* body, QWidget* content, const QString& dictionaryFolder);
     void updateThemeButtons();
@@ -99,6 +107,12 @@ private:
     QWidget* m_quickShortcutRow = nullptr;
     QLabel* m_quickShortcutHint = nullptr;
     QWidget* m_quickFallbackRow = nullptr;
+    QLabel* m_quickHintMark = nullptr;
+    bool m_recording = false;
+    Tray* m_tray = nullptr;
+    SwitchButton* m_loginSwitch = nullptr;
+    QLabel* m_loginHint = nullptr;
+    QLabel* m_loginLink = nullptr;
 };
 
 } // namespace omnidict::ui

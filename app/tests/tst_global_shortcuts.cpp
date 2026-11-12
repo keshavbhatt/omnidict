@@ -1,3 +1,4 @@
+#include "fake_hotkey.h"
 #include "fake_portal.h"
 #include "services/global_shortcuts.h"
 
@@ -129,6 +130,75 @@ private Q_SLOTS:
         QTRY_COMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
         QCOMPARE(shortcuts.trigger(), u"Meta+Shift+O"_s);
         QVERIFY(!changed.isEmpty());
+    }
+
+    // Windows (ADR-022, mocks/windows.html): Omnidict registers the recorded key itself.
+    void aRecordedKeyIsRegisteredAndFires()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>();
+        omnidict::tests::FakeHotkey* fake = backend.get();
+        GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        QVERIFY(shortcuts.recordsKey());
+        QVERIFY(!shortcuts.canConfigure()); // no desktop dialog: Settings records the key
+        shortcuts.start();
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
+        QCOMPARE(shortcuts.trigger(), u"Ctrl+Alt+D"_s);
+        QCOMPARE(fake->registered(), u"Ctrl+Alt+D"_s);
+
+        QSignalSpy activated(&shortcuts, &GlobalShortcuts::activated);
+        fake->press();
+        QCOMPARE(activated.size(), 1);
+    }
+
+    void aNewKeyIsKeptAndAnEmptyOneTurnsItOff()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>();
+        omnidict::tests::FakeHotkey* fake = backend.get();
+        GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        shortcuts.start();
+        QSignalSpy keyChanged(&shortcuts, &GlobalShortcuts::keyChanged);
+
+        shortcuts.setKey(u"Ctrl+Shift+K"_s);
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
+        QCOMPARE(fake->registered(), u"Ctrl+Shift+K"_s);
+        QCOMPARE(keyChanged.size(), 1);
+        QCOMPARE(keyChanged.at(0).at(0).toString(), u"Ctrl+Shift+K"_s);
+
+        shortcuts.setKey({}); // Backspace in Settings
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::NoKey);
+        QVERIFY(fake->registered().isEmpty());
+        QCOMPARE(keyChanged.size(), 2);
+        QVERIFY(keyChanged.at(1).at(0).toString().isEmpty());
+    }
+
+    void aKeyAnotherAppHoldsIsTaken()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>(QStringList{u"Ctrl+Alt+D"_s});
+        GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        shortcuts.start();
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::Taken);
+        QCOMPARE(shortcuts.key(), u"Ctrl+Alt+D"_s); // kept, so Settings shows which key
+        QVERIFY(shortcuts.trigger().isEmpty());     // and the tray shows none
+
+        shortcuts.setKey(u"Ctrl+Shift+D"_s);
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
+    }
+
+    void pausingReleasesTheKeyWhileSettingsListens()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>();
+        omnidict::tests::FakeHotkey* fake = backend.get();
+        GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        shortcuts.start();
+        shortcuts.pause();
+        QVERIFY(fake->registered().isEmpty());
+        shortcuts.resume();
+        QCOMPARE(fake->registered(), u"Ctrl+Alt+D"_s);
+        QCOMPARE(shortcuts.state(), GlobalShortcuts::State::Active);
     }
 
 private:

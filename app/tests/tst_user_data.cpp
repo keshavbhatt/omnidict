@@ -1,6 +1,7 @@
 #include "core/user_data.h"
 
 #include <QTemporaryDir>
+#include <QTemporaryFile>
 #include <QTest>
 
 using namespace Qt::StringLiterals;
@@ -87,7 +88,10 @@ private Q_SLOTS:
 
     void anUnwritableLocationIsAnError()
     {
-        QVERIFY(!UserData::open(u"/proc/omnidict-cannot-write-here/userdata.sqlite"_s));
+        // A folder cannot be made inside a file, on any system (/proc is Linux's only).
+        QTemporaryFile file;
+        QVERIFY(file.open());
+        QVERIFY(!UserData::open(file.fileName() + u"/userdata.sqlite"_s));
     }
 };
 

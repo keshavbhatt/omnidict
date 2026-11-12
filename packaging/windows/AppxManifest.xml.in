@@ -4,8 +4,9 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="uap uap5 rescap">
 
   <Identity Name="12809keshavnrj.Omnidict"
             Publisher="CN=4537E417-5797-495B-9457-854BBCC482B6"
@@ -35,6 +36,14 @@
                           Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Omnidict" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- Start at login, in the tray (services::Autostart, mocks/windows.html note 4): off
+             until the user turns it on in Settings. -->
+        <uap5:Extension Category="windows.startupTask" Executable="bin\omnidict.exe"
+                        EntryPoint="Windows.FullTrustApplication">
+          <uap5:StartupTask TaskId="OmnidictStartup" Enabled="false" DisplayName="Omnidict" />
+        </uap5:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

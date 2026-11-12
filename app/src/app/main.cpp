@@ -7,6 +7,7 @@
 #include "services/autostart.h"
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
+#include "services/hotkey_backend.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
 #include "ui/theme_applier.h"
@@ -209,10 +210,17 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     omnidict::services::Autostart autostart(QString::fromLatin1(version::kDesktopId));
     omnidict::ui::Tray tray(window, settings, autostart, omnidict::ui::Tray::systemTrayAvailable());
     omnidict::services::GlobalShortcuts shortcuts(QString::fromLatin1(version::kDesktopId));
+    // Windows: Omnidict registers the key itself and keeps the one the user recorded (ADR-022).
+    if (auto backend = omnidict::services::makeNativeHotkeyBackend()) {
+        shortcuts.useBackend(std::move(backend), settings.quickLookupKey());
+        QObject::connect(&shortcuts, &omnidict::services::GlobalShortcuts::keyChanged, &settings,
+                         &omnidict::core::Settings::setQuickLookupKey);
+    }
     connectQuickLookupShortcut(shortcuts, window);
     tray.setGlobalShortcuts(&shortcuts);
     showFirstWindow(window, query, parser.isSet(options.popup),
-                    parser.isSet(options.background) && tray.keepsRunning());
+                    (parser.isSet(options.background) || omnidict::services::Autostart::launchedAtLogin()) &&
+                        tray.keepsRunning());
     QObject::connect(&instance, &omnidict::app::SingleInstance::commandReceived, &window,
                      [&window](const QJsonObject& command) { handleCommand(window, command); });
     return QCoreApplication::exec();

@@ -1,0 +1,3 @@
+# Test data compared byte for byte keeps LF line endings on every checkout, Windows too
+# (git there turns text into CRLF by default).
+tests/** text eol=lf

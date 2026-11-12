@@ -1,10 +1,12 @@
 #include "core/settings.h"
+#include "fake_hotkey.h"
 #include "fake_portal.h"
 #include "services/global_shortcuts.h"
 #include "services/lookup_service.h"
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
+#include "ui/key_recorder.h"
 #include "ui/settings_dialog.h"
 #include "ui/shortcuts_dialog.h"
 #include "ui/style.h"
@@ -14,6 +16,7 @@
 
 #include <QApplication>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDir>
 #include <QLabel>
 #include <QLineEdit>
@@ -84,6 +87,21 @@ private:
 
     /// The no-key Settings row and the main window's notice, in both schemes, for review
     /// against mocks/quick-lookup-no-key.html.
+    /// The Windows rows (mocks/windows.html), dark, for comparing with the mock.
+    static void grabWindows(SettingsDialog& dialog, QWidget* row, const QString& name)
+    {
+        if (qEnvironmentVariableIsEmpty("OMNIDICT_GRAB_DIR")) {
+            return;
+        }
+        Tokens::setCurrentScheme(true);
+        qApp->setPalette(paletteFor(Tokens::current()));
+        qApp->setStyleSheet(styleSheetFor(Tokens::current()));
+        QCoreApplication::processEvents(); // widgets added since are laid out
+        dialog.findChild<QScrollArea*>()->ensureWidgetVisible(row);
+        grab(&dialog, name);
+        dialog.show(); // grab() hides it
+    }
+
     static void grabNoKey(SettingsDialog& dialog, QWidget* row)
     {
         for (const bool dark : {false, true}) {
@@ -260,6 +278,94 @@ private Q_SLOTS:
         qputenv("XDG_CURRENT_DESKTOP", desktop);
         qunsetenv("SNAP");
         qunsetenv("SNAP_NAME");
+    }
+
+    // mocks/windows.html: where Omnidict records the key itself (Windows).
+    void aRecordedKeyIsChangedInSettings()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>();
+        omnidict::tests::FakeHotkey* fake = backend.get();
+        omnidict::services::GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        shortcuts.start();
+
+        Settings settings(iniPath(u"recorded-key"_s));
+        SettingsDialog dialog(settings, u"/tmp/omnidict-dicts"_s, nullptr, &shortcuts);
+        dialog.show();
+        auto* change = dialog.findChild<QPushButton*>(u"quickLookupChange"_s);
+        auto* hint = dialog.findChild<QLabel*>(u"quickLookupHint"_s);
+        auto* fallbackRow = dialog.findChild<QWidget*>(u"quickLookupFallbackRow"_s);
+        QVERIFY(change != nullptr && hint != nullptr && fallbackRow != nullptr);
+        QVERIFY(change->isVisible());
+        QCOMPARE(change->text(), u"Change..."_s);
+        QCOMPARE(hint->text(), u"Copy a word in any app, then press it."_s); // note 5
+        QVERIFY(!fallbackRow->isVisible()); // no custom-shortcut route: the key always works
+        grabWindows(dialog, change, u"windows-installed"_s);
+
+        // Note 2: Change... listens for the new keys, with the old key released.
+        QTest::mouseClick(change, Qt::LeftButton);
+        auto* recorder = dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s);
+        QVERIFY(recorder != nullptr);
+        QCOMPARE(change->text(), u"Cancel"_s);
+        QVERIFY(hint->text().startsWith(u"Press the new keys."_s));
+        QVERIFY(fake->registered().isEmpty());
+        QTest::keyPress(recorder, Qt::Key_Shift, Qt::ControlModifier | Qt::ShiftModifier);
+        grabWindows(dialog, change, u"windows-recording"_s);
+        QTest::keyClick(recorder, Qt::Key_K); // no Ctrl, Alt or Win: still listening
+        QVERIFY(dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s) != nullptr);
+        QTest::keyClick(recorder, Qt::Key_K, Qt::ControlModifier | Qt::ShiftModifier);
+        QTRY_VERIFY(dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s) == nullptr);
+        QCOMPARE(fake->registered(), u"Ctrl+Shift+K"_s);
+        QCOMPARE(change->text(), u"Change..."_s);
+
+        // Escape cancels: the old key comes back and the dialog stays open.
+        QTest::mouseClick(change, Qt::LeftButton);
+        recorder = dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s);
+        QVERIFY(recorder != nullptr);
+        QTest::keyClick(recorder, Qt::Key_Escape);
+        QTRY_VERIFY(dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s) == nullptr);
+        QVERIFY(dialog.isVisible());
+        QCOMPARE(fake->registered(), u"Ctrl+Shift+K"_s);
+
+        // Backspace turns the shortcut off: "No key", and a key can be chosen again.
+        QTest::mouseClick(change, Qt::LeftButton);
+        recorder = dialog.findChild<KeyRecorder*>(u"quickLookupRecorder"_s);
+        QVERIFY(recorder != nullptr);
+        QTest::keyClick(recorder, Qt::Key_Backspace);
+        QTRY_VERIFY(dialog.findChild<QLabel*>(u"quickLookupNoKey"_s) != nullptr);
+        QVERIFY(fake->registered().isEmpty());
+        QCOMPARE(change->text(), u"Choose a key..."_s);
+    }
+
+    void aRecordedKeyTakenByAnotherAppIsShown()
+    {
+        auto backend = std::make_unique<omnidict::tests::FakeHotkey>(QStringList{u"Ctrl+Alt+D"_s});
+        omnidict::services::GlobalShortcuts shortcuts(u"com.ktechpit.omnidict"_s);
+        shortcuts.useBackend(std::move(backend), u"Ctrl+Alt+D"_s);
+        shortcuts.start();
+
+        Settings settings(iniPath(u"taken-key"_s));
+        SettingsDialog dialog(settings, u"/tmp/omnidict-dicts"_s, nullptr, &shortcuts);
+        dialog.show();
+        auto* hint = dialog.findChild<QLabel*>(u"quickLookupHint"_s);
+        auto* mark = dialog.findChild<QLabel*>(u"quickLookupHintMark"_s);
+        auto* row = dialog.findChild<QWidget*>(u"quickLookupShortcutRow"_s);
+        QVERIFY(hint != nullptr && mark != nullptr && row != nullptr);
+        QVERIFY(row->isVisible());
+        QVERIFY(mark->isVisible()); // note 3: a mark, not colour alone
+        QVERIFY(hint->text().contains(u"is taken by another app"_s));
+        QVERIFY(hint->text().contains(u"Ctrl+Alt+D"_s));
+        grabWindows(dialog, row, u"windows-taken"_s);
+    }
+
+    void theRecorderTakesOnlyKeysWindowsCanRegister()
+    {
+        QCOMPARE(KeyRecorder::keyFor(Qt::ControlModifier | Qt::AltModifier, Qt::Key_D), u"Ctrl+Alt+D"_s);
+        QCOMPARE(KeyRecorder::keyFor(Qt::MetaModifier | Qt::AltModifier, Qt::Key_D), u"Meta+Alt+D"_s);
+        QCOMPARE(KeyRecorder::keyFor(Qt::ControlModifier, Qt::Key_F5), u"Ctrl+F5"_s);
+        QVERIFY(KeyRecorder::keyFor(Qt::ShiftModifier, Qt::Key_D).isEmpty()); // typing, not a shortcut
+        QVERIFY(KeyRecorder::keyFor(Qt::NoModifier, Qt::Key_D).isEmpty());
+        QVERIFY(KeyRecorder::keyFor(Qt::ControlModifier, Qt::Key_Semicolon).isEmpty()); // not in the list
     }
 
     void shortcutsFilterHidesRowsAndEmptyGroups()

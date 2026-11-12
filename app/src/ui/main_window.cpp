@@ -1027,7 +1027,8 @@ void MainWindow::onShortcutStateChanged()
 {
     using State = services::GlobalShortcuts::State;
     const State state = m_shortcuts->state();
-    if (state != State::NoKey) {
+    // A recorded key is "none" only when the user turned it off (mocks/windows.html note 2).
+    if (state != State::NoKey || m_shortcuts->recordsKey()) {
         if (m_noKeyNotice != nullptr) {
             m_noKeyNotice->close(); // a key arrived (mocks/quick-lookup-no-key.html note 1)
         }

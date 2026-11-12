@@ -87,7 +87,8 @@ jobs:
 
       - name: clang-tidy
         run: |
-          find app/src app/tests -name '*.cpp' \
+          # *_windows.cpp builds on Windows only, so this compile database does not list it.
+          find app/src app/tests -name '*.cpp' ! -name '*_windows.cpp' \
             | xargs uvx --from "clang-tidy==${CLANG_TIDY_VERSION}" clang-tidy -p build --quiet --warnings-as-errors='*'
 
       - name: shellcheck

@@ -8,6 +8,8 @@ qt_add_library(omnidict_services STATIC
     dictionary_manager.h
     global_shortcuts.cpp
     global_shortcuts.h
+    hotkey_backend.cpp
+    hotkey_backend.h
     logging.cpp
     logging.h
     lookup_service.cpp
@@ -22,3 +24,10 @@ target_link_libraries(omnidict_services
         Qt6::Network
         Qt6::DBus
 )
+
+# Windows: start at login through the MSIX startup task, with C++/WinRT from the Windows SDK
+# (ADR-022); the quick lookup key through RegisterHotKey (user32, linked by default).
+if(WIN32)
+    target_sources(omnidict_services PRIVATE autostart_windows.cpp)
+    target_link_libraries(omnidict_services PRIVATE WindowsApp)
+endif()

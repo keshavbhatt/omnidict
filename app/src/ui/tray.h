@@ -44,6 +44,9 @@ public:
 
     /// Whether the desktop shows tray icons.
     [[nodiscard]] bool isAvailable() const { return m_available; }
+    /// Start at login was switched off in Windows, which only Windows can undo
+    /// (mocks/windows.html note 4).
+    [[nodiscard]] bool startAtLoginBlocked() const;
     /// Whether the app keeps running when its window closes: a tray, and the setting on.
     [[nodiscard]] bool keepsRunning() const;
 

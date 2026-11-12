@@ -26,6 +26,7 @@ private Q_SLOTS:
 
     void aPlainInstallWritesAnXdgAutostartFile()
     {
+        skipOnWindows();
         QCOMPARE(Autostart::method(), Autostart::Method::DesktopFile);
         Autostart autostart(u"com.ktechpit.omnidict"_s);
         const QString path = autostart.desktopFilePath();
@@ -58,6 +59,7 @@ private Q_SLOTS:
 
     void anAppImageRunsItselfQuotedWhenItHasToBe()
     {
+        skipOnWindows();
         qputenv("APPIMAGE", "/home/a user/Apps/Omnidict-1.0.1-x86_64.AppImage");
         QCOMPARE(Autostart::command(),
                  (QStringList{u"/home/a user/Apps/Omnidict-1.0.1-x86_64.AppImage"_s, u"--background"_s}));
@@ -68,6 +70,7 @@ private Q_SLOTS:
 
     void aSnapWritesIntoItsOwnConfigForSnapd()
     {
+        skipOnWindows();
         const QTemporaryDir snapData;
         qputenv("SNAP", "/snap/omnidict/16");
         qputenv("SNAP_NAME", "omnidict");
@@ -80,11 +83,40 @@ private Q_SLOTS:
 
     void aFlatpakAsksThePortal()
     {
+        skipOnWindows();
         qputenv("FLATPAK_ID", "com.ktechpit.omnidict");
         QCOMPARE(Autostart::method(), Autostart::Method::Portal);
         const Autostart autostart(u"com.ktechpit.omnidict"_s);
         QVERIFY(autostart.desktopFilePath().isEmpty());
         QVERIFY(!autostart.isEnabled()); // until the portal answers
+    }
+
+    // Windows (ADR-022, mocks/windows.html note 4): the package's startup task, whose state
+    // Windows tells; outside the package there is none, which reads as off and not blocked.
+    void windowsUsesThePackagesStartupTask()
+    {
+#ifndef Q_OS_WIN
+        QSKIP("Windows only");
+#endif
+        QCOMPARE(Autostart::method(), Autostart::Method::StartupTask);
+        Autostart autostart(u"com.ktechpit.omnidict"_s);
+        QVERIFY(autostart.desktopFilePath().isEmpty());
+        QSignalSpy finished(&autostart, &Autostart::finished);
+        autostart.refresh();
+        QVERIFY(finished.wait());
+        QCOMPARE(finished.first().at(0).toBool(), false);
+        QVERIFY(!autostart.isEnabled());
+        QVERIFY(!autostart.isBlocked());
+        QVERIFY(!Autostart::launchedAtLogin());
+    }
+
+private:
+    /// The desktop-file and portal ways are Linux's; Windows uses the startup task.
+    static void skipOnWindows()
+    {
+#ifdef Q_OS_WIN
+        QSKIP("Windows starts at login through the package's startup task");
+#endif
     }
 };
 

@@ -4,6 +4,8 @@
 #include <QTest>
 #include <QUuid>
 
+#include <future>
+
 using namespace Qt::StringLiterals;
 using omnidict::app::instanceKeyFor;
 using omnidict::app::SingleInstance;
@@ -29,8 +31,13 @@ private Q_SLOTS:
 
         SingleInstance second(key);
         QVERIFY(!second.isPrimary());
-        QVERIFY(second.sendToPrimary({{u"query"_s, u"perro"_s}}));
-        QVERIFY(received.wait());
+        // Sent from another thread, as a second process would: on Windows a local socket is a
+        // named pipe, and a blocking write from the primary's own thread waits for an accept
+        // that thread cannot run (as PixelFx found).
+        auto sent = std::async(std::launch::async,
+                               [&second] { return second.sendToPrimary({{u"query"_s, u"perro"_s}}); });
+        QTRY_COMPARE_WITH_TIMEOUT(received.size(), 1, 5000);
+        QVERIFY(sent.get());
         QCOMPARE(received.first().first().toJsonObject().value(u"query"_s).toString(), u"perro"_s);
     }
 

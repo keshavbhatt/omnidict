@@ -77,6 +77,10 @@ public:
     /// The main window already said that the desktop gave Quick Lookup no key; it says so once.
     [[nodiscard]] bool quickLookupNoKeyNoticeShown() const;
     void setQuickLookupNoKeyNoticeShown(bool shown);
+    /// The key Omnidict registers itself where it records one (Windows, mocks/windows.html), in
+    /// QKeySequence's portable text ("Ctrl+Alt+D"); empty when the user turned it off.
+    [[nodiscard]] QString quickLookupKey() const;
+    void setQuickLookupKey(const QString& key);
 
     // background/ (mocks/tray.html)
     /// Closing the window keeps the app running in the tray, where the desktop has one.

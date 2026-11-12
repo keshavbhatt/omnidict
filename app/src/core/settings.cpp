@@ -19,6 +19,7 @@ constexpr bool kDefaultSuggestSpellings = true;
 constexpr bool kDefaultRememberHistory = true;
 constexpr bool kDefaultKeepInTray = true;
 constexpr bool kDefaultStartAtLogin = false;
+constexpr auto kDefaultQuickLookupKey = "Ctrl+Alt+D"; // as on Linux (owner, 2026-09-30)
 
 } // namespace
 
@@ -182,6 +183,16 @@ bool Settings::quickLookupNoKeyNoticeShown() const
 void Settings::setQuickLookupNoKeyNoticeShown(bool shown)
 {
     store(keys::kQuickLookupNoKeyNoticeShown, shown, false);
+}
+
+QString Settings::quickLookupKey() const
+{
+    return m_store->value(keys::kQuickLookupKey, QString::fromLatin1(kDefaultQuickLookupKey)).toString();
+}
+
+void Settings::setQuickLookupKey(const QString& key)
+{
+    store(keys::kQuickLookupKey, key, QString::fromLatin1(kDefaultQuickLookupKey));
 }
 
 bool Settings::keepInTray() const

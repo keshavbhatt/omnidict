@@ -3,12 +3,14 @@
 #include "core/settings.h"
 #include "services/global_shortcuts.h"
 #include "ui/icons.h"
+#include "ui/key_recorder.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
 #include "ui/tray.h"
 
 #include <QButtonGroup>
 #include <QClipboard>
+#include <QCoreApplication>
 #include <QDesktopServices>
 #include <QFontDatabase>
 #include <QFrame>
@@ -32,6 +34,18 @@ namespace omnidict::ui {
 namespace {
 
 /// The key Omnidict suggests to the desktop, as people write it ("Ctrl+Alt+D").
+/// A recorded key (portable text, "Ctrl+Alt+D") as the keyboard names it here; the Windows
+/// key reads "Win" (mocks/windows.html).
+QString displayKey(const QString& portable)
+{
+    QString text =
+        QKeySequence::fromString(portable, QKeySequence::PortableText).toString(QKeySequence::NativeText);
+#ifdef Q_OS_WIN
+    text.replace(u"Meta"_s, QCoreApplication::translate("KeyRecorder", "Win"));
+#endif
+    return text;
+}
+
 QString suggestedKey()
 {
     return QKeySequence(QString::fromLatin1(services::GlobalShortcuts::kPreferredTrigger).toUpper())
@@ -251,6 +265,13 @@ void SettingsDialog::setupSearch(QVBoxLayout* body, QWidget* content)
             });
 }
 
+SettingsDialog::~SettingsDialog()
+{
+    if (m_recording && m_shortcuts != nullptr) {
+        m_shortcuts->resume(); // closed while listening: the old key works again
+    }
+}
+
 void SettingsDialog::setupBackground(QVBoxLayout* body, QWidget* content, Tray* tray)
 {
     // Background (mocks/tray.html notes 4 to 6): both rows need a tray.
@@ -268,23 +289,52 @@ void SettingsDialog::setupBackground(QVBoxLayout* body, QWidget* content, Tray* 
                             keep));
     body->addWidget(makeSeparator(content));
 
+    m_tray = available ? tray : nullptr;
     auto* login = new SwitchButton(tr("Start at login, in the tray"), content);
     login->setObjectName(u"startAtLoginSwitch"_s);
     login->setChecked(available && m_settings.startAtLogin());
-    login->setEnabled(available);
+    m_loginSwitch = login;
     if (available) {
         connect(login, &SwitchButton::toggled, tray, &Tray::setStartAtLogin);
         // The desktop may refuse (the portal's dialog): the switch shows what is in effect.
-        connect(tray, &Tray::startAtLoginSettled, login, [login](bool enabled) {
+        connect(tray, &Tray::startAtLoginSettled, login, [this, login](bool enabled) {
             const QSignalBlocker blocker(login);
             login->setChecked(enabled);
+            refreshStartAtLogin();
         });
     }
-    body->addWidget(makeRow(content, tr("Start at login, in the tray"),
-                            available ? tr("Ready for quick lookup without opening the window")
-                                      : tr("Needs a tray, as above"),
-                            login));
+    QWidget* loginRow = makeRow(content, tr("Start at login, in the tray"), u" "_s, login);
+    for (QLabel* label : loginRow->findChildren<QLabel*>()) {
+        if (label->text() == u" "_s) {
+            m_loginHint = label; // the placeholder description: refreshStartAtLogin() words it
+        }
+    }
+    m_loginHint->setObjectName(u"startAtLoginHint"_s);
+    // Windows switched it off: the way to its own page (mocks/windows.html note 4).
+    m_loginLink = new QLabel(u"<a href=\"ms-settings:startupapps\">%1</a>"_s.arg(tr("Open Startup settings")),
+                             loginRow);
+    m_loginLink->setObjectName(u"startAtLoginLink"_s);
+    m_loginLink->setProperty("small", true);
+    connect(m_loginLink, &QLabel::linkActivated, this,
+            [](const QString& link) { QDesktopServices::openUrl(QUrl(link)); });
+    qobject_cast<QVBoxLayout*>(loginRow->layout()->itemAt(0)->layout())->addWidget(m_loginLink);
+    body->addWidget(loginRow);
     body->addWidget(makeSeparator(content));
+    refreshStartAtLogin();
+}
+
+void SettingsDialog::refreshStartAtLogin()
+{
+    const bool available = m_tray != nullptr;
+    const bool blocked = available && m_tray->startAtLoginBlocked();
+    m_loginSwitch->setEnabled(available && !blocked);
+    m_loginLink->setVisible(blocked);
+    if (blocked) {
+        m_loginHint->setText(tr("Turned off in Windows Settings, Apps, Startup. Turn Omnidict on there."));
+    } else {
+        m_loginHint->setText(available ? tr("Ready for quick lookup without opening the window")
+                                       : tr("Needs a tray, as above"));
+    }
 }
 
 void SettingsDialog::setupHistory(QVBoxLayout* body, QWidget* content)
@@ -381,8 +431,8 @@ void SettingsDialog::openShortcutSettings(services::GlobalShortcuts* shortcuts)
 
 bool SettingsDialog::canOpenShortcutSettings(const services::GlobalShortcuts* shortcuts)
 {
-    return shortcuts != nullptr && (shortcuts->canConfigure() || !shortcutSettingsCommand().isEmpty() ||
-                                    shortcutSettingsUrl().isValid());
+    return shortcuts != nullptr && (shortcuts->recordsKey() || shortcuts->canConfigure() ||
+                                    !shortcutSettingsCommand().isEmpty() || shortcutSettingsUrl().isValid());
 }
 
 QString SettingsDialog::shortcutEntryName()
@@ -403,7 +453,16 @@ void SettingsDialog::setupQuickLookup(QVBoxLayout* body, QWidget* content,
     body->addWidget(buildQuickLookupShortcutRow(content));
     body->addWidget(buildQuickLookupFallbackRow(content));
     if (shortcuts != nullptr) {
-        connect(m_quickChange, &QPushButton::clicked, this, [shortcuts] { openShortcutSettings(shortcuts); });
+        connect(m_quickChange, &QPushButton::clicked, this, [this, shortcuts] {
+            if (!shortcuts->recordsKey()) {
+                openShortcutSettings(shortcuts);
+            } else if (m_recording) {
+                stopRecording(); // Cancel
+                shortcuts->resume();
+            } else {
+                startRecording();
+            }
+        });
         connect(shortcuts, &services::GlobalShortcuts::stateChanged, this,
                 &SettingsDialog::refreshQuickLookup);
     }
@@ -436,6 +495,20 @@ QWidget* SettingsDialog::buildQuickLookupShortcutRow(QWidget* content)
     }
     m_quickShortcutHint->setObjectName(u"quickLookupHint"_s);
     m_quickShortcutHint->setTextFormat(Qt::RichText); // the entry name in bold (no key)
+    // A mark before the hint when another app holds the key (mocks/windows.html note 3):
+    // the hint and the mark share a line where the hint was.
+    auto* textColumn = qobject_cast<QVBoxLayout*>(m_quickShortcutRow->layout()->itemAt(0)->layout());
+    const int hintIndex = textColumn->indexOf(m_quickShortcutHint);
+    textColumn->removeWidget(m_quickShortcutHint);
+    auto* hintLine = new QHBoxLayout;
+    hintLine->setSpacing(6);
+    m_quickHintMark = new QLabel(m_quickShortcutRow);
+    m_quickHintMark->setObjectName(u"quickLookupHintMark"_s);
+    m_quickHintMark->setAlignment(Qt::AlignTop);
+    m_quickHintMark->hide();
+    hintLine->addWidget(m_quickHintMark, 0, Qt::AlignTop);
+    hintLine->addWidget(m_quickShortcutHint, 1);
+    textColumn->insertLayout(hintIndex, hintLine);
     return m_quickShortcutRow;
 }
 
@@ -460,19 +533,93 @@ QWidget* SettingsDialog::buildQuickLookupFallbackRow(QWidget* content)
     return m_quickFallbackRow;
 }
 
-void SettingsDialog::refreshQuickLookup()
+void SettingsDialog::startRecording()
 {
-    using State = services::GlobalShortcuts::State;
-    const State state = m_shortcuts != nullptr ? m_shortcuts->state() : State::Unavailable;
+    // mocks/windows.html note 2: the key caps become a field that listens for the new keys.
+    m_recording = true;
+    m_shortcuts->pause(); // so pressing the current key reaches the field
     auto* keysLayout = qobject_cast<QHBoxLayout*>(m_quickKeys->layout());
     while (const QLayoutItem* item = keysLayout->takeAt(0)) {
         delete item->widget();
         delete item;
     }
+    auto* recorder = new KeyRecorder(m_quickKeys);
+    keysLayout->addWidget(recorder);
+    recorder->show(); // now, not on the next pass of the event loop: it takes the focus below
+    connect(recorder, &KeyRecorder::recorded, this, [this](const QString& key) {
+        stopRecording();
+        m_shortcuts->setKey(key); // registers it; stateChanged() redraws the row
+    });
+    connect(recorder, &KeyRecorder::cancelled, this, [this] {
+        stopRecording();
+        m_shortcuts->resume();
+    });
+    m_quickChange->setText(tr("Cancel"));
+    m_quickChange->setProperty("primary", false);
+    m_quickChange->style()->unpolish(m_quickChange);
+    m_quickChange->style()->polish(m_quickChange);
+    m_quickHintMark->hide();
+    m_quickShortcutHint->setProperty("tone", QVariant());
+    m_quickShortcutHint->setText(tr("Press the new keys. Escape cancels, Backspace turns the shortcut off."));
+    recorder->setFocus(Qt::OtherFocusReason);
+}
+
+void SettingsDialog::stopRecording()
+{
+    m_recording = false;
+    refreshQuickLookup(); // the field goes; resume() or setKey() then redraw with the outcome
+}
+
+void SettingsDialog::refreshQuickLookup()
+{
+    if (m_recording) {
+        return; // the field stays until a key is recorded or the user cancels
+    }
+    using State = services::GlobalShortcuts::State;
+    const State state = m_shortcuts != nullptr ? m_shortcuts->state() : State::Unavailable;
+    const bool records = m_shortcuts != nullptr && m_shortcuts->recordsKey();
+    fillQuickLookupKeys(state);
+    // Change... where it can do something: the portal's dialog, else KDE's Shortcuts page;
+    // a sandboxed copy on KDE says where to go instead (mocks/quick-lookup.html note 4).
     const bool noKey = state == State::NoKey;
-    if (state == State::Active) {
+    m_quickChange->setVisible(canOpenShortcutSettings(m_shortcuts));
+    m_quickChange->setText(noKey ? tr("Choose a key...") : tr("Change..."));
+    m_quickChange->setProperty("primary", noKey);
+    m_quickChange->style()->unpolish(m_quickChange);
+    m_quickChange->style()->polish(m_quickChange);
+    const bool taken = state == State::Taken;
+    m_quickHintMark->setVisible(taken);
+    if (taken) {
+        // In words and with a mark, not colour alone (mocks/windows.html note 3).
+        const int size = m_quickHintMark->fontMetrics().height();
+        m_quickHintMark->setPixmap(
+            icons::pixmap(u"alert"_s, Tokens::current().warning, size, devicePixelRatioF()));
+    }
+    m_quickShortcutHint->setProperty("tone", taken ? QVariant(u"warning"_s) : QVariant());
+    m_quickShortcutHint->style()->unpolish(m_quickShortcutHint);
+    m_quickShortcutHint->style()->polish(m_quickShortcutHint);
+    m_quickShortcutHint->setText(quickLookupHint(state));
+    m_quickShortcutRow->setVisible(state == State::Active || state == State::NoKey ||
+                                   state == State::Checking || taken);
+    m_quickFallbackRow->setVisible(!records && (state == State::Unavailable || state == State::Declined));
+}
+
+void SettingsDialog::fillQuickLookupKeys(services::GlobalShortcuts::State state)
+{
+    using State = services::GlobalShortcuts::State;
+    auto* keysLayout = qobject_cast<QHBoxLayout*>(m_quickKeys->layout());
+    while (const QLayoutItem* item = keysLayout->takeAt(0)) {
+        delete item->widget();
+        delete item;
+    }
+    const bool records = m_shortcuts != nullptr && m_shortcuts->recordsKey();
+    if (records && (state == State::Active || state == State::Taken)) {
+        // A recorded key; when taken, the caps stay so the user sees which key is held
+        // (mocks/windows.html note 3).
+        keysLayout->addWidget(makeKeyCaps(displayKey(m_shortcuts->key()), m_quickKeys));
+    } else if (state == State::Active) {
         keysLayout->addWidget(makeKeyCaps(m_shortcuts->trigger(), m_quickKeys));
-    } else if (noKey) {
+    } else if (state == State::NoKey) {
         // mocks/quick-lookup-no-key.html note 2: in words and with a mark, not colour alone.
         auto* mark = new QLabel(m_quickKeys);
         const int size = mark->fontMetrics().height();
@@ -487,33 +634,34 @@ void SettingsDialog::refreshQuickLookup()
         status->setProperty("muted", true);
         keysLayout->addWidget(status);
     }
-    // Change... where it can do something: the portal's dialog, else KDE's Shortcuts page;
-    // a sandboxed copy on KDE says where to go instead (mocks/quick-lookup.html note 4).
-    const bool canChange = canOpenShortcutSettings(m_shortcuts);
-    m_quickChange->setVisible(canChange);
-    m_quickChange->setText(noKey ? tr("Choose a key...") : tr("Change..."));
-    m_quickChange->setProperty("primary", noKey);
-    m_quickChange->style()->unpolish(m_quickChange);
-    m_quickChange->style()->polish(m_quickChange);
+}
+
+QString SettingsDialog::quickLookupHint(services::GlobalShortcuts::State state) const
+{
+    using State = services::GlobalShortcuts::State;
+    if (state == State::Taken) {
+        return tr("%1 is taken by another app. Choose other keys.")
+            .arg(displayKey(m_shortcuts->key()).toHtmlEscaped());
+    }
+    if (m_shortcuts != nullptr && m_shortcuts->recordsKey()) {
+        // Windows lets no app read another app's selection: the popup takes the clipboard
+        // (mocks/windows.html note 5).
+        return tr("Copy a word in any app, then press it.");
+    }
     const bool kde = qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s);
-    QString hint;
-    if (noKey) {
-        hint = kde ? tr("The desktop accepted the shortcut but gave it no key. Choose one in System "
+    if (state == State::NoKey) {
+        return kde ? tr("The desktop accepted the shortcut but gave it no key. Choose one in System "
                         "Settings, Keyboard, Shortcuts, <b>%1</b>: tick the suggested %2 or add your own.")
                          .arg(shortcutEntryName().toHtmlEscaped(), suggestedKey())
                    : tr("The desktop accepted the shortcut but gave it no key. Choose one in the "
                         "desktop's keyboard settings.");
-    } else if (!canChange && kde) {
-        hint = tr("Select a word in any app and press it. Change it in System Settings, Keyboard, "
-                  "Shortcuts, %1.")
-                   .arg(shortcutEntryName());
-    } else {
-        hint = tr("Select a word in any app and press it. Change it in the desktop's keyboard settings.");
     }
-    m_quickShortcutHint->setText(hint);
-    m_quickShortcutRow->setVisible(state == State::Active || state == State::NoKey ||
-                                   state == State::Checking);
-    m_quickFallbackRow->setVisible(state == State::Unavailable || state == State::Declined);
+    if (!canOpenShortcutSettings(m_shortcuts) && kde) {
+        return tr("Select a word in any app and press it. Change it in System Settings, Keyboard, "
+                  "Shortcuts, %1.")
+            .arg(shortcutEntryName());
+    }
+    return tr("Select a word in any app and press it. Change it in the desktop's keyboard settings.");
 }
 
 void SettingsDialog::setupStorage(QVBoxLayout* body, QWidget* content, const QString& dictionaryFolder)

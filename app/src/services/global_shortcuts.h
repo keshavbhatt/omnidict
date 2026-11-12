@@ -8,10 +8,13 @@
 #include <QVariantMap>
 
 #include <functional>
+#include <memory>
 
 class QDBusMessage;
 
 namespace omnidict::services {
+
+class HotkeyBackend;
 
 /// One entry of the portal's `a(sa{sv})` shortcut lists: an id and its properties
 /// (`description`, `preferred_trigger`, `trigger_description`).
@@ -31,6 +34,9 @@ const QDBusArgument& operator>>(const QDBusArgument& argument, PortalShortcut& s
 /// own settings change it. Works while the app runs. Where there is no portal
 /// (GNOME 46 and 47, wlroots desktops), the state says so and Settings explains the
 /// custom-shortcut route instead.
+///
+/// Where the desktop has no such service (Windows, ADR-022), Omnidict registers the key
+/// itself through a HotkeyBackend and Settings records a new one (mocks/windows.html).
 class GlobalShortcuts : public QObject
 {
     Q_OBJECT
@@ -44,6 +50,7 @@ public:
         Active,      ///< bound; trigger() says which key
         NoKey,       ///< accepted, but the desktop bound no key: the user has to choose one
         Declined,    ///< the user or the desktop refused the shortcut
+        Taken,       ///< recorded key only: another app holds it; key() says which
     };
 
     static constexpr auto kQuickLookupId = "quick-lookup";
@@ -52,6 +59,21 @@ public:
 
     explicit GlobalShortcuts(QString appId, QObject* parent = nullptr);
     ~GlobalShortcuts() override;
+
+    /// Registers the key itself through `backend` instead of the portal, starting with
+    /// `key` (portable text, empty for none). Call before start().
+    void useBackend(std::unique_ptr<HotkeyBackend> backend, const QString& key);
+    /// Whether Omnidict records the key itself (a backend), rather than the desktop.
+    [[nodiscard]] bool recordsKey() const { return m_backend != nullptr; }
+    /// The recorded key in portable text ("Ctrl+Alt+D"), also when Taken; empty for none.
+    [[nodiscard]] QString key() const { return m_key; }
+    /// Records and registers a new key (empty turns it off); keyChanged() reports it for
+    /// saving, stateChanged() the outcome.
+    void setKey(const QString& key);
+    /// Releases the recorded key while Settings listens for a new one, so pressing the
+    /// current key reaches Settings; resume() registers it again.
+    void pause();
+    void resume();
 
     /// Registers the shortcut, asynchronously; stateChanged() reports the outcome.
     void start();
@@ -77,6 +99,8 @@ Q_SIGNALS:
     /// on Wayland (empty when the desktop gives none).
     void activated(const QByteArray& activationToken);
     void stateChanged();
+    /// The recorded key changed (setKey()), for Settings to keep.
+    void keyChanged(const QString& key);
 
 private Q_SLOTS:
     void onResponse(const QDBusMessage& message);
@@ -98,7 +122,12 @@ private:
     void request(const QString& method, QList<QVariant> arguments, QVariantMap options,
                  ResponseHandler onResponse);
 
+    /// Registers the recorded key and sets the state from the answer.
+    void applyKey();
+
     QString m_appId;
+    std::unique_ptr<HotkeyBackend> m_backend;
+    QString m_key;
     /// A connection of its own: the portal ties an app id to a connection on its first
     /// call, and Qt's own portal calls (colour scheme, file dialogs) come first on the
     /// shared one, so registering there fails and KDE files the shortcut under whatever
