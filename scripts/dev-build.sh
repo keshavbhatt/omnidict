@@ -28,6 +28,17 @@ if [ ! -d "$OMNIDICT_RT/usr/lib/x86_64-linux-gnu" ]; then
     exit 1
 fi
 
+# The cmake snap, not the distro's cmake: with the SDK's libraries on LD_LIBRARY_PATH (below) a
+# distro cmake loads the SDK's libarchive, which needs libraries the distro may not have (Arch:
+# libnettle.so.8). Ninja keeps calling the cmake that configured, so this holds for the build too.
+CMAKE=cmake
+for candidate in /snap/bin/cmake /var/lib/snapd/snap/bin/cmake; do
+    if [ -x "$candidate" ]; then
+        CMAKE="$candidate"
+        break
+    fi
+done
+
 # The SDK's own build tools (moc, rcc, ...) need the SDK's libraries, some of
 # which sit in the libproxy subdirectory.
 export LD_LIBRARY_PATH="$SDK/usr/lib/x86_64-linux-gnu:$SDK/usr/lib/x86_64-linux-gnu/libproxy${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
@@ -47,7 +58,7 @@ omnidict_prepare_runtime_farm "$BUILD"
 # The SDK keeps its CMake packages under lib/x86_64-linux-gnu; a host CMake that does not know
 # that multiarch directory finds the host's Qt tool packages (moc, rcc) instead of the SDK's.
 # The CMake root is app/, not the repository root (ADR-010).
-cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
+"$CMAKE" -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DCMAKE_BUILD_TYPE="${OMNIDICT_BUILD_TYPE:-RelWithDebInfo}" \
     -DCMAKE_PREFIX_PATH="$SDK/usr" \
     -DCMAKE_LIBRARY_PATH="$SDK/usr/lib/x86_64-linux-gnu" \
@@ -62,7 +73,7 @@ cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DOMNIDICT_SNAP_RUNTIME="$OMNIDICT_RT" \
     -DOMNIDICT_SNAP_RUNTIME_LIB_PATH="$(omnidict_runtime_lib_path "$BUILD")" \
     "${EXTRA_ARGS[@]}"
-cmake --build "$BUILD" -j"$(nproc)"
+"$CMAKE" --build "$BUILD" -j"$(nproc)"
 
 # clangd / IDEs look for compile_commands.json at the repo root.
 ln -sf "$BUILD/compile_commands.json" "$DIR/compile_commands.json"
