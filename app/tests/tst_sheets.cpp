@@ -7,6 +7,7 @@
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
 #include "ui/key_recorder.h"
+#include "ui/more_apps_dialog.h"
 #include "ui/settings_dialog.h"
 #include "ui/shortcuts_dialog.h"
 #include "ui/style.h"
@@ -18,6 +19,7 @@
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
+#include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -28,6 +30,7 @@
 #include <QTest>
 #include <QToolButton>
 
+#include <AppCatalog.h>
 #include <algorithm>
 
 using namespace Qt::StringLiterals;
@@ -135,6 +138,14 @@ private Q_SLOTS:
         QStandardPaths::setTestModeEnabled(true);
         QCoreApplication::setApplicationName(u"Omnidict"_s);
         QCoreApplication::setApplicationVersion(u"0.1.0"_s);
+        // More apps from Ktechpit from the bundled catalog only: the test-mode cache is empty,
+        // and no refresh starts while the tests run.
+        ktechpit::CatalogConfig config;
+        config.hostAppId = u"omnidict"_s;
+        config.source = u"omnidict"_s;
+        config.oneLineText = true;
+        config.refreshDelayMs = 3600 * 1000;
+        ktechpit::AppCatalog::init(config);
     }
 
     void settingsDialogTogglesWriteSettings()
@@ -434,6 +445,39 @@ private Q_SLOTS:
         QVERIFY(texts.contains(u"SQLite"_s));
     }
 
+    void aboutShowsTwoOtherKtechpitAppsInsteadOfAMoreAppsButton()
+    {
+        // mocks/about.html note 5.
+        AboutDialog dialog(sampleDictionaries());
+        const auto cards = dialog.findChildren<QFrame*>(u"ktechpitAppCard"_s);
+        QCOMPARE(cards.size(), 2);
+        const auto names = dialog.findChildren<QLabel*>(u"ktechpitAppName"_s);
+        QVERIFY(std::ranges::none_of(names, [](const QLabel* name) {
+            return name->text().compare(u"Omnidict"_s, Qt::CaseInsensitive) == 0;
+        }));
+        QVERIFY(dialog.findChild<QLabel*>(u"ktechpitAppStripSeeAll"_s) != nullptr);
+        const auto buttons = dialog.findChildren<QPushButton*>();
+        QVERIFY(
+            std::ranges::none_of(buttons, [](const QPushButton* b) { return b->text() == u"More apps"_s; }));
+        const auto labels = dialog.findChildren<QLabel*>();
+        QVERIFY(std::ranges::any_of(labels, [](const QLabel* label) {
+            return label->text() == u"KtechpitApps"_s; // the module's notice in Open source
+        }));
+    }
+
+    void moreAppsListsEveryOtherAppAndSaysHowMany()
+    {
+        // mocks/more-apps.html notes 1 and 3.
+        MoreAppsDialog dialog(u"menu"_s);
+        const qsizetype apps = ktechpit::AppCatalog::instance()->allApps().size();
+        QVERIFY(apps > 0);
+        QCOMPARE(dialog.findChildren<QFrame*>(u"ktechpitAppCard"_s).size(), apps);
+        const auto* status = dialog.findChild<QLabel*>(u"moreAppsStatus"_s);
+        QVERIFY(status != nullptr);
+        QVERIFY(status->text().contains(QString::number(apps)));
+        QVERIFY(dialog.findChild<QPushButton*>(u"ktechpitMoreAppsRefresh"_s) != nullptr);
+    }
+
     /// Grabs every sheet to a PNG in both themes for visual review; a no-op
     /// unless OMNIDICT_GRAB_DIR is set.
     void visualGrabs()
@@ -462,6 +506,9 @@ private Q_SLOTS:
 
             AboutDialog aboutDialog(sampleDictionaries());
             grab(&aboutDialog, u"about"_s + suffix);
+
+            MoreAppsDialog moreAppsDialog(u"menu"_s);
+            grab(&moreAppsDialog, u"more-apps"_s + suffix);
         }
     }
 };

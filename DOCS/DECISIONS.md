@@ -542,3 +542,35 @@ key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which 
 CI run takes longer; vcpkg's binary cache keeps rebuilt libraries between runs. A release for
 the Store is the CI artifact of the tagged commit, uploaded in Partner Center by the owner.
 The Store listing text follows the rule for release text: no accounts or licensing.
+
+
+## ADR-023: More apps from Ktechpit (2026-11-13)
+
+**Status.** Accepted (owner, 2026-11-13: "integrate KtechpitApps module similar to ../pixelfx";
+`mocks/more-apps.html`, `about.html` note 5 and `menu.html` note 4 approved the same day).
+
+**Context.** The owner wants people who use Omnidict to find the other Ktechpit apps, as PixelFx
+does (PixelFx ADR-017). The KtechpitApps module (MIT, the owner's) does this for the Ktechpit Qt
+apps: a catalog from ktechpit.com with a copy built in, cards with Get, and a full list.
+Omnidict's About had a More apps button that opened the products page in the browser.
+
+**Decision.**
+- The module lives in `app/src/modules/KtechpitApps` as a squashed `git subtree` of its own
+  repository at tag v1.1.1, so an update is one `git subtree pull`; `ui` links it. Its code keeps
+  its own style: `make lint` and CI's clang-format and clang-tidy skip `app/src/modules`, and
+  `REUSE.toml` marks it MIT.
+- Two cards under About's tabs, drawn at random each time About opens, always shown (no setting
+  to hide them, as in PixelFx); they replace the More apps button. The full list is an Omnidict
+  sheet (`ui::MoreAppsDialog`, the module's `MoreAppsView` inside, three columns) from the main
+  menu's More apps from Ktechpit and from See all, which closes About first. Never at start, in
+  What's new or on the first-run panel.
+- Get opens the software centre for the way Omnidict was installed (snap, Flatpak, AppImage,
+  native, or the product page on Windows); web links carry `?ref=omnidict-about` or
+  `omnidict-menu`. One line per name and description (`oneLineText`), as in the mock.
+
+**Consequences.** One GET of the catalog and its icons at most weekly, 20 seconds after start,
+sending nothing about the user, cached in the user's cache folder. This amends PLAN section 9,
+question 6 ("the only network use is the dictionary catalogue and downloads"); the README, snap,
+metainfo and Store texts now say so. The snap's `network` plug, the Flatpak's network and the
+MSIX's `internetClient` already allow it. The descriptions come from the site's catalog and are
+fixed there; on Windows the site lists only Torrhunt and Whatsie today.

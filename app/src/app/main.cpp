@@ -22,6 +22,7 @@
 #include <QTextStream>
 #include <QTimer>
 
+#include <AppCatalog.h>
 #include <cstring>
 #include <memory>
 
@@ -172,6 +173,28 @@ void connectQuickLookupShortcut(omnidict::services::GlobalShortcuts& shortcuts,
     }
 }
 
+/// More apps from Ktechpit (the KtechpitApps module, ADR-023): never Omnidict itself, and Get
+/// through the store this copy came from.
+void setupMoreApps()
+{
+    ktechpit::CatalogConfig config;
+    config.hostAppId = u"omnidict"_s;
+    config.source = u"omnidict"_s;
+    config.oneLineText = true; // cards of one fixed height, as in the mock
+#ifdef Q_OS_WIN
+    config.package = ktechpit::Package::Windows;
+#else
+    if (!qEnvironmentVariableIsEmpty("SNAP")) {
+        config.package = ktechpit::Package::Snap;
+    } else if (!qEnvironmentVariableIsEmpty("FLATPAK_ID")) {
+        config.package = ktechpit::Package::Flatpak;
+    } else if (!qEnvironmentVariableIsEmpty("APPIMAGE")) {
+        config.package = ktechpit::Package::AppImage;
+    } // otherwise Native, the default
+#endif
+    ktechpit::AppCatalog::init(config);
+}
+
 int runWindow(const QCommandLineParser& parser, const Options& options)
 {
     // Everything the app keeps lives in one directory, a scratch one with --profile.
@@ -201,7 +224,10 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
     omnidict::services::DictionaryManager dictionaries(
         dataDir + u"/dictionaries"_s, dataDir + u"/cache"_s,
         omnidict::services::DictionaryManager::defaultCatalogUrl());
+    setupMoreApps();
     omnidict::ui::MainWindow window(settings, dictionaries, roots, dataDir + u"/userdata.sqlite"_s);
+    ktechpit::AppCatalog::instance()->setShowAll(
+        [&window](const QString& place, QWidget* from) { window.showMoreApps(place, from); });
     if (settings.windowGeometry().isEmpty()) {
         window.resize(kWindowWidth, kWindowHeight);
     }

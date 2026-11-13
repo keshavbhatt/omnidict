@@ -14,6 +14,22 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-11-13 - More apps from Ktechpit; the selected word on Windows
+
+- Owner tested the self-signed MSIX on Windows: everything as expected, except quick lookup
+  opens empty when a word is only selected (Windows has no primary selection; the approved
+  mock takes the clipboard). Options written up in `DOCS/windows-selection.md` (UI
+  Automation, then the clipboard; a simulated Ctrl+C only opt-in), waiting for the owner.
+- Owner: integrate the KtechpitApps module as in PixelFx (ADR-023). Module v1.1.1 added as a
+  squashed subtree in `app/src/modules/KtechpitApps`. Mocks `more-apps.html`, `about.html`
+  note 5 and `menu.html` note 4 approved by the owner the same day ("mocks look fine"), then
+  built: two cards under About's tabs in place of the More apps button, the main menu entry
+  with the grid glyph, `ui::MoreAppsDialog` (See all closes About first), the module's object
+  names styled in `ui::style`, KtechpitApps in About's Open source tab, and
+  `OMNIDICT_DEBUG_OPEN=moreapps`. Checked headlessly against the mocks; new tests in
+  `tst_sheets` and `tst_smoke`. README, snap, metainfo and Store texts now mention the weekly
+  app list.
+
 ## 2026-11-12 - Windows build and the Microsoft Store
 
 - Owner, 2026-11-12: package Omnidict for Windows and publish it on the Microsoft Store, as

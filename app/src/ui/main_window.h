@@ -71,6 +71,9 @@ public:
     void showShortcuts();
     void showWhatsNew();
     void showBugReport();
+    /// More apps from Ktechpit (more-apps.html), opened from `place` ("menu", "about"); when
+    /// `from` is a sheet (About's See all), that sheet closes first.
+    void showMoreApps(const QString& place, QWidget* from);
     /// After an update, shows What's new once; always remembers the running version.
     void showWhatsNewIfUpdated();
     /// Opens the Quick Lookup popup (DOCS/quick-lookup.md) with `word`, or with the

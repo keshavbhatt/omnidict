@@ -5,6 +5,9 @@
 # platform arrives with the milestone that needs it. Nothing links to `ui`
 # except the executable (via `app`).
 
+# More apps from Ktechpit (KtechpitApps, MIT, a squashed subtree of
+# github.com/keshavbhatt/ktechpit-apps), used by ui and app.
+add_subdirectory(modules/KtechpitApps)
 add_subdirectory(core)
 add_subdirectory(services)
 add_subdirectory(models)

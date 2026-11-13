@@ -71,6 +71,7 @@ bool grabSheet(ui::MainWindow& window, services::DictionaryManager& manager, con
         {u"shortcuts"_s, [](ui::MainWindow& w) { w.showShortcuts(); }},
         {u"whatsnew"_s, [](ui::MainWindow& w) { w.showWhatsNew(); }},
         {u"bugreport"_s, [](ui::MainWindow& w) { w.showBugReport(); }},
+        {u"moreapps"_s, [](ui::MainWindow& w) { w.showMoreApps(u"menu"_s, &w); }},
         {u"dictionaries"_s, [](ui::MainWindow& w) { w.showDictionaries(); }},
         {u"available"_s, [](ui::MainWindow& w) { w.showDictionaries(true); }},
     };

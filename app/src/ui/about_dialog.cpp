@@ -21,6 +21,8 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <AppStrip.h>
+
 using namespace Qt::StringLiterals;
 
 namespace omnidict::ui {
@@ -29,7 +31,6 @@ namespace {
 
 constexpr int kIconSize = 88;
 const QString kWebsiteUrl = u"https://ktechpit.com"_s;
-const QString kMoreAppsUrl = u"https://ktechpit.com/USS/public/products.php"_s;
 const QString kContactUrl = u"mailto:connect@ktechpit.com"_s;
 
 struct OpenSourceNotice
@@ -53,6 +54,9 @@ const QList<OpenSourceNotice>& openSourceNotices()
         {.name = u"Lucide icons"_s,
          .license = u"ISC (the Feather part MIT)"_s,
          .url = u"https://github.com/lucide-icons/lucide/blob/main/LICENSE"_s},
+        {.name = u"KtechpitApps"_s,
+         .license = u"MIT"_s,
+         .url = u"https://github.com/keshavbhatt/ktechpit-apps/blob/main/LICENSE"_s},
         {.name = u"Omnidict"_s,
          .license = u"GPL-3.0-or-later"_s,
          .url = u"https://www.gnu.org/licenses/gpl-3.0.html"_s},
@@ -112,10 +116,11 @@ AboutDialog::AboutDialog(const QList<services::DictionaryInfo>& dictionaries, QW
     body->addLayout(buildHero());
     body->addLayout(buildLinks());
     body->addWidget(buildTabs(), 1);
+    body->addWidget(buildMoreApps());
     root->addLayout(body, 1);
     root->addWidget(buildFooter());
 
-    resize(680, 620);
+    resize(680, 720);
 }
 
 QLayout* AboutDialog::buildHero()
@@ -167,9 +172,24 @@ QLayout* AboutDialog::buildLinks()
     links->addWidget(reportBug);
     links->addWidget(makeLinkButton(this, tr("Contact"), kContactUrl));
     links->addWidget(makeLinkButton(this, tr("Donate"), donateUrl().toString()));
-    links->addWidget(makeLinkButton(this, tr("More apps"), kMoreAppsUrl));
     links->addStretch(1);
     return links;
+}
+
+QWidget* AboutDialog::buildMoreApps()
+{
+    // mocks/about.html note 5: two of the developer's other apps, drawn afresh each time; See all
+    // goes through AppCatalog::setShowAll (main.cpp), which closes this window first.
+    auto* moreApps = new QWidget(this);
+    auto* layout = new QVBoxLayout(moreApps);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(12);
+    auto* divider = new QFrame(moreApps);
+    divider->setProperty("separator", true);
+    layout->addWidget(divider);
+    layout->addWidget(
+        new ktechpit::AppStrip(u"about"_s, 2, ktechpit::AppStrip::Orientation::Horizontal, moreApps));
+    return moreApps;
 }
 
 QWidget* AboutDialog::buildTabs()

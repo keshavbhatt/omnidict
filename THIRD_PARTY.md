@@ -1,6 +1,6 @@
 # Third-party components
 
-Nothing is vendored except the Lucide glyphs (data files, not code): every other component below is a system/runtime library, a snap-provided SDK
+Nothing is vendored except the Lucide glyphs (data files, not code) and the owner's KtechpitApps module (a subtree): every other component below is a system/runtime library, a snap-provided SDK
 or runtime, or a package pulled from PyPI at pipeline install time. No new third-party
 dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-008).
 
@@ -26,6 +26,7 @@ dependency is added without an ADR in `DOCS/DECISIONS.md` and a row here (ADR-00
 | Qt (Windows build) | 6.11.2 | LGPL-3.0 | official binaries from download.qt.io through `scripts/ci/fetch-qt.py`, deployed into the MSIX by `windeployqt` (ADR-022) | Microsoft Store package |
 | MSVC runtime (Microsoft.VC143.CRT) | as in the CI image's Visual Studio 2022 | Microsoft Visual C++ redistributable terms | copied from Visual Studio into the MSIX (ADR-022) | Microsoft Store package |
 | vcpkg | baseline commit in `app/vcpkg.json` | MIT | cloned in CI, not shipped (ADR-022) | Windows build |
+| KtechpitApps | 1.1.1 | MIT (the owner's) | `git subtree` of github.com/keshavbhatt/ktechpit-apps, squashed, in `app/src/modules/KtechpitApps`; its catalog and app icons from ktechpit.com, a copy built in (ADR-023) | `app` (More apps from Ktechpit: the cards in About and the full list) |
 
 ## Design mocks only
 

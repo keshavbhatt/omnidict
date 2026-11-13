@@ -7,6 +7,7 @@
 #include "ui/about_dialog.h"
 #include "ui/entry_view.h"
 #include "ui/main_window.h"
+#include "ui/more_apps_dialog.h"
 #include "ui/quick_lookup.h"
 #include "ui/settings_dialog.h"
 #include "ui/style.h"
@@ -32,6 +33,8 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QWheelEvent>
+
+#include <AppCatalog.h>
 
 using namespace Qt::StringLiterals;
 using omnidict::models::ResultsModel;
@@ -79,6 +82,11 @@ private Q_SLOTS:
     void initTestCase()
     {
         QStandardPaths::setTestModeEnabled(true);
+        // More apps from Ktechpit from the bundled catalog only, with no refresh during the tests.
+        ktechpit::CatalogConfig config;
+        config.hostAppId = u"omnidict"_s;
+        config.refreshDelayMs = 3600 * 1000;
+        ktechpit::AppCatalog::init(config);
         const QString fixture = QString::fromUtf8(OMNIDICT_FIXTURE_BUNDLE);
         QVERIFY2(QFile::exists(fixture), "run `make fixture` first");
         QVERIFY(QDir().mkpath(m_bundles.filePath(u"sample-en"_s)));
@@ -344,6 +352,57 @@ private Q_SLOTS:
         donate->trigger();
         QDesktopServices::unsetUrlHandler(u"https"_s);
         QCOMPARE(browser.urls, QList<QUrl>{omnidict::ui::AboutDialog::donateUrl()});
+    }
+
+    void moreAppsOpensFromTheMenuAndFromAboutWhichClosesFirst()
+    {
+        // mocks/menu.html note 4, mocks/about.html note 5.
+        omnidict::core::Settings settings(m_profile.filePath(u"more.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"more-dicts"_s),
+                                                      m_profile.filePath(u"more-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"more.sqlite"_s));
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto* moreApps = window.findChild<QAction*>(u"moreAppsAction"_s);
+        QVERIFY(moreApps != nullptr);
+        QVERIFY(!moreApps->icon().pixmap(16).isNull()); // the grid glyph is in the resources
+
+        bool listed = false;
+        QTimer::singleShot(0, &window, [&listed] {
+            auto* list = qobject_cast<omnidict::ui::MoreAppsDialog*>(QApplication::activeModalWidget());
+            listed = list != nullptr;
+            if (list != nullptr) {
+                list->accept();
+            }
+        });
+        moreApps->trigger();
+        QVERIFY(listed);
+
+        // See all in About: About closes, then the list opens over the main window.
+        listed = false;
+        bool overWindow = false;
+        QTimer::singleShot(0, &window, [&window] {
+            auto* about = qobject_cast<omnidict::ui::AboutDialog*>(QApplication::activeModalWidget());
+            QVERIFY(about != nullptr);
+            window.showMoreApps(u"about"_s, about);
+        });
+        QTimer poll;
+        poll.setInterval(10);
+        connect(&poll, &QTimer::timeout, &window, [&] {
+            auto* list = qobject_cast<omnidict::ui::MoreAppsDialog*>(QApplication::activeModalWidget());
+            if (list == nullptr) {
+                return;
+            }
+            poll.stop();
+            listed = true;
+            overWindow = list->parentWidget() == &window;
+            list->accept();
+        });
+        poll.start();
+        window.showAbout(); // returns once See all has closed About
+        QTRY_VERIFY(listed);
+        QVERIFY(overWindow);
     }
 
     void severalKeysShowWithOrBetweenThem()

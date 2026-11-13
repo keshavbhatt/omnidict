@@ -115,6 +115,14 @@ QFrame[separator="true"] { background: {{border}}; max-height: 1px; min-height: 
 QFrame[sheet="true"] { background: {{panel}}; }
 QWidget[dictionaryRow="true"] { border-bottom: 1px solid {{border}}; }
 QFrame[sheetFoot="true"] { background: {{panel}}; border: none; border-top: 1px solid {{border}}; }
+/* More apps from Ktechpit: the KtechpitApps module's cards (mocks/more-apps.html). */
+QFrame#ktechpitAppCard { border: 1px solid {{border}}; border-radius: 8px; background: transparent; }
+QFrame#ktechpitAppCard:hover { background: {{hover}}; }
+QFrame#ktechpitAppCard:focus { border-color: {{accent}}; }
+QLabel#ktechpitAppName, QLabel#ktechpitAppStripTitle { font-size: 12px; font-weight: 600; }
+QLabel#ktechpitAppSummary, QLabel#ktechpitMoreAppsIntro { color: {{muted}}; font-size: 12px; }
+QLabel#ktechpitAppStripSeeAll { font-size: 12px; }
+QPushButton#ktechpitAppGet, QPushButton#ktechpitMoreAppsRefresh { padding: 0 10px; min-height: 24px; font-size: 12px; }
 
 QLineEdit, QPlainTextEdit, QTextEdit[input="true"] {
     background: {{input}}; color: {{text}};

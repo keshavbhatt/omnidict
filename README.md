@@ -43,7 +43,7 @@ instantly, without an internet connection.
 - **Favourites and recent lookups**, links between entries with Back and Forward.
 - **Light and dark themes** that follow the desktop, adjustable text size, keyboard shortcuts
   for everything.
-- **Private**: no tracking; the only network use is downloading dictionaries.
+- **Private**: no tracking, nothing about you is sent anywhere; the only network use is downloading dictionaries and, once a week, the list of the developer's other apps.
 
 Bugs and requests: [GitHub issues](https://github.com/keshavbhatt/omnidict/issues).
 

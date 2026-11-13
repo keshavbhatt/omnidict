@@ -81,6 +81,7 @@ expects every ktechpit desktop app to have.
 | E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | planned |
 | E10 | Quick lookup: a popup over any app from a global shortcut (Ctrl+Alt+D suggested) or `omnidict --popup` (DOCS/quick-lookup.md, mocks/quick-lookup.html) | M5 | KEEP (owner, 2026-09-30) | done: portal shortcut (ADR-019), popup, `--popup`, activation token on Wayland, Settings rows; launcher search (KRunner, GNOME) later |
 | E11 | Tray icon: closing the window keeps the app (and the quick lookup key) running; start at login in the tray (mocks/tray.html) | M5 | KEEP (owner, 2026-10-24) | done (ADR-020) |
+| E12 | More apps from Ktechpit: two of the developer's other apps in About, the full list from See all and the main menu (mocks/more-apps.html) | M5 | KEEP (owner, 2026-11-13) | done (ADR-023, KtechpitApps module) |
 
 ## F. Packaging
 

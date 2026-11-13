@@ -13,6 +13,7 @@
 #include "ui/first_run_panel.h"
 #include "ui/icons.h"
 #include "ui/logging.h"
+#include "ui/more_apps_dialog.h"
 #include "ui/quick_lookup.h"
 #include "ui/results_delegate.h"
 #include "ui/search_field.h"
@@ -355,6 +356,10 @@ void MainWindow::buildMainMenu()
         QDesktopServices::openUrl(AboutDialog::donateUrl());
     })->setObjectName(u"donateAction"_s);
     add(tr("About Omnidict"), u"info"_s, {}, &MainWindow::showAbout)->setObjectName(u"aboutAction"_s);
+    // mocks/menu.html note 4: the developer's other apps.
+    add(tr("More apps from Ktechpit"), u"grid"_s, {}, [this] {
+        showMoreApps(u"menu"_s, this);
+    })->setObjectName(u"moreAppsAction"_s);
     m_mainMenu->addSeparator();
     add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, &MainWindow::quit)
         ->setObjectName(u"quitAction"_s);
@@ -971,6 +976,18 @@ void MainWindow::showAbout()
     } else if (next == Next::BugReport) {
         showBugReport();
     }
+}
+
+void MainWindow::showMoreApps(const QString& place, QWidget* from)
+{
+    // Sheets never stack (DOCS/DESIGN.md): See all in About closes About first.
+    if (auto* sheet = qobject_cast<QDialog*>(from); sheet != nullptr) {
+        sheet->accept();
+        QTimer::singleShot(0, this, [this, place] { showMoreApps(place, this); });
+        return;
+    }
+    MoreAppsDialog dialog(place, this);
+    dialog.exec();
 }
 
 void MainWindow::showDictionaries(bool available)

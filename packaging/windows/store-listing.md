@@ -44,7 +44,7 @@ MADE FOR LEARNING AND EVERYDAY USE
 • Reorder dictionaries, switch them off, update or remove them
 • Light and dark themes that follow Windows, and an adjustable text size
 • Keyboard shortcuts for everything
-• Private: no tracking, nothing is sent anywhere; the only network use is downloading dictionaries
+• Private: no tracking, nothing about you is sent anywhere; the only network use is downloading dictionaries and, once a week, the list of the developer's other apps
 
 Omnidict is free. Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT and Kengdic; the About window credits each source.
 
@@ -67,7 +67,7 @@ The first version for Windows.
 11. Keeps running in the notification area and can start when you sign in
 12. Favourites and recent lookups
 13. Light and dark themes and an adjustable text size
-14. No tracking: nothing is sent anywhere
+14. No tracking: nothing about you is sent anywhere
 
 ## Search terms (up to 7, each up to 30 characters)
 

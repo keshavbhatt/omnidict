@@ -10,9 +10,10 @@
 export PATH := $(HOME)/.local/bin:$(PATH)
 
 BUILD_DIR ?= build
-CXX_SOURCES := $(shell find app/src app/tests -name '*.cpp' -o -name '*.h')
+# app/src/modules holds subtrees with their own style (KtechpitApps), checked in their repositories.
+CXX_SOURCES := $(shell find app/src app/tests -path app/src/modules -prune -o \( -name '*.cpp' -o -name '*.h' \) -print)
 # *_windows.cpp builds on Windows only, so the Linux compile database does not list it.
-TIDY_SOURCES := $(shell find app/src app/tests -name '*.cpp' ! -name '*_windows.cpp')
+TIDY_SOURCES := $(shell find app/src app/tests -path app/src/modules -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print)
 
 .PHONY: all fixture build test test-pipeline test-app lint lint-pipeline lint-app format clean distclean
 

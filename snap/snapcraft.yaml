@@ -36,7 +36,7 @@ description: |
   * Reorder dictionaries, switch them off, update or remove them.
   * Light and dark themes that follow the desktop, and an adjustable text size.
   * Keyboard shortcuts for everything.
-  * Private: no tracking, nothing is sent anywhere; the only network use is downloading dictionaries.
+  * Private: no tracking, nothing about you is sent anywhere; the only network use is downloading dictionaries and, once a week, the list of the developer's other apps.
 
   Bugs and requests: https://github.com/keshavbhatt/omnidict/issues
 website: https://github.com/keshavbhatt/omnidict
@@ -65,7 +65,7 @@ apps:
       - x11
       - wayland
       - unity7
-      - network # the dictionary catalogue and downloads, nothing else
+      - network # the dictionary catalogue and downloads, and the weekly More apps list
 
 parts:
   omnidict:

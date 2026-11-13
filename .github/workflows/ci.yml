@@ -82,13 +82,14 @@ jobs:
 
       - name: clang-format
         run: |
-          find app/src app/tests -name '*.cpp' -o -name '*.h' \
+          # app/src/modules holds subtrees (KtechpitApps), checked in their own repositories.
+          find app/src app/tests -path app/src/modules -prune -o \( -name '*.cpp' -o -name '*.h' \) -print \
             | xargs uvx --from "clang-format==${CLANG_FORMAT_VERSION}" clang-format --dry-run --Werror
 
       - name: clang-tidy
         run: |
           # *_windows.cpp builds on Windows only, so this compile database does not list it.
-          find app/src app/tests -name '*.cpp' ! -name '*_windows.cpp' \
+          find app/src app/tests -path app/src/modules -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print \
             | xargs uvx --from "clang-tidy==${CLANG_TIDY_VERSION}" clang-tidy -p build --quiet --warnings-as-errors='*'
 
       - name: shellcheck

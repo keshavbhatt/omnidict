@@ -23,6 +23,8 @@ qt_add_library(omnidict_ui STATIC
     logging.h
     main_window.cpp
     main_window.h
+    more_apps_dialog.cpp
+    more_apps_dialog.h
     quick_lookup.cpp
     quick_lookup.h
     results_delegate.cpp
@@ -54,6 +56,7 @@ target_link_libraries(omnidict_ui
         omnidict_models
         omnidict_services
         Qt6::Widgets
+        ktechpit_apps
     PRIVATE
         Qt6::Svg
 )

@@ -56,3 +56,11 @@ path = "DOCS/mocks/mock.js"
 precedence = "override"
 SPDX-FileCopyrightText = ["2026 Keshav Bhatt (Ktechpit)", "2026 Lucide Icons and Contributors"]
 SPDX-License-Identifier = "GPL-3.0-or-later AND ISC"
+
+# KtechpitApps (More apps from Ktechpit), the owner's MIT module, a subtree of
+# github.com/keshavbhatt/ktechpit-apps (ADR-023); its catalog and app icons come from ktechpit.com.
+[[annotations]]
+path = "app/src/modules/KtechpitApps/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Keshav Bhatt (Ktechpit)"
+SPDX-License-Identifier = "MIT"

@@ -42,6 +42,7 @@ private:
     [[nodiscard]] QLayout* buildHero();
     [[nodiscard]] QLayout* buildLinks();
     [[nodiscard]] QWidget* buildTabs();
+    [[nodiscard]] QWidget* buildMoreApps();
     [[nodiscard]] QWidget* buildDictionariesTab(QWidget* tabParent);
     [[nodiscard]] static QWidget* buildOpenSourceTab(QWidget* tabParent);
     [[nodiscard]] QWidget* buildDiagnosticsTab(QWidget* tabParent);
