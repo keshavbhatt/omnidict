@@ -74,7 +74,6 @@
           <button class="btn">Report a bug...</button>
           <button class="btn">Contact</button>
           <button class="btn">Donate</button>
-          <button class="btn">More apps</button>
         </div>
         <div class="tabs" style="padding:0;margin-top:4px">
           <span class="on" data-tab="dict">Dictionaries</span>
@@ -117,6 +116,13 @@
 - OS: Arch Linux, kernel 6.18.18, platform: xcb
 - Dictionaries: Spanish - English 2026.09.27, English 2026.09.27, Hindi - English 2026.09.27</div>
         </div>
+        <div style="border-top:1px solid var(--border);padding-top:12px">
+          <div class="kstrip-head">More apps from Ktechpit<span class="grow"></span><a href="more-apps.html">See all</a></div>
+          <div class="kcards">
+            <div class="kcard" title="Paraphrase: Private AI grammar checker, rewriter and smart reply writer that runs offline"><img src="../../app/src/modules/KtechpitApps/resources/icons/paraphrase.png" alt=""><div class="kt"><b>Paraphrase</b><span>Private AI grammar checker, rewriter and smart reply writer that runs offline</span></div><button class="btn small">Get</button></div>
+            <div class="kcard" title="PixelFx: Quick Image retouching application for Linux Desktop"><img src="../../app/src/modules/KtechpitApps/resources/icons/pixelfx.png" alt=""><div class="kt"><b>PixelFx</b><span>Quick Image retouching application for Linux Desktop</span></div><button class="btn small">Get</button></div>
+          </div>
+        </div>
       </div>
       <div class="sheet-foot">
         <span class="grow"></span>
@@ -128,12 +134,14 @@
   <span class="pin" style="left:770px;top:304px">4</span>
   <span class="pin" style="left:520px;top:228px">2</span>
   <span class="pin" style="left:628px;top:228px">3</span>
+  <span class="pin" style="left:450px;bottom:150px">5</span>
 </div>
 <section class="notes"><h2>Notes</h2><ol>
     <li><b>Attribution.</b>Every installed dictionary's card shows the credit and licence its content requires, here rather than buried in a settings page.</li>
     <li><b>Source (approved 2026-09-28).</b>After the licence, "Source:" links to where the dictionary's upstream data can be downloaded, named by its site (kaikki.org, download.freedict.org, github.com). The GPL, AGPL and MPL licences require the source to be offered with the dictionary; the link is how (ADR-016). Dictionaries built before schema 3 carry no link, and their card shows none.</li>
     <li><b>Open source.</b>Lists Qt, SQLite, ICU and zstd, each with its own licence text.</li>
     <li><b>Diagnostics.</b>A plain, copyable text block with the app, Qt, OS and installed dictionary versions, for pasting into a bug report.</li>
+    <li><b>More apps from Ktechpit (proposed 2026-11-13).</b>Under the tabs, a divider, the heading with See all, and two of the developer's other apps, drawn at random each time About opens (trending apps more often), never Omnidict itself, never one installed here, never one for another system. Each card: the app's icon, its name and description on one line each with an ellipsis (the tooltip has both whole), and Get, which opens the software centre for the way Omnidict was installed (Snap Store, Flathub, the product page on Windows). Clicking the card opens the app's page on ktechpit.com. See all opens the full list (<a href="more-apps.html">more-apps.html</a>). The About window grows by about 100 px (680 x 720) so the tabs keep their room. The old <b>More apps</b> button, which opened the products page in the browser, goes: See all and the main menu replace it. Always shown, with no setting to hide it, as in PixelFx.</li>
   </ol></section>
 <script>
 document.querySelectorAll('.tabs [data-tab]').forEach(function (t) {
