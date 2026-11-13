@@ -44,6 +44,8 @@ omnidict_prepare_runtime_farm "$BUILD"
 # themselves are in the core24 base snap, as they are for the shipped snap.
 # Both are linked through the farm so the RPATH never points at core24's
 # glibc (ADR-015 for zstd).
+# The SDK keeps its CMake packages under lib/x86_64-linux-gnu; a host CMake that does not know
+# that multiarch directory finds the host's Qt tool packages (moc, rcc) instead of the SDK's.
 # The CMake root is app/, not the repository root (ADR-010).
 cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DCMAKE_BUILD_TYPE="${OMNIDICT_BUILD_TYPE:-RelWithDebInfo}" \
@@ -54,6 +56,7 @@ cmake -S "$DIR/app" -B "$BUILD" -G Ninja \
     -DZstd_INCLUDE_DIR="$SDK/usr/include" \
     -DZstd_LIBRARY="$BUILD/core24-libs/libzstd.so.1" \
     -DQt6_DIR="$SDK/usr/lib/x86_64-linux-gnu/cmake/Qt6" \
+    -DCMAKE_LIBRARY_ARCHITECTURE=x86_64-linux-gnu \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,$SDK/usr/lib/x86_64-linux-gnu -Wl,--allow-shlib-undefined" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DOMNIDICT_SNAP_RUNTIME="$OMNIDICT_RT" \
