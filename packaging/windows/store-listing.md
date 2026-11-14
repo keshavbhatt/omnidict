@@ -1,9 +1,14 @@
 # Microsoft Store listing (en-us)
 
-Draft, for the owner to paste into Partner Center by hand (Omnidict, Store ID 9P5NP69TJVS6,
-ADR-022). Release text rules apply: no accounts or licensing words (CLAUDE.md). Taken from the
-metainfo description, with Windows words (Ctrl+Alt+D, the notification area). Limits are
-Partner Center's.
+Pasted into Partner Center (Omnidict, Store ID 9P5NP69TJVS6, ADR-022). Release text rules apply:
+no accounts or licensing words (CLAUDE.md). Limits are Partner Center's.
+
+Written for Store search (owner, 2026-11-14: "enhanced listing SEO"). The Store matches searches
+against the product name first, then the search terms, then the short title, the description
+and the features, so the words people type (dictionary, offline dictionary, thesaurus, English
+dictionary, synonyms, the big language names) sit in the search terms, the short title and the
+first two sentences of the description. Every claim is something Omnidict does: Store policy
+10.1 rejects keywords that do not describe the product, and no other product is named.
 
 ## Product name
 
@@ -11,79 +16,96 @@ Omnidict
 
 ## Short title (up to 50 characters)
 
-Omnidict: Offline Dictionary
+Omnidict: Offline Dictionary & Thesaurus
 
 ## Short description (up to 1000 characters; the first lines show on the product page)
 
-Offline dictionary for any language. Choose from more than six hundred free dictionaries in hundreds of languages, download the ones you need once, and look words up instantly without an internet connection. X to see its meaning in a small window.
+Offline dictionary and thesaurus for Windows, in more than 300 languages. Download any of 600+ dictionaries, English, Spanish, French, German, Japanese, Chinese, Hindi, Arabic and many more, and look up word meanings, synonyms and pronunciation instantly, with no internet connection. Select a word in any app and press Ctrl+Alt+D to see its definition in a small window.
 
 ## Description (up to 10000 characters)
 
-Omnidict is a fast offline dictionary. Choose from more than six hundred free dictionaries in hundreds of languages, download the ones you need once, and look words up instantly, without an internet connection.
+Omnidict is a fast offline dictionary and thesaurus for Windows. Download any of more than 600 dictionaries in over 300 languages, at no extra cost, and look up definitions, synonyms, translations and pronunciation instantly, without an internet connection.
+
+Select a word in your browser, a document or any other app and press Ctrl+Alt+D: its meaning opens in a small window, without leaving what you are doing.
 
 A DICTIONARY FOR EVERY LANGUAGE
-• English dictionary and thesaurus: English Wiktionary definitions, and English WordNet with synonyms, antonyms and related words
-• Wiktionary for over three hundred languages: Spanish, French, German, Italian, Portuguese, Russian, Hindi, Arabic, Japanese, Chinese, Korean, Turkish and many more, each explained in English
-• Historical languages too: Latin, Ancient Greek, Old English, Sanskrit and Old Norse
-• Hundreds of bilingual FreeDict dictionaries, such as German-English, English-French and Spanish-Portuguese
-• JMdict Japanese dictionary, CC-CEDICT Chinese dictionary and Kengdic Korean dictionary
-• Filter the catalogue by language and provider, and see each dictionary's size and number of entries before you download
+• English dictionary with definitions, example sentences, word forms and pronunciation (IPA)
+• English thesaurus from WordNet: synonyms, antonyms and related words
+• Spanish, French, German, Italian, Portuguese, Russian, Hindi, Arabic, Turkish, Japanese, Chinese, Korean and over 300 more languages from Wiktionary, each explained in English
+• Bilingual dictionaries for translating words: German-English, English-French, Spanish-Portuguese and hundreds more pairs from FreeDict
+• Japanese-English (JMdict), Chinese-English (CC-CEDICT) and Korean-English (Kengdic) dictionaries
+• Latin, Ancient Greek, Sanskrit, Old English and Old Norse for students of classical and historical languages
+• Filter the catalogue by language, and see each dictionary's size and number of words before you download it
 
-LOOK WORDS UP QUICKLY
-• Word lookup as you type, results grouped by dictionary with the best match first
-• Accents are optional, and an inflected form finds its entry: ran finds run
-• "Did you mean" spelling suggestions for misspelled words, in every script
-• Wildcards: ? for one letter, * for any run of letters
-• Full text search finds words used inside definitions
-• Links between entries, with Back and Forward as in a browser
-• Quick lookup: select or copy a word in any app and press Ctrl+Alt+D (or a key you choose) to see its meaning in a small window
-• Runs in the notification area, so quick lookup works with the window closed, and can start when you sign in
+FAST WORD LOOKUP
+• Results as you type, grouped by dictionary, with the best match first
+• Finds the base word from its other forms: "ran" finds "run"
+• Accents are optional: type "cafe" to find "café"
+• "Did you mean" spelling suggestions when a word is misspelled
+• Wildcard search: ? for one letter, * for any number of letters, for crosswords and word games
+• Full text search finds a word inside definitions, for reverse dictionary lookups
+• Click any word in an entry to look it up, with Back and Forward as in a browser
 
-MADE FOR LEARNING AND EVERYDAY USE
+QUICK LOOKUP FROM ANY APP
+• Select or copy a word anywhere and press Ctrl+Alt+D, or a shortcut you choose
+• Reads the selected word in Edge, Chrome, Word, Notepad and most Windows apps; anywhere else, copy the word first
+• Stays in the notification area so quick lookup is always ready, and can start when you sign in to Windows
+
+FOR LEARNERS, WRITERS AND TRANSLATORS
 • Favourites and recent lookups to build your vocabulary
-• Reorder dictionaries, switch them off, update or remove them
-• Light and dark themes that follow Windows, and an adjustable text size
+• Turn dictionaries on or off, reorder them, update or remove them
+• Light and dark themes that follow Windows, and adjustable text size
 • Keyboard shortcuts for everything
-• Private: no tracking, nothing about you is sent anywhere; the only network use is downloading dictionaries and, once a week, the list of the developer's other apps
+• Works fully offline once a dictionary is downloaded: on a plane, at school or anywhere without internet
+• Private: no ads, no tracking, nothing about you is sent anywhere
 
 Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT and Kengdic; the About window credits each source.
 
 ## What's new in this version
 
-The first version for Windows.
+The first version for Windows: offline dictionaries in over 300 languages, quick lookup with Ctrl+Alt+D from any app, and a thesaurus with synonyms and antonyms.
 
 ## Product features (up to 20, each up to 200 characters)
 
-1. More than six hundred free dictionaries in hundreds of languages, downloaded once and used offline
-2. English dictionary and thesaurus with synonyms, antonyms and related words
-3. Wiktionary for over three hundred languages, each explained in English
-4. Bilingual dictionaries such as German-English, English-French and Spanish-Portuguese
-5. Japanese, Chinese and Korean dictionaries: JMdict, CC-CEDICT and Kengdic
-6. Results as you type, with the best match first
-7. Accents optional, inflected forms found: ran finds run
-8. "Did you mean" spelling suggestions in every script
-9. Wildcards and full text search inside definitions
-10. Quick lookup: select or copy a word in any app and press Ctrl+Alt+D
-11. Keeps running in the notification area and can start when you sign in
-12. Favourites and recent lookups
-13. Light and dark themes and an adjustable text size
-14. No tracking: nothing about you is sent anywhere
+1. Offline dictionary: download any of 600+ dictionaries once and look words up without internet
+2. Over 300 languages: English, Spanish, French, German, Japanese, Chinese, Hindi, Arabic and more
+3. English dictionary with definitions, example sentences and IPA pronunciation
+4. Thesaurus: synonyms, antonyms and related words from WordNet
+5. Bilingual dictionaries for translating words, such as German-English and English-French
+6. Japanese, Chinese and Korean dictionaries: JMdict, CC-CEDICT and Kengdic
+7. Quick lookup: select a word in any app and press Ctrl+Alt+D
+8. Instant results as you type, best match first
+9. Finds the base word from any form: ran finds run
+10. Accents optional and "Did you mean" spelling suggestions
+11. Wildcard search for crosswords and word games
+12. Full text search inside definitions
+13. Favourites and recent lookups to build your vocabulary
+14. Stays in the notification area and can start with Windows
+15. Light and dark themes and adjustable text size
+16. No ads and no tracking
 
-## Search terms (up to 7, each up to 30 characters)
+## Search terms (up to 7, each up to 30 characters, 21 words in all)
 
-offline dictionary, english dictionary, thesaurus, translator, wiktionary, spanish dictionary, word lookup
+dictionary
+offline dictionary
+thesaurus
+english dictionary
+synonyms
+translation dictionary
+language learning
 
 ## Screenshots (PNG, at least 1366x768, up to 10)
 
 The Linux store screenshots (`screenshots/store/`, 1200x760) are below the Store's minimum
 size and show a Linux title bar: new ones are needed, taken from the installed test package on
-Windows at 1366x768 or larger. Captions (up to 200 characters each):
+Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword first:
 
-1. lookup: Look words up as you type, with results from every dictionary and the best match first
-2. catalogue: More than six hundred free dictionaries in hundreds of languages, downloaded once and used offline
-3. suggestions: "Did you mean" suggestions for misspelled words, in every script
-4. quick lookup: Select or copy a word in any app and press Ctrl+Alt+D to see its meaning in a small window
-5. dark: Light and dark themes that follow Windows
+1. lookup: Offline dictionary with instant results as you type, from every dictionary you installed
+2. catalogue: 600+ dictionaries in over 300 languages, downloaded once and used offline
+3. quick lookup: Select a word in any app and press Ctrl+Alt+D to see its meaning
+4. thesaurus: Synonyms, antonyms and related words from the English thesaurus
+5. suggestions: "Did you mean" spelling suggestions for misspelled words
+6. dark: Light and dark themes that follow Windows
 
 ## Other fields
 
@@ -91,7 +113,7 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each):
 - Developed by: Keshav Bhatt (Ktechpit)
 - Website: https://github.com/keshavbhatt/omnidict
 - Support contact: connect@ktechpit.com
-- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; Omnidict sends nothing)
-- Category (Properties page): Books & reference, subcategory none; or Education
-- Pricing: paid, no free trial (owner, 2026-11-14); the price is set in Partner Center,
+- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; Omnidict sends nothing about the user)
+- Category (Properties page): Books & reference (owner, 2026-11-14)
+- Pricing: USD 9.99 in all markets, no free trial (owner, 2026-11-14), set in Partner Center,
   Pricing and availability. The app needs no change for this: the Store sells and installs it.
