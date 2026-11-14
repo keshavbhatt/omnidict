@@ -14,6 +14,8 @@ qt_add_library(omnidict_services STATIC
     logging.h
     lookup_service.cpp
     lookup_service.h
+    selection.cpp
+    selection.h
 )
 omnidict_set_warnings(omnidict_services)
 
@@ -26,8 +28,9 @@ target_link_libraries(omnidict_services
 )
 
 # Windows: start at login through the MSIX startup task, with C++/WinRT from the Windows SDK
-# (ADR-022); the quick lookup key through RegisterHotKey (user32, linked by default).
+# (ADR-022); the quick lookup key through RegisterHotKey (user32, linked by default); the
+# selected word through UI Automation (COM, mocks/windows.html note 5).
 if(WIN32)
-    target_sources(omnidict_services PRIVATE autostart_windows.cpp)
-    target_link_libraries(omnidict_services PRIVATE WindowsApp)
+    target_sources(omnidict_services PRIVATE autostart_windows.cpp selection_windows.cpp)
+    target_link_libraries(omnidict_services PRIVATE WindowsApp ole32 oleaut32 uiautomationcore)
 endif()

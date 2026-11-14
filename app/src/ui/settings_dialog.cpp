@@ -644,9 +644,9 @@ QString SettingsDialog::quickLookupHint(services::GlobalShortcuts::State state) 
             .arg(displayKey(m_shortcuts->key()).toHtmlEscaped());
     }
     if (m_shortcuts != nullptr && m_shortcuts->recordsKey()) {
-        // Windows lets no app read another app's selection: the popup takes the clipboard
-        // (mocks/windows.html note 5).
-        return tr("Copy a word in any app, then press it.");
+        // Windows: the selection through UI Automation, else the clipboard (mocks/windows.html
+        // note 5, services::focusedSelection).
+        return tr("Select or copy a word in any app, then press it.");
     }
     const bool kde = qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains(u"KDE"_s);
     if (state == State::NoKey) {

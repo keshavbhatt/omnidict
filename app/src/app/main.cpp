@@ -8,8 +8,10 @@
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
 #include "services/hotkey_backend.h"
+#include "services/selection.h"
 #include "ui/icons.h"
 #include "ui/main_window.h"
+#include "ui/quick_lookup.h"
 #include "ui/theme_applier.h"
 #include "ui/tray.h"
 
@@ -23,6 +25,7 @@
 #include <QTimer>
 
 #include <AppCatalog.h>
+#include <chrono>
 #include <cstring>
 #include <memory>
 
@@ -157,6 +160,16 @@ void showFirstWindow(omnidict::ui::MainWindow& window, const QString& query, boo
     }
 }
 
+/// Windows: the word selected in the app the user is in, read before the popup takes the focus;
+/// empty elsewhere, and when that app gives none, so the popup reads the selection or the
+/// clipboard itself (mocks/windows.html note 5).
+QString selectedWord()
+{
+    constexpr std::chrono::milliseconds kSelectionTimeout{300};
+    return omnidict::ui::QuickLookup::wordFrom(
+        omnidict::services::focusedSelection(kSelectionTimeout).value_or(QString()));
+}
+
 /// The Quick Lookup shortcut (DOCS/quick-lookup.md): registered with the desktop, which
 /// asks the user once; pressing it opens the popup over whatever has focus.
 void connectQuickLookupShortcut(omnidict::services::GlobalShortcuts& shortcuts,
@@ -164,7 +177,7 @@ void connectQuickLookupShortcut(omnidict::services::GlobalShortcuts& shortcuts,
 {
     window.setGlobalShortcuts(&shortcuts);
     QObject::connect(&shortcuts, &omnidict::services::GlobalShortcuts::activated, &window,
-                     [&window](const QByteArray& token) { window.showQuickLookup({}, token); });
+                     [&window](const QByteArray& token) { window.showQuickLookup(selectedWord(), token); });
     // After the window is up: the desktop's one-time question comes over a visible app.
     // Not headless (tests, screenshots): there is no screen to press a shortcut on, and
     // the desktop would put its question up on the real session's screen.

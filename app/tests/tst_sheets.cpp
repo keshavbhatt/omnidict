@@ -309,7 +309,7 @@ private Q_SLOTS:
         QVERIFY(change != nullptr && hint != nullptr && fallbackRow != nullptr);
         QVERIFY(change->isVisible());
         QCOMPARE(change->text(), u"Change..."_s);
-        QCOMPARE(hint->text(), u"Copy a word in any app, then press it."_s); // note 5
+        QCOMPARE(hint->text(), u"Select or copy a word in any app, then press it."_s); // note 5
         QVERIFY(!fallbackRow->isVisible()); // no custom-shortcut route: the key always works
         grabWindows(dialog, change, u"windows-installed"_s);
 

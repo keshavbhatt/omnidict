@@ -29,6 +29,10 @@ Newest first. One entry per working session.
   `OMNIDICT_DEBUG_OPEN=moreapps`. Checked headlessly against the mocks; new tests in
   `tst_sheets` and `tst_smoke`. README, snap, metainfo and Store texts now mention the weekly
   app list.
+- Owner approved `windows.html` note 5 revised: quick lookup on Windows reads the selected word
+  of the app with the focus through UI Automation (`services::focusedSelection`,
+  `selection_windows.cpp`: a worker thread, at most 300 ms, Omnidict's own windows skipped),
+  then the clipboard as before. The Settings hint and Store texts say "select or copy".
 
 ## 2026-11-12 - Windows build and the Microsoft Store
 

@@ -531,7 +531,10 @@ key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which 
   `RegisterHotKey` with no window, read through Qt's native event filter), and Settings
   records a new key (`ui::KeyRecorder`), kept as `quickLookup/key`, since Windows has no
   service that lets the user pick it. A key another app holds is `GlobalShortcuts::State::Taken`.
-  The popup starts with the clipboard's word, as Windows lets no app read another's selection.
+  The popup starts with the word selected in the app the user is in, read through UI
+  Automation before the popup takes the focus (`services::focusedSelection`, at most 300 ms),
+  and with the clipboard's word when that app gives none (owner, 2026-11-13, after testing on
+  Windows; `DOCS/windows-selection.md`, `mocks/windows.html` note 5 revised and approved).
 - Start at login: the package's startup task (`uap5:StartupTask` id `OmnidictStartup`,
   `Windows.ApplicationModel.StartupTask` through C++/WinRT from the Windows SDK), which starts
   the app without arguments, so `Autostart::launchedAtLogin()` reads the activation kind to

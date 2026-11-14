@@ -1,6 +1,7 @@
 # Quick lookup on Windows: the selected word
 
-Status: **proposed, waiting for the owner** (2026-11-13). Nothing is implemented yet.
+Status: **accepted by the owner on 2026-11-13**: A, then C (UI Automation, then the clipboard); no
+simulated Ctrl+C. Built as `services::focusedSelection` (`selection_windows.cpp`).
 
 ## The problem
 

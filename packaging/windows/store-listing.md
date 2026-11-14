@@ -15,7 +15,7 @@ Omnidict: Offline Dictionary
 
 ## Short description (up to 1000 characters; the first lines show on the product page)
 
-Offline dictionary for any language. Choose from more than six hundred free dictionaries in hundreds of languages, download the ones you need once, and look words up instantly without an internet connection. Select or copy a word in any app and press Ctrl+Alt+D to see its meaning in a small window.
+Offline dictionary for any language. Choose from more than six hundred free dictionaries in hundreds of languages, download the ones you need once, and look words up instantly without an internet connection. X to see its meaning in a small window.
 
 ## Description (up to 10000 characters)
 
@@ -36,7 +36,7 @@ LOOK WORDS UP QUICKLY
 • Wildcards: ? for one letter, * for any run of letters
 • Full text search finds words used inside definitions
 • Links between entries, with Back and Forward as in a browser
-• Quick lookup: copy a word in any app and press Ctrl+Alt+D (or a key you choose) to see its meaning in a small window
+• Quick lookup: select or copy a word in any app and press Ctrl+Alt+D (or a key you choose) to see its meaning in a small window
 • Runs in the notification area, so quick lookup works with the window closed, and can start when you sign in
 
 MADE FOR LEARNING AND EVERYDAY USE
@@ -63,7 +63,7 @@ The first version for Windows.
 7. Accents optional, inflected forms found: ran finds run
 8. "Did you mean" spelling suggestions in every script
 9. Wildcards and full text search inside definitions
-10. Quick lookup: copy a word in any app and press Ctrl+Alt+D
+10. Quick lookup: select or copy a word in any app and press Ctrl+Alt+D
 11. Keeps running in the notification area and can start when you sign in
 12. Favourites and recent lookups
 13. Light and dark themes and an adjustable text size
@@ -82,7 +82,7 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each):
 1. lookup: Look words up as you type, with results from every dictionary and the best match first
 2. catalogue: More than six hundred free dictionaries in hundreds of languages, downloaded once and used offline
 3. suggestions: "Did you mean" suggestions for misspelled words, in every script
-4. quick lookup: Copy a word in any app and press Ctrl+Alt+D to see its meaning in a small window
+4. quick lookup: Select or copy a word in any app and press Ctrl+Alt+D to see its meaning in a small window
 5. dark: Light and dark themes that follow Windows
 
 ## Other fields

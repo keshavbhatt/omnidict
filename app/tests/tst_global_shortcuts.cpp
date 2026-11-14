@@ -1,6 +1,7 @@
 #include "fake_hotkey.h"
 #include "fake_portal.h"
 #include "services/global_shortcuts.h"
+#include "services/selection.h"
 
 #include <QCoreApplication>
 #include <QDBusConnection>
@@ -20,6 +21,19 @@ class TestGlobalShortcuts : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void onlyWindowsAsksTheFocusedAppForItsSelection()
+    {
+        // mocks/windows.html note 5: elsewhere the popup reads the selection itself. On
+        // Windows the test runner's console has the focus and offers no selected text.
+        const std::optional<QString> selected =
+            omnidict::services::focusedSelection(std::chrono::milliseconds(300));
+#ifdef Q_OS_WIN
+        QVERIFY(!selected.has_value() || selected->isEmpty());
+#else
+        QVERIFY(!selected.has_value());
+#endif
+    }
+
     void initTestCase()
     {
         // Outside a sandbox: the service registers its app id with the portal.
