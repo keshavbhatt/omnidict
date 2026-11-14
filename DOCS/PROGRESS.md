@@ -14,6 +14,13 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-11-14 - Windows test package approved; paid on the Store
+
+- CI run 43561921601 green (Windows 19/19); the owner tested its MSIX on Windows: More apps and
+  the selected word work. Owner: Omnidict is a paid app on the Microsoft Store, no free trial,
+  priced in Partner Center (ADR-022); `packaging/windows/store-listing.md` no longer says it
+  is free. No code change.
+
 ## 2026-11-13 - More apps from Ktechpit; the selected word on Windows
 
 - Owner tested the self-signed MSIX on Windows: everything as expected, except quick lookup

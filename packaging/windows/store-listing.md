@@ -46,7 +46,7 @@ MADE FOR LEARNING AND EVERYDAY USE
 • Keyboard shortcuts for everything
 • Private: no tracking, nothing about you is sent anywhere; the only network use is downloading dictionaries and, once a week, the list of the developer's other apps
 
-Omnidict is free. Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT and Kengdic; the About window credits each source.
+Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT and Kengdic; the About window credits each source.
 
 ## What's new in this version
 
@@ -93,4 +93,5 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each):
 - Support contact: connect@ktechpit.com
 - Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; Omnidict sends nothing)
 - Category (Properties page): Books & reference, subcategory none; or Education
-- Pricing: free
+- Pricing: paid, no free trial (owner, 2026-11-14); the price is set in Partner Center,
+  Pricing and availability. The app needs no change for this: the Store sells and installs it.

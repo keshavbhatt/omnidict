@@ -545,6 +545,10 @@ key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which 
 CI run takes longer; vcpkg's binary cache keeps rebuilt libraries between runs. A release for
 the Store is the CI artifact of the tagged commit, uploaded in Partner Center by the owner.
 The Store listing text follows the rule for release text: no accounts or licensing.
+On the Store Omnidict is a paid app with no free trial (owner, 2026-11-14), priced in Partner
+Center; it stays free on Linux. A Store trial would need the app to check its Store licence
+itself (`Windows.Services.Store`), so it was left out. Selling one's own open-source app is
+allowed: Store policy 10.8.7 dropped its open-source wording in July 2022.
 
 
 ## ADR-023: More apps from Ktechpit (2026-11-13)
