@@ -13,7 +13,8 @@ BUILD_DIR ?= build
 # app/src/modules holds subtrees with their own style (KtechpitApps), checked in their repositories.
 CXX_SOURCES := $(shell find app/src app/tests -path app/src/modules -prune -o \( -name '*.cpp' -o -name '*.h' \) -print)
 # *_windows.cpp builds on Windows only, so the Linux compile database does not list it.
-TIDY_SOURCES := $(shell find app/src app/tests -path app/src/modules -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print)
+# services/licensing builds only with OMNIDICT_LICENSING (the Microsoft Store build, ADR-024).
+TIDY_SOURCES := $(shell find app/src app/tests \( -path app/src/modules -o -path app/src/services/licensing \) -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print)
 
 .PHONY: all fixture build test test-pipeline test-app lint lint-pipeline lint-app format clean distclean
 

@@ -20,28 +20,32 @@ is built or conveyed by anyone else must not contain the Module.
 
 ## The licensing module: Ktechpit Licensing Module License
 
-The account, licence, evaluation-period and download-allowance code is not part of the
-GPL-licensed work. It is source-available under the Ktechpit Licensing Module License
-(`LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt`, added together with the module's
-code in milestone M3, since REUSE rejects a licence text that no file uses): you may read it and build it
+The account, licence and evaluation-period code is not part of the GPL-licensed work. It is
+source-available under the Ktechpit Licensing Module License
+(`LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt`): you may read it and build it
 unmodified for your own use, and you may not modify it, bypass it, redistribute it or use
-its endpoints in other software. These paths, reserved from milestone M3 onward and not
-present in this early scaffold:
+its endpoints in other software. These paths:
 
-- `app/src/modules/AccountAndLicense/`
-- `app/src/services/licensing/`
-- `app/src/core/licensing/`
+- `app/src/modules/AccountAndLicense/` (the module, as Ktechpit's other apps use it)
+- `app/src/services/licensing/` (Omnidict's use of it)
+- `app/src/core/licensing/` (reserved, empty)
 
-`REUSE.toml` records the same mapping in machine-readable form; the module's own files
-carry an SPDX header once they exist.
+The module is built only into the Microsoft Store package (`OMNIDICT_LICENSING`, on for
+Windows, ADR-024). Every other build (the snap, the Flatpak, the AppImage, a distribution
+package or your own) leaves it out and has no Omnidict Pro: everything is included there. The
+one-dictionary rule of Omnidict Free is GPL code (`app/src/ui/free_limit.*`) that does nothing
+without the module.
+
+`REUSE.toml` records the same mapping in machine-readable form; the module's own files carry
+an SPDX header.
 
 ## What this means for forks and contributors
 
 - Contributions to the GPL part are welcome under the GPL.
-- A fork that ships its own builds must leave the module out and replace what it
-  provides, and must not talk to Ktechpit's licence servers.
-- Official builds (the snap and other packages published by Ktechpit) combine both parts
-  under the additional permission above.
+- A fork that ships its own builds leaves the module out (the default everywhere but
+  Windows) and must not talk to Ktechpit's licence servers.
+- The Microsoft Store package published by Ktechpit combines both parts under the additional
+  permission above; the Linux packages do not contain the module.
 
 No earlier version of Omnidict existed under a different licence; this is the licensing model
 from the project's start.

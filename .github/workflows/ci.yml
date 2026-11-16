@@ -89,7 +89,8 @@ jobs:
       - name: clang-tidy
         run: |
           # *_windows.cpp builds on Windows only, so this compile database does not list it.
-          find app/src app/tests -path app/src/modules -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print \
+          # services/licensing builds only with OMNIDICT_LICENSING (the Microsoft Store build).
+          find app/src app/tests \( -path app/src/modules -o -path app/src/services/licensing \) -prune -o -name '*.cpp' ! -name '*_windows.cpp' -print \
             | xargs uvx --from "clang-tidy==${CLANG_TIDY_VERSION}" clang-tidy -p build --quiet --warnings-as-errors='*'
 
       - name: shellcheck

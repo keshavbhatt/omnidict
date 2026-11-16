@@ -115,6 +115,21 @@ QFrame[separator="true"] { background: {{border}}; max-height: 1px; min-height: 
 QFrame[sheet="true"] { background: {{panel}}; }
 QWidget[dictionaryRow="true"] { border-bottom: 1px solid {{border}}; }
 QFrame[sheetFoot="true"] { background: {{panel}}; border: none; border-top: 1px solid {{border}}; }
+/* Omnidict Pro (mocks/pro.html), Microsoft Store build. */
+QFrame[proStatus="true"] { background: {{hover}}; border: none; border-radius: 10px; }
+QFrame[proPass="true"] { background: transparent; border: 1px solid {{border}}; border-radius: 8px; }
+QLabel[strong="true"] { font-weight: 600; }
+QLabel[tableHead="true"] { font-size: 11px; font-weight: 700; color: {{muted}}; letter-spacing: 1px; }
+QLabel[tone="success"] { color: {{success}}; font-weight: 600; }
+QLabel[accountId="true"] {
+    background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 6px 10px;
+}
+QLabel[proMark="true"] {
+    border: 1px solid {{border}}; border-radius: 4px; padding: 0 5px; font-size: 11px; font-weight: 600;
+    color: {{muted}};
+}
+QProgressBar#proMeter { background: {{border}}; border: none; border-radius: 2px; }
+QProgressBar#proMeter::chunk { background: {{text}}; border-radius: 2px; }
 /* More apps from Ktechpit: the KtechpitApps module's cards (mocks/more-apps.html). */
 QFrame#ktechpitAppCard { border: 1px solid {{border}}; border-radius: 8px; background: transparent; }
 QFrame#ktechpitAppCard:hover { background: {{hover}}; }
@@ -386,6 +401,7 @@ QString styleSheetFor(const Tokens& t)
         {u"text"_s, t.text},
         {u"muted"_s, t.muted},
         {u"link"_s, t.link},
+        {u"success"_s, t.success},
         {u"warning"_s, t.warning},
         {u"danger"_s, t.danger},
     };

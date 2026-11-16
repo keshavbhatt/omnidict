@@ -1,5 +1,6 @@
 #include "core/settings.h"
 #include "fake_portal.h"
+#include "fake_pro.h"
 #include "models/results_model.h"
 #include "services/autostart.h"
 #include "services/dictionary_manager.h"
@@ -26,6 +27,7 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QMenu>
+#include <QPushButton>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -234,6 +236,58 @@ private Q_SLOTS:
         QTRY_VERIFY(window.isVisible());
         QVERIFY(!quick->isVisible());
         QTRY_VERIFY(!mainShown.isEmpty() && mainShown.last().at(1).toString() == u"serendipity"_s);
+    }
+
+    void omnidictProOnFree()
+    {
+        // ADR-024 (Microsoft Store build): the menu entry, quick lookup's Pro prompt with its
+        // free way out, and the trial's end said once (mocks/pro-prompts.html notes 2 to 4).
+        omnidict::core::Settings settings(m_profile.filePath(u"pro.ini"_s));
+        omnidict::services::DictionaryManager manager(m_profile.filePath(u"pro-dicts"_s),
+                                                      m_profile.filePath(u"pro-cache"_s),
+                                                      QUrl(u"http://127.0.0.1:9/catalog.json"_s));
+        MainWindow window(settings, manager, {m_bundles.path()}, m_profile.filePath(u"pro.sqlite"_s));
+        QSignalSpy ready(&window, &MainWindow::libraryReady);
+        QVERIFY(ready.wait());
+        auto* proAction = window.findChild<QAction*>(u"proAction"_s);
+        QVERIFY(proAction != nullptr);
+        QVERIFY(!proAction->isVisible()); // every build but the Store's: no Pro at all
+
+        omnidict::tests::FakePro pro(omnidict::services::ProStatus::Tier::Free);
+        window.setProStatus(&pro);
+        QVERIFY(proAction->isVisible());
+        QVERIFY(!proAction->icon().pixmap(16).isNull());
+        QCOMPARE(settings.proNotice(), u"trial-ended"_s);
+        const qsizetype toasts = window.findChildren<omnidict::ui::Toast*>().size();
+        QCOMPARE(toasts, 1);
+        Q_EMIT pro.statusChanged(); // a later answer: the line is not shown again
+        QCOMPARE(window.findChildren<omnidict::ui::Toast*>().size(), toasts);
+
+        omnidict::ui::QuickLookup* quick = window.quickLookup();
+        QSignalSpy quickShown(quick, &omnidict::ui::QuickLookup::entryShown);
+        window.showQuickLookup(u"perhaps"_s);
+        auto* message = quick->findChild<QLabel*>(u"quickMessage"_s);
+        QTRY_VERIFY(message->isVisible());
+        QVERIFY(message->text().contains(u"part of Omnidict Pro"_s));
+        QVERIFY(message->text().contains(u"perhaps"_s));
+        QVERIFY(quickShown.isEmpty());
+        auto* open = quick->findChild<QPushButton*>(u"quickOpen"_s);
+        QCOMPARE(open->text(), u"Look it up in Omnidict"_s);
+        QVERIFY(quick->findChild<QPushButton*>(u"quickPlan"_s)->isVisible());
+        if (const QString dir = qEnvironmentVariable("OMNIDICT_GRAB_DIR"); !dir.isEmpty()) {
+            QDir().mkpath(dir);
+            qApp->setPalette(omnidict::ui::paletteFor(omnidict::ui::Tokens::current()));
+            qApp->setStyleSheet(omnidict::ui::styleSheetFor(omnidict::ui::Tokens::current()));
+            QTest::qWait(100);
+            quick->grab().save(dir + u"/quick-lookup-free.png"_s); // mocks/pro-prompts.html, Quick lookup
+        }
+
+        // With Pro the same popup shows the entry.
+        pro.set(omnidict::services::ProStatus::Tier::Pro);
+        QTRY_VERIFY(!quickShown.isEmpty());
+        QCOMPARE(open->text(), u"Open in Omnidict"_s);
+        QVERIFY(!quick->findChild<QPushButton*>(u"quickPlan"_s)->isVisible());
+        quick->close();
     }
 
     void quickLookupStartsWithTheClipboardAndEscapeClosesIt()

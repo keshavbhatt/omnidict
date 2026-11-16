@@ -15,6 +15,8 @@ qt_add_library(omnidict_ui STATIC
     entry_view.h
     first_run_panel.cpp
     first_run_panel.h
+    free_limit.cpp
+    free_limit.h
     icons.cpp
     icons.h
     key_recorder.cpp
@@ -25,6 +27,10 @@ qt_add_library(omnidict_ui STATIC
     main_window.h
     more_apps_dialog.cpp
     more_apps_dialog.h
+    pro_dialog.cpp
+    pro_dialog.h
+    pro_prompt.cpp
+    pro_prompt.h
     quick_lookup.cpp
     quick_lookup.h
     results_delegate.cpp

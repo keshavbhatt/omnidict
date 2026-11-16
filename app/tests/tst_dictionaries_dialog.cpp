@@ -1,8 +1,10 @@
 #include "core/bundle.h"
 #include "core/settings.h"
+#include "fake_pro.h"
 #include "services/dictionary_manager.h"
 #include "services/lookup_service.h"
 #include "ui/dictionaries_dialog.h"
+#include "ui/pro_prompt.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
 
@@ -286,6 +288,70 @@ private Q_SLOTS:
         QVERIFY(settings.disabledDictionaries().contains(u"a"_s));
         toggle->click();
         QVERIFY(!settings.disabledDictionaries().contains(u"a"_s));
+    }
+
+    void onFreeASecondDictionaryAsksAndSwaps()
+    {
+        // mocks/pro-prompts.html note 1: Omnidict Free searches one dictionary at a time; Use
+        // ... instead switches the other one off in the same step.
+        QTemporaryDir dictDir;
+        QTemporaryDir cacheDir;
+        const QString pathA = dictDir.filePath(u"a/1/dict.sqlite"_s);
+        const QString pathB = dictDir.filePath(u"b/1/dict.sqlite"_s);
+        writeDummyFile(pathA);
+        writeDummyFile(pathB);
+        Settings settings(iniPath(u"free"_s));
+        settings.setDisabledDictionaries({u"b"_s});
+        DictionaryManager manager(dictDir.path(), cacheDir.path(),
+                                  QUrl(u"http://127.0.0.1:1/catalog.json"_s));
+        const QList<DictionaryInfo> installed{makeInstalled(u"a"_s, u"Spanish - English"_s, u"1"_s, pathA),
+                                              makeInstalled(u"b"_s, u"German - English"_s, u"1"_s, pathB)};
+        DictionariesDialog dialog(manager, settings, installed, dictDir.path());
+        omnidict::tests::FakePro pro(omnidict::services::ProStatus::Tier::Free);
+        dialog.setProStatus(&pro);
+
+        // Escape: nothing changes.
+        QString asked;
+        QTimer::singleShot(0, &dialog, [&asked] {
+            auto* prompt =
+                qobject_cast<omnidict::ui::DictionaryProPrompt*>(QApplication::activeModalWidget());
+            QVERIFY(prompt != nullptr);
+            asked = prompt->findChild<QLabel*>(u"dictionaryProPromptText"_s)->text();
+            if (const QString dir = qEnvironmentVariable("OMNIDICT_GRAB_DIR"); !dir.isEmpty()) {
+                QDir().mkpath(dir);
+                prompt->grab().save(dir + u"/dictionary-pro-prompt.png"_s); // mocks/pro-prompts.html
+            }
+            prompt->reject();
+        });
+        auto* toggleB = dialog.findChild<SwitchButton*>(u"dictSwitch_b"_s);
+        QVERIFY(toggleB != nullptr);
+        toggleB->click();
+        QVERIFY(asked.contains(u"Spanish - English is on"_s));
+        QVERIFY(asked.contains(u"Use German - English instead"_s));
+        QCOMPARE(settings.disabledDictionaries(), QStringList{u"b"_s});
+
+        // Use German - English instead: swapped.
+        QTimer::singleShot(0, &dialog, [] {
+            auto* prompt =
+                qobject_cast<omnidict::ui::DictionaryProPrompt*>(QApplication::activeModalWidget());
+            QVERIFY(prompt != nullptr);
+            prompt->findChild<QPushButton*>(u"promptSwap"_s)->click();
+        });
+        dialog.findChild<SwitchButton*>(u"dictSwitch_b"_s)->click();
+        QCOMPARE(settings.disabledDictionaries(), QStringList{u"a"_s});
+
+        // With Pro (or the trial) nothing asks.
+        pro.set(omnidict::services::ProStatus::Tier::Trial);
+        // The rows rebuilt after the swap: their old switches are only deleted later.
+        auto* list = dialog.findChild<QListWidget*>();
+        SwitchButton* toggleA = nullptr;
+        for (int i = 0; i < list->count() && toggleA == nullptr; ++i) {
+            toggleA = list->itemWidget(list->item(i))->findChild<SwitchButton*>(u"dictSwitch_a"_s);
+        }
+        QVERIFY(toggleA != nullptr);
+        QVERIFY(!toggleA->isChecked());
+        toggleA->click();
+        QVERIFY(settings.disabledDictionaries().isEmpty());
     }
 
     void movingRowWithAltDownWritesDictionaryOrder()

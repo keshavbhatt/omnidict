@@ -13,6 +13,13 @@ project(omnidict
 option(OMNIDICT_BUILD_TESTS "Build unit tests" ON)
 option(OMNIDICT_WERROR "Treat warnings as errors" OFF)
 option(OMNIDICT_ENABLE_CLANG_TIDY "Run clang-tidy during the build" OFF)
+# Omnidict Pro through the Ktechpit licensing module (ADR-024): on for the Microsoft Store build.
+if(WIN32)
+    set(_omnidict_licensing_default ON)
+else()
+    set(_omnidict_licensing_default OFF)
+endif()
+option(OMNIDICT_LICENSING "Build Omnidict Pro with the Ktechpit licensing module" ${_omnidict_licensing_default})
 
 # ---------------------------------------------------------------------------
 # Global settings

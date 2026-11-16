@@ -26,6 +26,8 @@ inline constexpr QLatin1StringView kDisabledDictionaries{"dictionaries/disabled"
 
 // quickLookup/
 inline constexpr QLatin1StringView kQuickLookupNoKeyNoticeShown{"quickLookup/noKeyNoticeShown"};
+/// Omnidict Pro: the last one-time line the main window showed (ADR-024).
+inline constexpr QLatin1StringView kProNotice{"pro/notice"};
 inline constexpr QLatin1StringView kQuickLookupKey{"quickLookup/key"};
 
 // background/

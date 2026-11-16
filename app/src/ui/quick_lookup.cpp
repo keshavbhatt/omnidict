@@ -9,6 +9,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDesktopServices>
 #include <QFrame>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -148,23 +149,98 @@ QWidget* QuickLookup::buildFooter(QWidget* frame)
     auto* layout = new QHBoxLayout(foot);
     layout->setContentsMargins(12, 8, 12, 8);
     layout->setSpacing(6);
-    const auto hint = [foot, layout](const QString& key, const QString& text) {
-        layout->addWidget(makeKeyCaps(key, foot));
-        auto* label = new QLabel(text, foot);
+    m_hints = new QWidget(foot);
+    auto* hintsLayout = new QHBoxLayout(m_hints);
+    hintsLayout->setContentsMargins(0, 0, 0, 0);
+    hintsLayout->setSpacing(6);
+    const auto hint = [this, hintsLayout](const QString& key, const QString& text) {
+        hintsLayout->addWidget(makeKeyCaps(key, m_hints));
+        auto* label = new QLabel(text, m_hints);
         label->setProperty("muted", true);
         label->setProperty("small", true);
-        layout->addWidget(label);
-        layout->addSpacing(6);
+        hintsLayout->addWidget(label);
+        hintsLayout->addSpacing(6);
     };
     hint(tr("Enter"), tr("open in Omnidict"));
     hint(tr("Esc"), tr("close"));
+    layout->addWidget(m_hints);
+    // On Free (mocks/pro-prompts.html note 2).
+    m_whatProAdds = new QPushButton(tr("What Pro adds"), foot);
+    m_whatProAdds->setObjectName(u"quickWhatPro"_s);
+    m_whatProAdds->setProperty("linkButton", true);
+    m_whatProAdds->setCursor(Qt::PointingHandCursor);
+    connect(m_whatProAdds, &QPushButton::clicked, this, [this] {
+        close();
+        Q_EMIT proRequested();
+    });
+    layout->addWidget(m_whatProAdds);
     layout->addStretch(1);
-    auto* open = new QPushButton(tr("Open in Omnidict"), foot);
-    open->setObjectName(u"quickOpen"_s);
-    open->setProperty("small", true);
-    connect(open, &QPushButton::clicked, this, [this] { Q_EMIT openInMain(m_search->text().trimmed()); });
-    layout->addWidget(open);
+    m_open = new QPushButton(tr("Open in Omnidict"), foot);
+    m_open->setObjectName(u"quickOpen"_s);
+    m_open->setProperty("small", true);
+    connect(m_open, &QPushButton::clicked, this, [this] { Q_EMIT openInMain(m_search->text().trimmed()); });
+    layout->addWidget(m_open);
+    m_plan = new QPushButton(tr("Choose a plan"), foot);
+    m_plan->setObjectName(u"quickPlan"_s);
+    m_plan->setProperty("small", true);
+    m_plan->setProperty("primary", true);
+    connect(m_plan, &QPushButton::clicked, this, [this] {
+        if (const services::ProStatus* pro = m_pro.data(); pro != nullptr) {
+            QDesktopServices::openUrl(pro->checkoutUrl(services::ProStatus::Source::QuickLookup));
+        }
+        close();
+    });
+    layout->addWidget(m_plan);
+    applyProFooter();
     return foot;
+}
+
+void QuickLookup::setProStatus(services::ProStatus* pro)
+{
+    if (m_pro != nullptr) {
+        disconnect(m_pro, nullptr, this, nullptr);
+    }
+    m_pro = pro;
+    if (pro != nullptr) {
+        connect(pro, &services::ProStatus::statusChanged, this, [this] {
+            applyProFooter();
+            if (isVisible()) {
+                search();
+            }
+        });
+    }
+    applyProFooter();
+}
+
+bool QuickLookup::proOnly() const
+{
+    const services::ProStatus* pro = m_pro.data();
+    return pro != nullptr && !pro->hasPro();
+}
+
+void QuickLookup::applyProFooter()
+{
+    const bool free = proOnly();
+    m_hints->setVisible(!free);
+    m_whatProAdds->setVisible(free);
+    m_plan->setVisible(free);
+    m_open->setText(free ? tr("Look it up in Omnidict") : tr("Open in Omnidict"));
+}
+
+void QuickLookup::showProOnly(const QString& text)
+{
+    m_dictionaryName->clear();
+    m_also->clear();
+    m_entry->hide();
+    const QString instead =
+        text.isEmpty() ? tr("Look words up in Omnidict instead, or get Pro to see meanings right here "
+                            "from any app.")
+                       : tr("Look %1 up in Omnidict instead, or get Pro to see meanings right here from "
+                            "any app.")
+                             .arg(u"<i>%1</i>"_s.arg(text.toHtmlEscaped()));
+    m_message->setText(
+        u"<p><b>%1</b></p><p>%2</p>"_s.arg(tr("Quick lookup is part of Omnidict Pro"), instead));
+    m_message->show();
 }
 
 void QuickLookup::setDictionaries(const QList<services::DictionaryInfo>& dictionaries)
@@ -238,6 +314,10 @@ void QuickLookup::search()
     const QString text = m_search->text().trimmed();
     m_searchRequest = nextRequestId();
     m_entryRequest = 0;
+    if (proOnly()) {
+        showProOnly(text);
+        return;
+    }
     if (text.isEmpty() || m_lookup == nullptr) {
         m_dictionaryName->clear();
         m_entry->showEntry({}, {});

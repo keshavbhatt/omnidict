@@ -6,6 +6,8 @@
 #include <QPointer>
 #include <QThread>
 
+#include <functional>
+
 class QAction;
 class QBoxLayout;
 class QActionGroup;
@@ -24,6 +26,7 @@ class Settings;
 namespace omnidict::services {
 class DictionaryManager;
 class GlobalShortcuts;
+class ProStatus;
 struct DownloadStatus;
 } // namespace omnidict::services
 
@@ -93,6 +96,12 @@ public:
     /// The global shortcut, for Settings to show its state (owned by the caller). When the
     /// desktop binds it without a key, says so once (mocks/quick-lookup-no-key.html).
     void setGlobalShortcuts(services::GlobalShortcuts* shortcuts);
+    /// Omnidict Pro, Microsoft Store build only (ADR-024): the main menu entry, the
+    /// one-dictionary limit on Free, quick lookup's Pro prompt and the one-time lines. Never
+    /// set elsewhere: then everything is included.
+    void setProStatus(services::ProStatus* pro);
+    /// The Omnidict Pro sheet (mocks/pro.html); nothing without a ProStatus.
+    void showPro();
 
 Q_SIGNALS:
     /// The dictionaries are open (or found to be missing).
@@ -163,6 +172,11 @@ private:
     void applyLayoutMode();
     void showEntryColumn(bool entry);
     void onShortcutStateChanged();
+    /// On Free, leaves one dictionary switched on, and shows the trial's or a plan's one-time
+    /// line once (mocks/pro-prompts.html notes 3 and 5).
+    void applyProStatus();
+    void showProNotice(const QString& id, const QString& text, const QString& action,
+                       std::function<void()> onAction);
 
     [[nodiscard]] QString currentDictId() const;
     [[nodiscard]] const services::DictionaryInfo* dictionary(const QString& dictId) const;
@@ -176,6 +190,8 @@ private:
     QuickLookup* m_quick = nullptr;
     services::GlobalShortcuts* m_shortcuts = nullptr;
     Tray* m_tray = nullptr;
+    QPointer<services::ProStatus> m_pro;
+    QAction* m_proAction = nullptr;
     bool m_quitting = false;       ///< quit() or the session ending: the window closes for real
     QPointer<Toast> m_noKeyNotice; ///< while shown: closed once the desktop has a key
     bool m_libraryOpen = false;

@@ -14,6 +14,22 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-11-16 - Omnidict Pro on the Microsoft Store build
+
+- Owner: no Microsoft payout profile, so the Store listing is free and Omnidict Pro is sold on
+  ktechpit.com through the Ktechpit licensing module, Windows only (ADR-024, replacing the
+  paid listing of 2026-11-14). Decisions: 14-day trial; Free searches one dictionary at a
+  time (first two, then one, owner); Pro adds all dictionaries and quick lookup; plans
+  Forever or for a time; included in Ktechpit Pass; app code OMNIDICT on the server.
+- Mocks `pro.html` and `pro-prompts.html` approved the same day, then built: the module
+  copied unchanged from PixelFx and `services::LicenseService`, both behind
+  `OMNIDICT_LICENSING` (on for WIN32 only); `services::ProStatus` (GPL) for the UI;
+  `ui::ProDialog`, `ui::DictionaryProPrompt`, `ui::free_limit`; quick lookup's Free state,
+  the Settings Pro mark, the main menu entry and the one-time lines. The style sheet gained
+  its missing `success` colour. Checked headlessly against the mocks in every state; new
+  `tst_pro`, and Free cases in `tst_dictionaries_dialog` and `tst_smoke`. A build with
+  `OMNIDICT_LICENSING=ON` compiles on Linux too.
+
 ## 2026-11-14 - Windows test package approved; paid on the Store
 
 - CI run 43561921601 green (Windows 19/19); the owner tested its MSIX on Windows: More apps and

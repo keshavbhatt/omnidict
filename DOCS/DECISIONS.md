@@ -545,10 +545,9 @@ key (ADR-019) and start at login (ADR-020) go through xdg-desktop-portal, which 
 CI run takes longer; vcpkg's binary cache keeps rebuilt libraries between runs. A release for
 the Store is the CI artifact of the tagged commit, uploaded in Partner Center by the owner.
 The Store listing text follows the rule for release text: no accounts or licensing.
-On the Store Omnidict is a paid app with no free trial (owner, 2026-11-14), priced in Partner
-Center; it stays free on Linux. A Store trial would need the app to check its Store licence
-itself (`Windows.Services.Store`), so it was left out. Selling one's own open-source app is
-allowed: Store policy 10.8.7 dropped its open-source wording in July 2022.
+On the Store Omnidict was to be a paid app with no free trial (owner, 2026-11-14); replaced
+two days later by a free listing with Omnidict Pro sold through the Ktechpit licensing module
+(ADR-024), as a paid listing needs a Microsoft payout profile.
 
 
 ## ADR-023: More apps from Ktechpit (2026-11-13)
@@ -581,3 +580,42 @@ question 6 ("the only network use is the dictionary catalogue and downloads"); t
 metainfo and Store texts now say so. The snap's `network` plug, the Flatpak's network and the
 MSIX's `internetClient` already allow it. The descriptions come from the site's catalog and are
 fixed there; on Windows the site lists only Torrhunt and Whatsie today.
+
+
+## ADR-024: Omnidict Pro on the Microsoft Store build (2026-11-16)
+
+**Status.** Accepted (owner, 2026-11-16). `mocks/pro.html` and `mocks/pro-prompts.html`
+approved the same day, after three revisions: plans for a time, Ktechpit Pass, and one
+dictionary on Free.
+
+**Context.** The plan for the Store was a paid app (ADR-022, 2026-11-14), but a paid Store app
+needs a Microsoft payout profile, which the owner does not have and wants to avoid. PixelFx
+sells Pro on the Store through the Ktechpit licensing module and Ktechpit's own checkout (its
+ADR-016 and ADR-018); Store policy 10.8.7 lets apps that are not games take their own payments.
+LICENSING.md has reserved the module's paths since the start (ADR-007, "Model B").
+
+**Decision.**
+- The Store listing is free. Omnidict Pro is sold on ktechpit.com: app code OMNIDICT,
+  checkout slug `omnidict`, a 14-day trial for every new install, plans Forever or for a time,
+  and Omnidict is included in Ktechpit Pass. The owner sets these up on the server.
+- Windows only. The module (`app/src/modules/AccountAndLicense`, copied unchanged from
+  PixelFx) and `services::LicenseService` build only with `OMNIDICT_LICENSING`, on by default
+  for WIN32 and off elsewhere, so no Linux package contains code under the module's licence.
+  The UI depends on `services::ProStatus`, an interface under the GPL; null means everything is
+  included, which is every non-Store build.
+- Free: everything in the main window and every dictionary to download, but one dictionary
+  searched at a time (`ui::free_limit`, GPL); quick lookup (the key and the tray item) shows
+  its Pro prompt with Look it up in Omnidict as the free way out. Nothing is ever uninstalled:
+  at the trial's or a plan's end, the first dictionary in the user's order stays on and the
+  others are switched off; a dictionary installed on Free arrives switched off when another
+  is on; switching a second one on asks, with Use ... instead as a one-click swap.
+- One-time lines in the main window (`pro/notice`): the trial's end, a plan's end, and 7 days
+  before a plan for a time ends. The Pro sheet shows every state; the meter is the trial's
+  only, as the server reports a plan's end but not its start.
+- Choose a plan sends the checkout a `source` (sheet, dictionary, quick_lookup, trial_end,
+  plan_end, ends_soon). Debug builds take `OMNIDICT_DEBUG_LICENSE=pro|trial|free|neterr`.
+
+**Consequences.** The Store's product declaration says the app takes purchases outside the
+Microsoft Store commerce system. Release text keeps the rule on accounts and licensing; the
+Pro sheet and prompts are UI, not release text. Changing what Free includes is a change to
+`ui::free_limit` and the Pro sheet's table. A plan for a time ends on its date offline too.

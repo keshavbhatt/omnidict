@@ -87,6 +87,7 @@ omnidict_add_test(tst_smoke tst_smoke.cpp omnidict_ui GUI)
 target_compile_definitions(tst_smoke PRIVATE
     OMNIDICT_FIXTURE_BUNDLE="${OMNIDICT_FIXTURE_BUNDLE}")
 omnidict_add_test(tst_sheets tst_sheets.cpp omnidict_ui GUI)
+omnidict_add_test(tst_pro tst_pro.cpp omnidict_ui GUI)
 omnidict_add_test(tst_dictionaries_dialog tst_dictionaries_dialog.cpp omnidict_ui GUI)
 # The test builds its own .odict with the zstd C API and serves it from the
 # same QTcpServer-based HTTP helper as tst_dictionary_manager.

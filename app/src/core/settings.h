@@ -76,6 +76,10 @@ public:
     // quickLookup/
     /// The main window already said that the desktop gave Quick Lookup no key; it says so once.
     [[nodiscard]] bool quickLookupNoKeyNoticeShown() const;
+    /// Omnidict Pro: which one-time line the main window last showed ("trial-ended",
+    /// "plan-ended:<date>", "ends-soon:<date>"), so each shows once (mocks/pro-prompts.html).
+    [[nodiscard]] QString proNotice() const;
+    void setProNotice(const QString& notice);
     void setQuickLookupNoKeyNoticeShown(bool shown);
     /// The key Omnidict registers itself where it records one (Windows, mocks/windows.html), in
     /// QKeySequence's portable text ("Ctrl+Alt+D"); empty when the user turned it off.

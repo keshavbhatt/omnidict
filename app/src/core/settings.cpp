@@ -175,6 +175,16 @@ void Settings::setDisabledDictionaries(const QStringList& dictIds)
     }
 }
 
+QString Settings::proNotice() const
+{
+    return m_store->value(keys::kProNotice).toString();
+}
+
+void Settings::setProNotice(const QString& notice)
+{
+    store(keys::kProNotice, notice, QString());
+}
+
 bool Settings::quickLookupNoKeyNoticeShown() const
 {
     return boolValue(keys::kQuickLookupNoKeyNoticeShown, false);

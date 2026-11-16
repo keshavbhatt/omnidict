@@ -78,7 +78,7 @@ expects every ktechpit desktop app to have.
 | E6 | Report a bug | M2 | KEEP | done (mocks/bug-report.html: GitHub issue or email, diagnostics on the clipboard, nothing sent by the app) |
 | E7 | Keyboard shortcuts sheet (F1 and Ctrl+/) | M2 | KEEP | done (mocks/shortcuts.html, filterable) |
 | E8 | What's new sheet from the bundled changelog | M2 | KEEP | done (mocks/whats-new.html; once after an update, and from the menu and About) |
-| E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | planned |
+| E9 | Account and Pro plan module (`AccountAndLicense`) | M3 | KEEP | done for the Microsoft Store build only (ADR-024, mocks/pro.html, mocks/pro-prompts.html): 14-day trial, Free with one dictionary at a time, Pro with all and quick lookup; Linux builds have no Pro |
 | E10 | Quick lookup: a popup over any app from a global shortcut (Ctrl+Alt+D suggested) or `omnidict --popup` (DOCS/quick-lookup.md, mocks/quick-lookup.html) | M5 | KEEP (owner, 2026-09-30) | done: portal shortcut (ADR-019), popup, `--popup`, activation token on Wayland, Settings rows; launcher search (KRunner, GNOME) later |
 | E11 | Tray icon: closing the window keeps the app (and the quick lookup key) running; start at login in the tray (mocks/tray.html) | M5 | KEEP (owner, 2026-10-24) | done (ADR-020) |
 | E12 | More apps from Ktechpit: two of the developer's other apps in About, the full list from See all and the main menu (mocks/more-apps.html) | M5 | KEEP (owner, 2026-11-13) | done (ADR-023, KtechpitApps module) |

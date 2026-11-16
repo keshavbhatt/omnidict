@@ -4,8 +4,11 @@
 #include "core/installer.h"
 #include "core/settings.h"
 #include "services/dictionary_manager.h"
+#include "services/pro_status.h"
 #include "ui/empty_state.h"
+#include "ui/free_limit.h"
 #include "ui/icons.h"
+#include "ui/pro_prompt.h"
 #include "ui/style.h"
 #include "ui/switch_button.h"
 
@@ -759,7 +762,12 @@ SwitchButton* DictionariesDialog::buildDictSwitch(QWidget* row, const services::
     auto* toggle = new SwitchButton(tr("Show %1 in search").arg(info.name), row);
     toggle->setObjectName(u"dictSwitch_"_s + info.dictId);
     toggle->setChecked(!m_settings.disabledDictionaries().contains(info.dictId));
-    connect(toggle, &SwitchButton::toggled, this, [this, dictId = info.dictId](bool on) {
+    connect(toggle, &SwitchButton::toggled, this, [this, toggle, dictId = info.dictId](bool on) {
+        if (on && !maySwitchOn(dictId)) {
+            const QSignalBlocker blocker(toggle);
+            toggle->setChecked(false);
+            return;
+        }
         QStringList disabled = m_settings.disabledDictionaries();
         disabled.removeAll(dictId);
         if (!on) {
@@ -769,6 +777,45 @@ SwitchButton* DictionariesDialog::buildDictSwitch(QWidget* row, const services::
         rebuildInstalledRows();
     });
     return toggle;
+}
+
+bool DictionariesDialog::maySwitchOn(const QString& dictId)
+{
+    if (m_pro == nullptr || m_pro->hasPro()) {
+        return true;
+    }
+    QStringList others =
+        free_limit::switchedOn(m_installed, m_settings.dictionaryOrder(), m_settings.disabledDictionaries());
+    others.removeAll(dictId);
+    if (others.size() < free_limit::kDictionaries) {
+        return true;
+    }
+    const auto nameOf = [this](const QString& id) {
+        const auto it = std::ranges::find_if(
+            m_installed, [&](const services::DictionaryInfo& i) { return i.dictId == id; });
+        return it != m_installed.end() ? it->name : id;
+    };
+    DictionaryProPrompt prompt(*m_pro, nameOf(others.constFirst()), nameOf(dictId), this);
+    prompt.exec();
+    switch (prompt.choice()) {
+    case DictionaryProPrompt::Choice::Swap: {
+        QStringList disabled = m_settings.disabledDictionaries();
+        for (const QString& other : std::as_const(others)) {
+            if (!disabled.contains(other)) {
+                disabled.append(other);
+            }
+        }
+        m_settings.setDisabledDictionaries(disabled);
+        return true;
+    }
+    case DictionaryProPrompt::Choice::WhatProAdds:
+        Q_EMIT proRequested();
+        return false;
+    case DictionaryProPrompt::Choice::Plan:
+    case DictionaryProPrompt::Choice::Cancel:
+        return false;
+    }
+    return false;
 }
 
 void DictionariesDialog::attachRowMenu(QToolButton* button, const services::DictionaryInfo& info)

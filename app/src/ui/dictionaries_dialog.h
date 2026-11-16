@@ -17,6 +17,7 @@ struct CatalogEntry;
 
 namespace omnidict::services {
 class DictionaryManager;
+class ProStatus;
 struct DownloadStatus;
 } // namespace omnidict::services
 
@@ -62,6 +63,13 @@ public:
     void setInstalled(const QList<services::DictionaryInfo>& installed);
     /// Selects the Available tab.
     void showAvailable();
+    /// Omnidict Pro (Microsoft Store build): on Free, switching a second dictionary on asks
+    /// first (mocks/pro-prompts.html note 1). Null: no limit.
+    void setProStatus(services::ProStatus* pro) { m_pro = pro; }
+
+Q_SIGNALS:
+    /// What Pro adds, from the prompt: the caller closes this sheet and shows Omnidict Pro.
+    void proRequested();
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -79,6 +87,9 @@ private:
     static QVBoxLayout* buildInstalledText(QWidget* row, const services::DictionaryInfo& info);
     void appendUpdateControls(QHBoxLayout* layout, QWidget* row, const services::DictionaryInfo& info);
     SwitchButton* buildDictSwitch(QWidget* row, const services::DictionaryInfo& info);
+    /// On Free with another dictionary on: asks, and on Use ... instead switches the others
+    /// off. False when `dictId` must stay off.
+    bool maySwitchOn(const QString& dictId);
     QWidget* buildAvailableRow(const core::CatalogEntry& entry, bool isLast);
     /// The fixed-width right-hand column holding a row's button or status, so sizes line up.
     QWidget* makeActionColumn(QWidget* parent) const;
@@ -123,6 +134,7 @@ private:
     services::DictionaryManager& m_manager;
     core::Settings& m_settings;
     QList<services::DictionaryInfo> m_installed;
+    services::ProStatus* m_pro = nullptr;
     QString m_dictionariesRoot;
     QString m_catalogFailure; ///< the reason from the last catalogFailed(); empty when it last succeeded
     QString m_selectedDictId; ///< survives a rebuild, for repeated Alt+Up / Alt+Down

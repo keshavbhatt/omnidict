@@ -636,6 +636,21 @@ void SettingsDialog::fillQuickLookupKeys(services::GlobalShortcuts::State state)
     }
 }
 
+void SettingsDialog::setProStatus(const services::ProStatus* pro)
+{
+    if (pro == nullptr || pro->hasPro() || m_quickShortcutRow == nullptr ||
+        m_quickShortcutRow->findChild<QLabel*>(u"quickLookupProMark"_s) != nullptr) {
+        return;
+    }
+    auto* mark = new QLabel(tr("Pro"), m_quickShortcutRow);
+    mark->setObjectName(u"quickLookupProMark"_s);
+    mark->setProperty("proMark", true);
+    mark->setToolTip(tr("Quick lookup is part of Omnidict Pro"));
+    if (auto* layout = qobject_cast<QHBoxLayout*>(m_quickShortcutRow->layout())) {
+        layout->insertWidget(1, mark, 0, Qt::AlignVCenter);
+    }
+}
+
 QString SettingsDialog::quickLookupHint(services::GlobalShortcuts::State state) const
 {
     using State = services::GlobalShortcuts::State;

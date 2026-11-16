@@ -4,6 +4,7 @@
 #include "models/results_model.h"
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
+#include "services/pro_status.h"
 #include "ui/about_dialog.h"
 #include "ui/bug_report_dialog.h"
 #include "ui/diagnostics.h"
@@ -11,9 +12,11 @@
 #include "ui/empty_state.h"
 #include "ui/entry_view.h"
 #include "ui/first_run_panel.h"
+#include "ui/free_limit.h"
 #include "ui/icons.h"
 #include "ui/logging.h"
 #include "ui/more_apps_dialog.h"
+#include "ui/pro_dialog.h"
 #include "ui/quick_lookup.h"
 #include "ui/results_delegate.h"
 #include "ui/search_field.h"
@@ -360,6 +363,10 @@ void MainWindow::buildMainMenu()
     add(tr("More apps from Ktechpit"), u"grid"_s, {}, [this] {
         showMoreApps(u"menu"_s, this);
     })->setObjectName(u"moreAppsAction"_s);
+    // mocks/pro-prompts.html note 4: the Microsoft Store build only (setProStatus).
+    m_proAction = add(tr("Omnidict Pro"), u"star"_s, {}, [this] { showPro(); });
+    m_proAction->setObjectName(u"proAction"_s);
+    m_proAction->setVisible(false);
     m_mainMenu->addSeparator();
     add(tr("Quit"), u"power"_s, {QKeySequence(Qt::CTRL | Qt::Key_Q)}, &MainWindow::quit)
         ->setObjectName(u"quitAction"_s);
@@ -569,6 +576,7 @@ void MainWindow::onLibraryOpened(const QList<services::DictionaryInfo>& dictiona
     for (const QString& problem : problems) {
         qCWarning(lcUi) << "dictionary not usable:" << problem;
     }
+    applyProStatus();    // on Free, a newly installed dictionary arrives switched off
     rebuildFilterMenu(); // also the search placeholder
     if (m_dictionariesDialog != nullptr) {
         m_dictionariesDialog->setInstalled(dictionaries);
@@ -978,6 +986,96 @@ void MainWindow::showAbout()
     }
 }
 
+void MainWindow::setProStatus(services::ProStatus* pro)
+{
+    m_pro = pro;
+    m_proAction->setVisible(pro != nullptr);
+    if (m_quick != nullptr) {
+        m_quick->setProStatus(pro);
+    }
+    if (pro != nullptr) {
+        connect(pro, &services::ProStatus::statusChanged, this, &MainWindow::applyProStatus);
+    }
+    applyProStatus();
+}
+
+void MainWindow::showPro()
+{
+    if (m_pro == nullptr) {
+        return;
+    }
+    ProDialog dialog(*m_pro, this);
+    dialog.exec();
+}
+
+void MainWindow::showProNotice(const QString& id, const QString& text, const QString& action,
+                               std::function<void()> onAction)
+{
+    if (m_settings.proNotice() == id) {
+        return; // each line shows once
+    }
+    m_settings.setProNotice(id);
+    Toast::showUntilClosed(this, text, action, std::move(onAction));
+}
+
+void MainWindow::applyProStatus()
+{
+    const services::ProStatus* pro = m_pro.data();
+    if (pro == nullptr || !m_libraryOpen) {
+        return;
+    }
+    using Tier = services::ProStatus::Tier;
+    const Tier tier = pro->tier();
+    const QLocale locale;
+    if (tier == Tier::Free) {
+        // mocks/pro-prompts.html note 3: the first dictionary in the user's order stays on.
+        const QStringList disabled = m_settings.disabledDictionaries();
+        const QStringList limited =
+            free_limit::disabledForFree(m_dictionaries, m_settings.dictionaryOrder(), disabled);
+        if (limited != disabled) {
+            m_settings.setDisabledDictionaries(limited);
+        }
+        const QStringList on = free_limit::switchedOn(m_dictionaries, m_settings.dictionaryOrder(), limited);
+        QString kept;
+        if (!on.isEmpty() && m_dictionaries.size() > free_limit::kDictionaries) {
+            const auto it = std::ranges::find_if(m_dictionaries, [&](const services::DictionaryInfo& info) {
+                return info.dictId == on.constFirst();
+            });
+            kept =
+                u' ' + tr("Free searches one dictionary at a time: %1 stays on, the others are switched off.")
+                           .arg(it != m_dictionaries.end() ? it->name : on.constFirst());
+        } else {
+            kept = u' ' + tr("Free searches one dictionary at a time; quick lookup is part of Pro.");
+        }
+        if (const QDateTime ended = pro->endedPlan(); ended.isValid()) {
+            showProNotice(
+                u"plan-ended:"_s + ended.date().toString(Qt::ISODate),
+                tr("Your Omnidict Pro plan ended on %1.")
+                        .arg(locale.toString(ended.date(), u"d MMMM yyyy"_s)) +
+                    kept,
+                tr("Choose a plan"),
+                [pro] { QDesktopServices::openUrl(pro->checkoutUrl(services::ProStatus::Source::PlanEnd)); });
+        } else {
+            showProNotice(u"trial-ended"_s, tr("Your Omnidict Pro trial has ended.") + kept,
+                          tr("What Pro adds"), [this] { showPro(); });
+        }
+        return;
+    }
+    if (tier == Tier::Pro && !pro->isForever()) {
+        // mocks/pro-prompts.html note 5: once, 7 days before a plan for a time ends.
+        constexpr qint64 kEndsSoonNoticeDays = 7;
+        const QDateTime until = pro->paidUntil();
+        const qint64 days = QDateTime::currentDateTime().daysTo(until);
+        if (days >= 0 && days <= kEndsSoonNoticeDays) {
+            const QString inDays = days == 1 ? tr("1 day") : tr("%1 days").arg(days);
+            showProNotice(u"ends-soon:"_s + until.date().toString(Qt::ISODate),
+                          tr("Omnidict Pro ends in %1, on %2. Choose a plan to add more time.")
+                              .arg(inDays, locale.toString(until.date(), u"d MMMM yyyy"_s)),
+                          tr("Omnidict Pro"), [this] { showPro(); });
+        }
+    }
+}
+
 void MainWindow::showMoreApps(const QString& place, QWidget* from)
 {
     // Sheets never stack (DOCS/DESIGN.md): See all in About closes About first.
@@ -997,8 +1095,18 @@ void MainWindow::showDictionaries(bool available)
     if (available) {
         dialog.showAvailable();
     }
+    dialog.setProStatus(m_pro);
+    // Sheets never stack: What Pro adds closes Dictionaries first.
+    bool pro = false;
+    connect(&dialog, &DictionariesDialog::proRequested, &dialog, [&] {
+        pro = true;
+        dialog.accept();
+    });
     m_dictionariesDialog = &dialog;
     dialog.exec();
+    if (pro) {
+        showPro();
+    }
 }
 
 QuickLookup* MainWindow::quickLookup()
@@ -1008,6 +1116,13 @@ QuickLookup* MainWindow::quickLookup()
         // parent, and the shortcut must work while the main window is minimized.
         m_quick = new QuickLookup(m_lookup, m_settings);
         m_quick->setDictionaries(m_dictionaries);
+        m_quick->setProStatus(m_pro);
+        connect(m_quick, &QuickLookup::proRequested, this, [this] {
+            showNormal();
+            raise();
+            activateWindow();
+            showPro();
+        });
         connect(m_quick, &QuickLookup::openInMain, this, [this](const QString& word) {
             // Shown before the popup closes: closing the only visible window quits the app.
             showNormal();
@@ -1064,6 +1179,7 @@ void MainWindow::onShortcutStateChanged()
 void MainWindow::showSettings()
 {
     SettingsDialog dialog(m_settings, m_roots.constLast(), this, m_shortcuts, m_tray);
+    dialog.setProStatus(m_pro);
     connect(&dialog, &SettingsDialog::clearHistoryRequested, this, &MainWindow::clearHistory);
     dialog.exec();
 }

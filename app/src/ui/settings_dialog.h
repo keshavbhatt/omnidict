@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/global_shortcuts.h"
+#include "services/pro_status.h"
 
 #include <QDialog>
 #include <QProcessEnvironment>
@@ -39,6 +40,10 @@ public:
     /// a desktop without one) greys that section out with the reason.
     SettingsDialog(core::Settings& settings, const QString& dictionaryFolder, QWidget* parent = nullptr,
                    services::GlobalShortcuts* shortcuts = nullptr, Tray* tray = nullptr);
+
+    /// Omnidict Pro (Microsoft Store build): on Free the Quick lookup shortcut row keeps its
+    /// key and shows a Pro mark (mocks/pro-prompts.html note 2).
+    void setProStatus(const services::ProStatus* pro);
 
     /// The command a desktop's custom shortcut should run to open Quick Lookup, for the
     /// way this copy was installed (Flatpak, snap, AppImage or a plain install).

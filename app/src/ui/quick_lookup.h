@@ -2,12 +2,14 @@
 
 #include "core/search_engine.h"
 #include "services/lookup_service.h"
+#include "services/pro_status.h"
 
 #include <QList>
 #include <QPointer>
 #include <QWidget>
 
 class QLabel;
+class QPushButton;
 class QTimer;
 
 namespace omnidict::core {
@@ -46,6 +48,11 @@ public:
     /// Looks `word` up in the popup.
     void lookUp(const QString& word);
 
+    /// Omnidict Pro (Microsoft Store build): on Free the popup says quick lookup is Pro, with
+    /// Look it up in Omnidict as the free way out (mocks/pro-prompts.html note 2). Null: no
+    /// limit.
+    void setProStatus(services::ProStatus* pro);
+
     /// A word taken from a selection or the clipboard, cleaned for a lookup: one line,
     /// trimmed, at most a few words; empty when it does not look like something to look up.
     [[nodiscard]] static QString wordFrom(const QString& text);
@@ -53,6 +60,8 @@ public:
 Q_SIGNALS:
     /// "Open in Omnidict" or Enter: the main window should show `word` with all results.
     void openInMain(const QString& word);
+    /// What Pro adds: the main window should show Omnidict Pro.
+    void proRequested();
     /// An entry is on screen (for tests and debug hooks).
     void entryShown(const QString& dictId, const QString& headword);
 
@@ -70,6 +79,9 @@ private:
                           const QStringList& favorites);
     void onEntryLoaded(quint64 requestId, const QString& dictId, const core::Entry& entry,
                        const QString& html, bool favorite);
+    [[nodiscard]] bool proOnly() const;
+    void showProOnly(const QString& text);
+    void applyProFooter();
     void showNothingFound(const QString& text, const QList<core::SuggestedWord>& suggestions);
     void showOtherDictionaries(const QString& headword, const core::SearchResults& results);
     void openLink(const QString& href);
@@ -84,6 +96,11 @@ private:
     QLabel* m_message = nullptr; ///< nothing found, with suggestions
     QLabel* m_also = nullptr;    ///< "Also in" the other dictionaries with the word
     QTimer* m_typingPause = nullptr;
+    QPointer<services::ProStatus> m_pro;
+    QWidget* m_hints = nullptr;           ///< Enter and Esc
+    QPushButton* m_open = nullptr;        ///< Open in Omnidict, or Look it up in Omnidict on Free
+    QPushButton* m_plan = nullptr;        ///< Choose a plan, on Free
+    QPushButton* m_whatProAdds = nullptr; ///< on Free
     quint64 m_searchRequest = 0;
     quint64 m_entryRequest = 0;
     bool m_pickWordOnActivation = false;

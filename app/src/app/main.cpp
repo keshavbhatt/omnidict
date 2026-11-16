@@ -8,7 +8,11 @@
 #include "services/dictionary_manager.h"
 #include "services/global_shortcuts.h"
 #include "services/hotkey_backend.h"
+#include "services/pro_status.h"
 #include "services/selection.h"
+#ifdef OMNIDICT_HAS_LICENSING
+#include "services/licensing/license_service.h"
+#endif
 #include "ui/icons.h"
 #include "ui/main_window.h"
 #include "ui/quick_lookup.h"
@@ -208,6 +212,25 @@ void setupMoreApps()
     ktechpit::AppCatalog::init(config);
 }
 
+/// What the window gets beyond the dictionary: See all for More apps from Ktechpit, and
+/// Omnidict Pro on the Microsoft Store build (ADR-024), which the caller keeps alive; none
+/// elsewhere.
+std::unique_ptr<omnidict::services::ProStatus> attachExtras(omnidict::ui::MainWindow& window)
+{
+    ktechpit::AppCatalog::instance()->setShowAll(
+        [&window](const QString& place, QWidget* from) { window.showMoreApps(place, from); });
+#ifdef OMNIDICT_HAS_LICENSING
+    // Checked on start and weekly, the last answer kept for offline use. Never headless (tests,
+    // screenshots): no server there.
+    auto license = std::make_unique<omnidict::services::LicenseService>();
+    license->start(QGuiApplication::platformName() != u"offscreen"_s);
+    window.setProStatus(license.get());
+    return license;
+#else
+    return nullptr;
+#endif
+}
+
 int runWindow(const QCommandLineParser& parser, const Options& options)
 {
     // Everything the app keeps lives in one directory, a scratch one with --profile.
@@ -239,8 +262,7 @@ int runWindow(const QCommandLineParser& parser, const Options& options)
         omnidict::services::DictionaryManager::defaultCatalogUrl());
     setupMoreApps();
     omnidict::ui::MainWindow window(settings, dictionaries, roots, dataDir + u"/userdata.sqlite"_s);
-    ktechpit::AppCatalog::instance()->setShowAll(
-        [&window](const QString& place, QWidget* from) { window.showMoreApps(place, from); });
+    const std::unique_ptr<omnidict::services::ProStatus> pro = attachExtras(window);
     if (settings.windowGeometry().isEmpty()) {
         window.resize(kWindowWidth, kWindowHeight);
     }

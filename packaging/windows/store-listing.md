@@ -115,5 +115,7 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword fir
 - Support contact: connect@ktechpit.com
 - Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; Omnidict sends nothing about the user)
 - Category (Properties page): Books & reference (owner, 2026-11-14)
-- Pricing: USD 9.99 in all markets, no free trial (owner, 2026-11-14), set in Partner Center,
-  Pricing and availability. The app needs no change for this: the Store sells and installs it.
+- Pricing (owner, 2026-11-16, ADR-024): Free in Partner Center, no Store trial. Omnidict Pro
+  is sold on ktechpit.com through the app (14-day trial, then Free with one dictionary at a
+  time). On the Properties page, tick "This product allows users to make purchases, but does not
+  use the Microsoft Store commerce system".
