@@ -142,3 +142,12 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword fir
   Year Pass $9.99 (365 days, recommended), Forever Pass $19.99; also in Ktechpit Pass. Partner
   Center: price Free and the outside-commerce declaration set 2026-11-16. On the Properties page, tick "This product allows users to make purchases, but does not
   use the Microsoft Store commerce system".
+- Age ratings (IARC questionnaire, answered 2026-11-16, as for PixelFx): All Other App Types;
+  nothing rating-relevant in the package; no sharing between users; online content Yes (the
+  downloaded dictionaries and the More apps list), with no violence and no sexual material, but
+  offensive language (a full dictionary defines profanities, slurs and sexual expletives) and
+  drugs referred to in text, none of it the app's focus; no age-restricted products; no
+  location sharing; digital goods Yes (Omnidict Pro), no chance-based purchases, no cash
+  rewards; not a browser; primarily educational; no physical media. Preview: IARC 12+,
+  Microsoft 12+, ESRB Everyone 10+, USK 6+, Brazil all ages, Chile 8+, PEGI parental guidance,
+  Russia 18+; In-App Purchases noted. The owner accepts IARC's terms and saves.
