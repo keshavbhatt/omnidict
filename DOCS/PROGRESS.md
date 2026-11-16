@@ -31,6 +31,12 @@ Newest first. One entry per working session.
   `OMNIDICT_LICENSING=ON` compiles on Linux too.
 - Owner tested the CI 43875027096 MSIX on Windows (trial, Account ID `win...`) and asked for the
   plans line under the Account ID to go: removed from the sheet and from `mocks/pro.html`.
+- The owner spotted more in the Windows screenshot; `mocks/pro.html` updated first and approved,
+  then built: Copy and Get the Pass at full height (Get the Pass centred), the focus on Choose
+  a plan, `ui::monospaceFont()` (Cascadia Mono or Consolas on Windows instead of Courier New, also
+  for About's diagnostics, the bug report and Settings), a minus sign for not included, the
+  table's marks level with each row's name, the app's check glyph for included (as PixelFx), a
+  visible meter track, and the layers glyph in the Pass box.
 
 ## 2026-11-14 - Windows test package approved; paid on the Store
 

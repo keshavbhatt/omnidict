@@ -12,7 +12,6 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDesktopServices>
-#include <QFontDatabase>
 #include <QFrame>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -204,7 +203,7 @@ QWidget* SettingsDialog::buildTextSizeRow(QWidget* content)
     sizeLayout->addWidget(decrease);
     m_textSizeLabel = new QLabel(sizeRow);
     m_textSizeLabel->setObjectName(u"entryTextSizeLabel"_s);
-    m_textSizeLabel->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    m_textSizeLabel->setFont(monospaceFont());
     sizeLayout->addWidget(m_textSizeLabel);
     auto* increase = new QPushButton(u"A+"_s, sizeRow);
     increase->setObjectName(u"entryTextSizeIncrease"_s);
@@ -693,7 +692,7 @@ void SettingsDialog::setupStorage(QVBoxLayout* body, QWidget* content, const QSt
     auto* folderPath = new QLabel(dictionaryFolder, folderRow);
     folderPath->setProperty("muted", true);
     folderPath->setProperty("small", true);
-    folderPath->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    folderPath->setFont(monospaceFont());
     folderPath->setWordWrap(true);
     folderPath->setTextInteractionFlags(Qt::TextSelectableByMouse);
     folderText->addWidget(folderPath);

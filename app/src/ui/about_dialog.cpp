@@ -8,7 +8,6 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDesktopServices>
-#include <QFontDatabase>
 #include <QFrame>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -292,7 +291,7 @@ QWidget* AboutDialog::buildDiagnosticsTab(QWidget* tabParent)
     disableWheelZoom(diagnosticsView);
     diagnosticsView->setObjectName(u"aboutDiagnostics"_s);
     diagnosticsView->setReadOnly(true);
-    diagnosticsView->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    diagnosticsView->setFont(monospaceFont());
     diagnosticsView->setPlainText(diagnosticsText(m_dictionaries));
     diagnosticsLayout->addWidget(diagnosticsView, 1);
     return diagnosticsTab;

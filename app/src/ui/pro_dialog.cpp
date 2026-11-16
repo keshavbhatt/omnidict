@@ -6,7 +6,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
-#include <QFontDatabase>
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -26,6 +25,8 @@ constexpr int kWidth = 560;
 constexpr int kIconSize = 18;
 constexpr int kMeterHeight = 4;
 constexpr int kMarkColumn = 64;
+constexpr int kRowPadding = 8;
+constexpr int kCheckSize = 14;
 /// The table's first column: the sheet less its margins and the two mark columns.
 constexpr int kTextWidth = kWidth - (2 * 20) - (2 * kMarkColumn) - (2 * 8);
 
@@ -119,6 +120,8 @@ ProDialog::ProDialog(services::ProStatus& pro, QWidget* parent)
     connect(&m_pro, &services::ProStatus::statusChanged, this, &ProDialog::refresh);
     connect(&m_pro, &services::ProStatus::checkingChanged, this, &ProDialog::refresh);
     refresh();
+    // The focus starts on what the sheet is for, not on Copy, the first button in it.
+    (m_choose->isHidden() ? m_close : m_choose)->setFocus(); // not shown yet: isVisible() is false
 }
 
 QWidget* ProDialog::buildStatus()
@@ -171,8 +174,8 @@ QWidget* ProDialog::buildTable()
     grid->addWidget(head(tr("FREE")), 0, 1, Qt::AlignHCenter);
     grid->addWidget(head(tr("PRO")), 0, 2, Qt::AlignHCenter);
 
-    const QString yes = u"\u2713"_s;
-    const QString no = u"-"_s;
+    const QString yes;              // empty: the check glyph
+    const QString no = u"\u2212"_s; // a minus sign: "not included"
     const QList<TableRow> rows = {
         {.name = tr("Look words up in Omnidict"),
          .detail = tr("Suggestions, wildcards, full text search, favourites"),
@@ -206,7 +209,7 @@ void ProDialog::addTableRow(QGridLayout* grid, int at, const TableRow& row)
     grid->addWidget(rule, at, 0, 1, 3);
     auto* cell = new QWidget(m_table);
     auto* cellLayout = new QVBoxLayout(cell);
-    cellLayout->setContentsMargins(0, 8, 0, 8);
+    cellLayout->setContentsMargins(0, kRowPadding, 0, kRowPadding);
     cellLayout->setSpacing(2);
     cellLayout->addWidget(new QLabel(row.name, cell));
     QLabel* detail = mutedSmall(row.detail, cell);
@@ -217,9 +220,17 @@ void ProDialog::addTableRow(QGridLayout* grid, int at, const TableRow& row)
     grid->addWidget(cell, at + 1, 0);
     const auto mark = [this](const QString& text) {
         auto* label = new QLabel(text, m_table);
-        const bool included = text != u"-"_s && text != u"1"_s;
+        if (text.isEmpty()) {
+            // The app's own check glyph, as in PixelFx: the \u2713 character differs by font.
+            label->setPixmap(icons::themed(u"check"_s, Tokens::current().success)
+                                 .pixmap(QSize(kCheckSize, kCheckSize), devicePixelRatioF()));
+        }
+        const bool missing = text == u"\u2212"_s;
+        const bool included = !missing && text != u"1"_s;
         label->setProperty(included ? "tone" : "muted", included ? QVariant(u"success"_s) : QVariant(true));
-        label->setToolTip(text == u"-"_s ? tr("Not included") : tr("Included"));
+        label->setToolTip(missing ? tr("Not included") : tr("Included"));
+        label->setAccessibleName(label->toolTip());
+        label->setContentsMargins(0, kRowPadding, 0, 0); // level with the row's name
         return label;
     };
     grid->addWidget(mark(row.free), at + 1, 1, Qt::AlignHCenter | Qt::AlignTop);
@@ -240,12 +251,11 @@ QWidget* ProDialog::buildAccount()
     m_accountId = new QLabel(account);
     m_accountId->setObjectName(u"proAccountId"_s);
     m_accountId->setProperty("accountId", true);
-    m_accountId->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    m_accountId->setFont(monospaceFont());
     m_accountId->setTextInteractionFlags(Qt::TextSelectableByMouse);
     row->addWidget(m_accountId, 1);
     auto* copy = new QPushButton(icons::themed(u"copy"_s, Tokens::current().text), tr("Copy"), account);
-    copy->setObjectName(u"proCopy"_s);
-    copy->setProperty("small", true);
+    copy->setObjectName(u"proCopy"_s); // full height, level with the Account ID box
     copy->setToolTip(tr("Copy the Account ID"));
     connect(copy, &QPushButton::clicked, this,
             [this] { QApplication::clipboard()->setText(m_pro.accountId()); });
@@ -268,6 +278,11 @@ QWidget* ProDialog::buildPass()
     auto* layout = new QHBoxLayout(pass);
     layout->setContentsMargins(12, 10, 12, 10);
     layout->setSpacing(10);
+    auto* glyph = new QLabel(pass);
+    constexpr int kPassGlyph = 16;
+    glyph->setPixmap(icons::themed(u"layers"_s, Tokens::current().muted)
+                         .pixmap(QSize(kPassGlyph, kPassGlyph), devicePixelRatioF()));
+    layout->addWidget(glyph, 0, Qt::AlignTop);
     auto* text = new QVBoxLayout;
     text->setSpacing(2);
     auto* name = new QLabel(tr("Omnidict is included in Ktechpit Pass"), pass);
@@ -284,11 +299,10 @@ QWidget* ProDialog::buildPass()
     layout->addLayout(text, 1);
     auto* get =
         new QPushButton(icons::themed(u"external"_s, Tokens::current().text), tr("Get the Pass"), pass);
-    get->setObjectName(u"proPassGet"_s);
-    get->setProperty("small", true);
+    get->setObjectName(u"proPassGet"_s); // full height, as Copy
     get->setToolTip(tr("Opens the Ktechpit Pass checkout in your browser, with this Account ID"));
     connect(get, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(m_pro.passCheckoutUrl()); });
-    layout->addWidget(get, 0, Qt::AlignTop);
+    layout->addWidget(get, 0, Qt::AlignVCenter);
     return pass;
 }
 
@@ -307,9 +321,10 @@ QWidget* ProDialog::buildFooter()
     connect(manage, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(m_pro.portalUrl()); });
     layout->addWidget(manage);
     layout->addStretch(1);
-    auto* close = new QPushButton(tr("Close"), foot);
-    connect(close, &QPushButton::clicked, this, &QDialog::accept);
-    layout->addWidget(close);
+    m_close = new QPushButton(tr("Close"), foot);
+    m_close->setObjectName(u"proClose"_s);
+    connect(m_close, &QPushButton::clicked, this, &QDialog::accept);
+    layout->addWidget(m_close);
     const QIcon external = icons::themed(u"external"_s, Tokens::current().text);
     m_moreTime = new QPushButton(external, tr("Add more time"), foot);
     m_moreTime->setObjectName(u"proMoreTime"_s);

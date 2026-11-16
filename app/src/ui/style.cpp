@@ -5,6 +5,7 @@
 #include <QAbstractScrollArea>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QHash>
@@ -128,7 +129,7 @@ QLabel[proMark="true"] {
     border: 1px solid {{border}}; border-radius: 4px; padding: 0 5px; font-size: 11px; font-weight: 600;
     color: {{muted}};
 }
-QProgressBar#proMeter { background: {{border}}; border: none; border-radius: 2px; }
+QProgressBar#proMeter { background: {{input}}; border: none; border-radius: 2px; }
 QProgressBar#proMeter::chunk { background: {{text}}; border-radius: 2px; }
 /* More apps from Ktechpit: the KtechpitApps module's cards (mocks/more-apps.html). */
 QFrame#ktechpitAppCard { border: 1px solid {{border}}; border-radius: 8px; background: transparent; }
@@ -371,6 +372,22 @@ void styleComboPopup(QComboBox* combo)
 void disableWheelZoom(QAbstractScrollArea* view)
 {
     view->viewport()->installEventFilter(new WheelZoomBlocker(view));
+}
+
+QFont monospaceFont()
+{
+#ifdef Q_OS_WIN
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    for (const QString& family : {u"Cascadia Mono"_s, u"Consolas"_s}) {
+        if (QFontDatabase::hasFamily(family)) {
+            font.setFamilies({family});
+            break;
+        }
+    }
+    return font;
+#else
+    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+#endif
 }
 
 void makeSectionLabel(QLabel* label)

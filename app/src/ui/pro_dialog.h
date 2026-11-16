@@ -82,6 +82,7 @@ private:
     QLabel* m_checked = nullptr;
     QWidget* m_pass = nullptr;
     QPushButton* m_choose = nullptr;
+    QPushButton* m_close = nullptr;
     QPushButton* m_moreTime = nullptr;
 };
 

@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
-#include <QFontDatabase>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -123,7 +122,7 @@ QWidget* BugReportDialog::buildForm()
     disableWheelZoom(diagnosticsView);
     diagnosticsView->setObjectName(u"diagnosticsView"_s);
     diagnosticsView->setReadOnly(true);
-    diagnosticsView->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    diagnosticsView->setFont(monospaceFont());
     diagnosticsView->setPlainText(m_diagnostics);
     diagnosticsView->setMaximumHeight(160);
     diagnosticsView->setVisible(false);

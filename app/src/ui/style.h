@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+#include <QFont>
 #include <QPalette>
 #include <QString>
 
@@ -71,6 +72,10 @@ void styleComboPopup(QComboBox* combo);
 /// Turns off the Ctrl+wheel zoom Qt's text views have built in: it has no limits
 /// and rescales only part of the text. Text size is Ctrl+Plus/Minus in the entry.
 void disableWheelZoom(QAbstractScrollArea* view);
+
+/// The fixed-width face for IDs, paths and diagnostics: Windows' own (Cascadia Mono, then
+/// Consolas) rather than the Courier New Qt picks there; the desktop's elsewhere.
+[[nodiscard]] QFont monospaceFont();
 
 /// The application style sheet. Widgets opt into the looks with dynamic
 /// properties: `primary` and `flat` buttons, `chip` tool buttons, `muted`,
