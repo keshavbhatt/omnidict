@@ -19,9 +19,9 @@ Omnidict
 
 Omnidict: Offline English Dictionary & Thesaurus
 
-## Short description (up to 1000 characters; the first lines show on the product page)
+## Short description (Partner Center recommends 270 characters or fewer)
 
-Free offline dictionary and thesaurus for Windows 10 and Windows 11. Look up word meanings, definitions, synonyms, antonyms and pronunciation instantly, with no internet connection. Choose from 600+ dictionaries in over 300 languages: English, Spanish, French, German, Hindi, Arabic, Japanese, Chinese and many more, plus bilingual dictionaries such as English to Spanish and English to Hindi. Select a word in any app and press Ctrl+Alt+D to see its meaning in a small window. No ads, no tracking, no sign-in.
+Free offline dictionary and thesaurus for Windows. Word meanings, synonyms and pronunciation in 600+ dictionaries and 300+ languages, with English to Spanish, Hindi and more. Select a word in any app and press Ctrl+Alt+D. No ads, no sign-in.
 
 ## Description (up to 10000 characters)
 
@@ -75,6 +75,8 @@ Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT a
 
 ## What's new in this version
 
+Left blank in Partner Center for the first submission, as it asks. For the next one:
+
 The first version for Windows: offline dictionaries in over 300 languages, an English thesaurus with synonyms and antonyms, and quick lookup with Ctrl+Alt+D from any app.
 
 ## Product features (up to 20, each up to 200 characters)
@@ -99,12 +101,12 @@ The first version for Windows: offline dictionaries in over 300 languages, an En
 18. No ads, no tracking, no sign-in
 19. 14-day trial of every feature; Omnidict Pro searches all dictionaries at once
 
-## Search terms (up to 7, each up to 30 characters, 21 words in all)
+## Search terms (Partner Center "Keywords": up to 7, each up to 40 characters, 21 words in all)
 
 free offline dictionary
 english dictionary
 thesaurus synonyms antonyms
-word meaning definitions
+word meaning definitions pronunciation
 translation dictionary
 language learning vocabulary
 dictionary app for windows
