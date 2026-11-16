@@ -80,7 +80,6 @@ private:
     QWidget* m_table = nullptr;
     QLabel* m_accountId = nullptr;
     QLabel* m_checked = nullptr;
-    QLabel* m_plans = nullptr;
     QWidget* m_pass = nullptr;
     QPushButton* m_choose = nullptr;
     QPushButton* m_moreTime = nullptr;

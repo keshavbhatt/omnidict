@@ -29,6 +29,8 @@ Newest first. One entry per working session.
   its missing `success` colour. Checked headlessly against the mocks in every state; new
   `tst_pro`, and Free cases in `tst_dictionaries_dialog` and `tst_smoke`. A build with
   `OMNIDICT_LICENSING=ON` compiles on Linux too.
+- Owner tested the CI 43875027096 MSIX on Windows (trial, Account ID `win...`) and asked for the
+  plans line under the Account ID to go: removed from the sheet and from `mocks/pro.html`.
 
 ## 2026-11-14 - Windows test package approved; paid on the Store
 

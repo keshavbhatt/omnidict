@@ -256,10 +256,6 @@ QWidget* ProDialog::buildAccount()
     m_checked->setTextFormat(Qt::RichText);
     connect(m_checked, &QLabel::linkActivated, this, [this] { m_pro.refresh(); });
     layout->addWidget(m_checked);
-    m_plans =
-        mutedSmall(tr("Plans for a time or Forever, with their prices, are on the checkout page."), account);
-    m_plans->setObjectName(u"proPlans"_s);
-    layout->addWidget(m_plans);
     return account;
 }
 
@@ -411,7 +407,6 @@ void ProDialog::refresh()
     const bool hasPro = state == State::Forever || state == State::Until;
     m_table->setVisible(!hasPro);
     m_pass->setVisible(!hasPro);
-    m_plans->setVisible(state != State::Forever);
     m_choose->setVisible(!hasPro);
     m_moreTime->setVisible(state == State::Until);
     m_accountId->setText(m_pro.accountId());
