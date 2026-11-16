@@ -130,7 +130,11 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword fir
 - Developed by: Keshav Bhatt (Ktechpit)
 - Website: https://github.com/keshavbhatt/omnidict
 - Support contact: connect@ktechpit.com
-- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; lookups never leave the computer; the Windows build sends only a random Account ID for the weekly Pro check, ADR-024)
+- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx), entered 2026-11-16.
+  Partner Center switched the personal-information answer to Yes once the package (internetClient)
+  was uploaded; Yes is right for Windows: the weekly Pro check sends a random Account ID (ADR-024).
+  Lookups never leave the computer. The Ktechpit page is a website policy and does not yet
+  describe the app's Account ID or weekly checks (owner to extend it).
 - Category (Properties page): Books & reference (owner, 2026-11-14)
 - Pricing (owner, 2026-11-16, ADR-024): Free in Partner Center, no Store trial. Omnidict Pro
   is sold on ktechpit.com through the app (14-day trial, then Free with one dictionary at a
