@@ -75,7 +75,7 @@
       </div>
     </div>
   </div>
-<div class="statebar" role="group" aria-label="Mock state"><span style="padding:3px 6px">State</span><button class="on" data-set="trial">Trial</button><button data-set="free">Free</button><button data-set="pro">Pro</button></div>
+<div class="statebar" role="group" aria-label="Mock state"><span style="padding:3px 6px">State</span><button class="on" data-set="trial">Trial</button><button data-set="free">Free</button><button data-set="pro">Pro, Forever</button><button data-set="until">Pro, 1 year</button><button data-set="soon">Ends soon</button><button data-set="ended">Plan ended</button></div>
   <div class="overlay">
     <div class="sheet" id="prosheet" style="width:560px">
       <div class="sheet-head"><h2>Omnidict Pro</h2><span class="grow"></span><button class="btn flat icon" title="Close (Esc)"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -83,8 +83,11 @@
         <div class="status" data-state="trial"><svg class="ic" style="color:var(--text)"><use href="#i-star"/></svg><div class="grow"><b>Pro trial: 12 days left</b><div class="small muted">Everything in Pro is yours to use until 30 November. After that Omnidict stays free with 2 dictionaries at a time.</div><div class="meter" title="2 of 14 days used"><i style="width:14%"></i></div></div></div>
         <div class="status" data-state="free"><svg class="ic" style="color:var(--muted)"><use href="#i-book"/></svg><div class="grow"><b>Free</b><div class="small muted">Look words up in 2 dictionaries at a time. Pro searches all of them and adds quick lookup from any app.</div></div></div>
         <div class="status" data-state="pro"><svg class="ic" style="color:var(--success)"><use href="#i-check"/></svg><div class="grow"><b>Pro, Forever</b><div class="small muted">Thank you. Every Pro feature is yours, in every update.</div></div></div>
+        <div class="status" data-state="until"><svg class="ic" style="color:var(--success)"><use href="#i-check"/></svg><div class="grow"><b>Pro, until 16 November 2027</b><div class="small muted">Thank you. Every Pro feature is yours until then. Choose a plan again before it ends to add more time.</div><div class="meter" title="1 of 365 days used"><i style="width:1%"></i></div></div></div>
+        <div class="status" data-state="soon"><svg class="ic" style="color:var(--warning)"><use href="#i-clock"/></svg><div class="grow"><b>Pro ends in 5 days</b><div class="small muted">Your plan runs until 21 November 2027. After that Omnidict goes back to Free: 2 dictionaries at a time, no quick lookup. Choose a plan to add more time; it starts when this one ends.</div><div class="meter" title="360 of 365 days used"><i style="width:99%"></i></div></div></div>
+        <div class="status" data-state="ended"><svg class="ic" style="color:var(--muted)"><use href="#i-book"/></svg><div class="grow"><b>Your Pro plan ended on 21 November 2027</b><div class="small muted">Omnidict is Free again: 2 dictionaries at a time, no quick lookup. Your dictionaries, favourites and history are all still here; choose a plan to switch Pro back on.</div></div></div>
 
-        <table class="plans" data-state="trial free">
+        <table class="plans" data-state="trial free soon ended">
           <thead><tr><th>What you get</th><th>Free</th><th>Pro</th></tr></thead>
           <tbody>
             <tr><td>Look words up in Omnidict<span class="sub">Results as you type, suggestions, wildcards, full text search, favourites and history</span></td><td class="yes" title="Included">&#10003;</td><td class="yes" title="Included">&#10003;</td></tr>
@@ -96,12 +99,14 @@
 
         <h3 style="margin:16px 0 6px;font-size:13px">Account ID</h3>
         <div class="row" style="gap:8px"><span class="mono grow" style="padding:6px 10px;border-radius:7px;background:var(--input);border:1px solid var(--border)">WINK7Q2M9XD4PLR8TNW3</span><button class="btn small" title="Copy the Account ID"><svg class="ic s"><use href="#i-copy"/></svg>Copy</button></div>
-        <p class="small muted" style="margin:6px 0 0">The checkout asks for it, and it is how a purchase finds this copy of Omnidict. <span data-state="pro">Checked with Ktechpit 2 minutes ago.</span><span data-state="trial free">Bought already? <a href="#">Check again</a>.</span></p>
+        <p class="small muted" style="margin:6px 0 0">The checkout asks for it, and it is how a purchase finds this copy of Omnidict. <span data-state="pro until soon">Checked with Ktechpit 2 minutes ago.</span><span data-state="trial free ended">Bought already? <a href="#">Check again</a>.</span></p>
+        <p class="small muted" style="margin:10px 0 0" data-state="trial free soon ended until">Plans: 1 month, 1 year or Forever, with their prices, on the checkout page.</p>
       </div>
       <div class="sheet-foot">
         <a class="small" href="#" title="Your purchases on ktechpit.com">Manage purchases</a><span class="grow"></span>
         <button class="btn">Close</button>
-        <button class="btn primary" data-state="trial free"><svg class="ic s"><use href="#i-external"/></svg>Choose a plan</button>
+        <button class="btn primary" data-state="trial free soon ended"><svg class="ic s"><use href="#i-external"/></svg>Choose a plan</button>
+        <button class="btn" data-state="until"><svg class="ic s"><use href="#i-external"/></svg>Add more time</button>
       </div>
     </div>
   </div>
@@ -115,6 +120,8 @@
   <li><b>The states.</b> A 14-day trial for every new install, with everything in Pro; then Free; Pro after a purchase. The status box names the state in words and, during the trial, the days left with a meter.</li>
   <li><b>What is Free.</b> Everything in the main window, every dictionary to download, but 2 dictionaries searched at a time (the user picks which with the switches in Dictionaries, as today); quick lookup (the key and the tray's Quick lookup item) is Pro. The table answers "what is free?" first. Nothing is ever deleted: dictionaries beyond 2 stay installed and switched off.</li>
   <li><b>Buying.</b> Choose a plan opens the Ktechpit checkout in the browser with this Account ID (app code OMNIDICT, slug omnidict, set up by the owner on the server). Check again asks the server at once; Omnidict also checks on start and weekly, and keeps the last answer, so it works offline. Manage purchases opens the self-service portal. Nothing here is a Microsoft Store purchase.</li>
+  <li><b>Plans for a time (owner, 2026-11-16).</b> A plan can run for a time (1 month, 1 year) or Forever; the checkout on ktechpit.com lists them with their prices, so a price change never needs an Omnidict update, and the app never shows a price. The module reports the end date (<code>paidUntil</code>), and the sheet shows four more states: <b>Pro, 1 year</b> (the end date, a meter of the time used, and Add more time, a secondary button since nothing is due); <b>Ends soon</b> (the last 14 days: the clock glyph in <code>--warning</code> and the words "Pro ends in 5 days", never colour alone, and Choose a plan back as the primary button; new time starts when the current plan ends, so buying early loses nothing); <b>Plan ended</b> (Free again, saying when it ended and that nothing was lost). A Forever plan never shows a date.</li>
+  <li><b>When a plan ends</b> Omnidict switches the same things off as at the trial's end, the same way (<a href="pro-prompts.html?scene=ended">pro-prompts.html</a>): the first 2 dictionaries stay on, the others stay installed and switched off, quick lookup shows its Pro prompt. A plan that ends while Omnidict is offline ends on its date: the module keeps the last answer with its end date and does not need the server for that.</li>
 </ol></section>
 <script>
   function showState(state) {

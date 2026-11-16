@@ -64,7 +64,7 @@
       </div>
     </div>
   </div>
-  <div class="statebar" role="group" aria-label="Mock scene"><span style="padding:3px 6px">Scene</span><button class="on" data-set="dict">Third dictionary</button><button data-set="quick">Quick lookup</button><button data-set="trial">Trial ended</button></div>
+  <div class="statebar" role="group" aria-label="Mock scene"><span style="padding:3px 6px">Scene</span><button class="on" data-set="dict">Third dictionary</button><button data-set="quick">Quick lookup</button><button data-set="trial">Trial ended</button><button data-set="soon">Plan ends soon</button><button data-set="ended">Plan ended</button></div>
 
   <div class="overlay" data-scene="dict">
     <div class="sheet" style="width:440px">
@@ -108,6 +108,12 @@
       <div class="mi"><svg class="ic"><use href="#i-power"/></svg>Quit<span class="sc">Ctrl+Q</span></div>
     </div>
   </div>
+  <div data-scene="soon">
+    <div class="toast" style="max-width:640px"><svg class="ic s" style="color:var(--warning)"><use href="#i-clock"/></svg><span>Omnidict Pro ends in 7 days, on 21 November 2027. Choose a plan to add more time.</span><a href="pro.html?state=soon" style="white-space:nowrap">Omnidict Pro</a><span class="clear" title="Close"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+  </div>
+  <div data-scene="ended">
+    <div class="toast" style="max-width:640px"><svg class="ic s"><use href="#i-star"/></svg><span>Your Omnidict Pro plan ended on 21 November 2027. Free searches 2 dictionaries at a time: English and Spanish - English stay on, the others are switched off.</span><a href="pro.html?state=ended" style="white-space:nowrap">Choose a plan</a><span class="clear" title="Close"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+  </div>
   <span class="pin" style="left:calc(50% - 230px);top:42%">1</span>
   <span class="pin" style="right:540px;top:120px">2</span>
   <span class="pin" style="left:10px;bottom:60px">3</span>
@@ -118,6 +124,7 @@
   <li><b>Quick lookup on Free.</b> The key still opens the popup with the selected word, but instead of the entry it says quick lookup is Pro, with a free way out: <b>Look it up in Omnidict</b> (Enter) opens the main window on that word, with every result Free allows. The tray menu's Quick lookup item opens the same popup. The Settings row keeps its key and adds a Pro mark.</li>
   <li><b>The trial's end.</b> On the first start after the 14 days, one line in the main window says so and closes with its button, never again. If more than 2 dictionaries were on, Omnidict keeps the first 2 in the user's order switched on and says which; the others stay installed and switched off, so buying Pro later switches nothing back on by surprise: the user does it in Dictionaries. During the trial nothing asks.</li>
   <li><b>Omnidict Pro in the main menu</b>, under More apps from Ktechpit, star glyph, opens the Pro sheet (<a href="pro.html">pro.html</a>). Windows only, like everything here; Linux builds keep the menu of <a href="menu.html">menu.html</a>.</li>
+  <li><b>A plan for a time (owner, 2026-11-16).</b> <b>Plan ends soon</b>: 7 days before a plan for a time ends, once, one line in the main window with the clock glyph and the date, linking to the Pro sheet. Never for Forever, never in the trial (its end says enough). <b>Plan ended</b>: on the first start after the end date, the same line as the trial's end, naming the date, with Choose a plan; it switches dictionaries off exactly as note 3 says. Each line shows once and closes with its button.</li>
 </ol></section>
 <script>
   function showScene(scene) {
