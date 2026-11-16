@@ -37,6 +37,8 @@ Newest first. One entry per working session.
   for About's diagnostics, the bug report and Settings), a minus sign for not included, the
   table's marks level with each row's name, the app's check glyph for included (as PixelFx), a
   visible meter track, and the layers glyph in the Pass box.
+- Owner tested the CI 43890070183 MSIX (commit 5dd8120) on Windows: works as expected. Its
+  unsigned `Omnidict-1.1.0-x64.msix` is the one for Partner Center.
 
 ## 2026-11-14 - Windows test package approved; paid on the Store
 
