@@ -117,5 +117,7 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword fir
 - Category (Properties page): Books & reference (owner, 2026-11-14)
 - Pricing (owner, 2026-11-16, ADR-024): Free in Partner Center, no Store trial. Omnidict Pro
   is sold on ktechpit.com through the app (14-day trial, then Free with one dictionary at a
-  time). On the Properties page, tick "This product allows users to make purchases, but does not
+  time). Plans on the server (OMNIDICT, set 2026-11-16): One Month Pass $3.99 (30 days), One
+  Year Pass $9.99 (365 days, recommended), Forever Pass $19.99; also in Ktechpit Pass. Partner
+  Center: price Free and the outside-commerce declaration set 2026-11-16. On the Properties page, tick "This product allows users to make purchases, but does not
   use the Microsoft Store commerce system".
