@@ -113,16 +113,27 @@ dictionary app for windows
 
 ## Screenshots (PNG, at least 1366x768, up to 10)
 
-The Linux store screenshots (`screenshots/store/`, 1200x760) are below the Store's minimum
-size and show a Linux title bar: new ones are needed, taken from the installed test package on
-Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword first:
+Six 3840x2160 shots, uploaded 2026-11-16 as for PixelFx: headless grabs of the current build
+(1120x720 at 2x, scratch profiles with the published dictionaries) framed with a Windows 11
+title bar on a dark backdrop with a caption. The images, `capture.sh` and `compose.py` are in
+`DOCS/private/microsoft-store-images/` (not in git), with the 300x300 tile and 2160x2160 box
+art also uploaded. Captions in Partner Center:
 
-1. lookup: Offline dictionary with instant results as you type, from every dictionary you installed
-2. catalogue: 600+ dictionaries in over 300 languages, downloaded once and used offline
-3. quick lookup: Select a word in any app and press Ctrl+Alt+D to see its meaning
-4. thesaurus: Synonyms, antonyms and related words from the English thesaurus
-5. suggestions: "Did you mean" spelling suggestions for misspelled words
-6. dark: Light and dark themes that follow Windows
+1. 1-lookup: Offline dictionary with instant results as you type, from every dictionary you installed
+2. 2-catalogue: 600+ dictionaries in over 300 languages, downloaded once and used offline
+3. 3-thesaurus: Thesaurus: synonyms, antonyms and related words for every sense of a word
+4. 4-translate: Translate words with bilingual dictionaries: English to Spanish, Hindi, German and more
+5. 5-suggestions: Spelling suggestions: Did you mean, for words you are not sure how to spell
+6. 6-dark: Japanese, Chinese and Korean dictionaries, in light and dark themes that follow Windows
+
+## Trailer
+
+About 25 seconds, 1920x1080, 30 fps, silent, as PixelFx's: look up, thesaurus, translate,
+spelling suggestions, the catalogue, Japanese, Chinese and Korean, then an end card. The window
+is centred with captions at the top, since the Store page fades the trailer's sides and lower
+part. It needs the 16:9 Super hero art (the icon on the trailer's background, no title) to play
+at the top of the page. `DOCS/private/store-trailer/` holds the video, thumbnail, hero art and
+`source/render.py` with its grabs.
 
 ## Other fields
 

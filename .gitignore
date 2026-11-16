@@ -80,3 +80,6 @@ snapcraft-credentials*
 .flatpak-builder/
 /repo/
 snap/.snapcraft/
+
+# Store assets and their tools, kept out of git (as PixelFx)
+/DOCS/private/
