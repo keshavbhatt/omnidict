@@ -51,7 +51,7 @@ FAST, SMART WORD SEARCH
 • Finds the base word from its other forms: "ran" finds "run", "mice" finds "mouse"
 • Accents are optional: type "cafe" to find "café"
 • "Did you mean" spelling suggestions when you are not sure how a word is spelled
-• Wildcard search for crosswords, Scrabble-style word games and puzzles: ? for one letter, * for any number of letters
+• Wildcard search for crosswords, word games and puzzles: ? for one letter, * for any number of letters
 • Reverse dictionary: full text search finds a word from words in its definition
 • Click any word in a definition to look it up, with Back and Forward as in a browser
 
