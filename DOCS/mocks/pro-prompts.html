@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Omnidict Pro prompts (Windows)</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script><style>
+  [hidden] { display: none !important; }
+  .statebar { position: absolute; left: 50%; transform: translateX(-50%); top: 8px; z-index: 45; display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: #FFE58A; color: #3A2E00; font-size: 12px; }
+  .statebar button { border: 0; background: transparent; padding: 3px 10px; border-radius: 6px; font: inherit; color: inherit; cursor: pointer; }
+  .statebar button.on { background: #3A2E00; color: #FFE58A; }
+  body.clean .statebar { display: none; }
+  /* The quick lookup popup. */
+  .quick { position: absolute; left: 470px; top: 110px; width: 470px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.45); display: flex; flex-direction: column; overflow: hidden; }
+  .quick .qhead { padding: 12px 12px 8px; display: flex; gap: 8px; align-items: center; }
+  .quick .qhead .search { flex: 1; }
+  .quick .qbody { padding: 4px 18px 12px; max-height: 300px; overflow: auto; }
+  .quick .qgroup { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 4px; }
+  .quick .qhw { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .quick .qipa { color: var(--muted); font-size: 13px; margin: 2px 0 8px; }
+  .quick .qsense { margin: 6px 0; }
+  .quick .qsense .qpos { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .quick .qalso { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .quick .qalso a { color: var(--link); }
+  .quick .qfoot { border-top: 1px solid var(--border); background: var(--panel); padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  /* The Settings row, beside it. */
+  .setsheet { position: absolute; left: 40px; top: 600px; width: 760px; }
+</style></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">perro - Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>Omnidict</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
+  <div class="header">
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" value="perro"><span class="clear" title="Clear (Escape)"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+    <span class="chip" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+    <button class="btn flat icon" style="background:var(--hover)" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="results">
+      <div class="section">Spanish - English <span class="count">(Wiktionary)</span></div>
+      <div class="item selected"><div class="txt"><div class="hw">perro</div><div class="pv">dog (the species Canis familiaris)</div></div><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="item"><div class="txt"><div class="hw">perra</div><div class="pv">bitch (female dog); (colloquial) tantrum</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perro caliente</div><div class="pv">hot dog</div></div></div>
+      <div class="section">English <span class="count">(Wiktionary)</span></div>
+      <div class="item"><div class="txt"><div class="hw">Perro</div><div class="pv">A surname from Spanish.</div></div></div>
+      <div class="section">Also found in definitions <span class="more">Show 12</span></div>
+      <div class="item"><div class="txt"><div class="hw">can</div><div class="pv">Spanish - English: (archaic, poetic) dog, perro</div></div></div>
+    </div>
+    <div class="entry-wrap">
+      <div class="entry-bar">
+        <button class="btn flat icon" title="Back (Alt+Left)"><svg class="ic"><use href="#i-back"/></svg></button>
+        <button class="btn flat icon disabled" title="Forward (Alt+Right)"><svg class="ic"><use href="#i-forward"/></svg></button>
+        <span class="crumb">Spanish - English (Wiktionary)</span>
+        <span class="grow"></span>
+        <button class="btn flat icon" title="Copy entry (Ctrl+Shift+C)"><svg class="ic"><use href="#i-copy"/></svg></button>
+        <button class="btn flat icon on" title="Remove from favourites (Ctrl+D)"><svg class="ic"><use href="#i-star-on"/></svg></button>
+      </div>
+      <div class="entry">
+        <div class="hw">perro <span class="freq">&#x25C6;&#x25C6;&#x25C6;&#x25C6;&#x25C7;</span></div>
+        <div class="ipa"><b>IPA</b>/ˈpero/ &middot; [ˈpe.ro]</div>
+        <div class="forms">Plural <i>perros</i> &middot; feminine <i>perra</i></div>
+        <div class="sense"><div class="head"><span class="n">1</span><span class="pos">noun</span><span class="pattern">[masculine]</span></div>
+          <div class="def"><a href="#">dog</a> (the species <a href="#">Canis familiaris</a>, domesticated for thousands of years)</div>
+          <ul class="ex"><li><b>perro</b> callejero<span class="tr">stray dog</span></li></ul>
+        </div>
+        <div class="attrib">From Wiktionary, CC BY-SA 4.0. Spanish - English, version 2026.09.27.</div>
+      </div>
+    </div>
+  </div>
+  <div class="statebar" role="group" aria-label="Mock scene"><span style="padding:3px 6px">Scene</span><button class="on" data-set="dict">Third dictionary</button><button data-set="quick">Quick lookup</button><button data-set="trial">Trial ended</button></div>
+
+  <div class="overlay" data-scene="dict">
+    <div class="sheet" style="width:440px">
+      <div class="sheet-head"><h2>Search more than 2 dictionaries with Pro</h2></div>
+      <div class="sheet-body">
+        <p>Omnidict Free searches 2 dictionaries at a time: English and Spanish - English are on. Switch one of them off to use German - English instead, or get Pro to search all of them.</p>
+        <p class="small muted">German - English stays installed either way.</p>
+      </div>
+      <div class="sheet-foot">
+        <a class="small" href="pro.html">What Pro adds</a><span class="grow"></span>
+        <button class="btn">Not now</button>
+        <button class="btn primary"><svg class="ic s"><use href="#i-external"/></svg>Choose a plan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick" data-scene="quick" style="left:auto;right:60px;top:120px">
+    <div class="qhead"><div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" value="serendipity"></div></div>
+    <div class="qbody" style="padding:8px 18px 16px">
+      <div class="row" style="gap:10px;align-items:flex-start"><svg class="ic" style="color:var(--muted);margin-top:2px"><use href="#i-star"/></svg>
+        <div class="grow"><div style="font-weight:600">Quick lookup is part of Omnidict Pro</div>
+        <div class="small muted" style="margin-top:4px">Look serendipity up in Omnidict instead, or get Pro to see meanings right here from any app.</div></div></div>
+    </div>
+    <div class="qfoot"><a href="pro.html">What Pro adds</a><span class="grow"></span><button class="btn small">Look it up in Omnidict</button><button class="btn small primary">Choose a plan</button></div>
+  </div>
+
+  <div data-scene="trial">
+    <div class="toast" style="max-width:640px"><svg class="ic s"><use href="#i-star"/></svg><span>Your Omnidict Pro trial has ended. Free searches 2 dictionaries at a time: English and Spanish - English stay on, the others are switched off.</span><a href="pro.html" style="white-space:nowrap">What Pro adds</a><span class="clear" title="Close"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+    <div class="popup" style="right:8px;top:64px">
+      <div class="mi"><svg class="ic"><use href="#i-books"/></svg>Dictionaries...<span class="sc">Ctrl+Shift+D</span></div>
+      <div class="mi"><svg class="ic"><use href="#i-settings"/></svg>Settings...<span class="sc">Ctrl+,</span></div>
+      <div class="sep"></div>
+      <div class="mi"><svg class="ic"><use href="#i-keyboard"/></svg>Keyboard shortcuts<span class="sc">F1</span></div>
+      <div class="mi"><svg class="ic"><use href="#i-sparkles"/></svg>What's new</div>
+      <div class="mi"><svg class="ic"><use href="#i-bug"/></svg>Report a bug...</div>
+      <div class="mi"><svg class="ic"><use href="#i-heart"/></svg>Donate</div>
+      <div class="mi"><svg class="ic"><use href="#i-info"/></svg>About Omnidict</div>
+      <div class="mi"><svg class="ic"><use href="#i-grid"/></svg>More apps from Ktechpit</div>
+      <div class="mi hot"><svg class="ic"><use href="#i-star"/></svg>Omnidict Pro</div>
+      <div class="sep"></div>
+      <div class="mi"><svg class="ic"><use href="#i-power"/></svg>Quit<span class="sc">Ctrl+Q</span></div>
+    </div>
+  </div>
+  <span class="pin" style="left:calc(50% - 230px);top:42%">1</span>
+  <span class="pin" style="right:540px;top:120px">2</span>
+  <span class="pin" style="left:10px;bottom:60px">3</span>
+  <span class="pin" style="right:262px;top:330px">4</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+  <li><b>A third dictionary on Free (Windows, owner 2026-11-16).</b> Switching a dictionary on in Dictionaries while 2 are already on, after the trial, opens this prompt instead. Not now leaves the new one off; the free way out is the sentence itself: switch one of the others off. A dictionary downloaded on Free while 2 are on arrives switched off, with the same prompt when its switch is turned on. Nothing is uninstalled.</li>
+  <li><b>Quick lookup on Free.</b> The key still opens the popup with the selected word, but instead of the entry it says quick lookup is Pro, with a free way out: <b>Look it up in Omnidict</b> (Enter) opens the main window on that word, with every result Free allows. The tray menu's Quick lookup item opens the same popup. The Settings row keeps its key and adds a Pro mark.</li>
+  <li><b>The trial's end.</b> On the first start after the 14 days, one line in the main window says so and closes with its button, never again. If more than 2 dictionaries were on, Omnidict keeps the first 2 in the user's order switched on and says which; the others stay installed and switched off, so buying Pro later switches nothing back on by surprise: the user does it in Dictionaries. During the trial nothing asks.</li>
+  <li><b>Omnidict Pro in the main menu</b>, under More apps from Ktechpit, star glyph, opens the Pro sheet (<a href="pro.html">pro.html</a>). Windows only, like everything here; Linux builds keep the menu of <a href="menu.html">menu.html</a>.</li>
+</ol></section>
+<script>
+  function showScene(scene) {
+    document.querySelectorAll('.statebar button').forEach((x) => x.classList.toggle('on', x.dataset.set === scene));
+    document.querySelectorAll('[data-scene]').forEach((el) => { el.hidden = el.dataset.scene !== scene; });
+  }
+  document.querySelectorAll('.statebar button').forEach((b) => b.addEventListener('click', () => showScene(b.dataset.set)));
+  showScene(new URLSearchParams(location.search).get('scene') || 'dict');
+</script>
+</body></html>

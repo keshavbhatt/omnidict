@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Omnidict mock: Omnidict Pro (Windows)</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script><style>
+  /* Mock only: the states, switched from the yellow control at the top. */
+  [hidden] { display: none !important; }
+  .statebar { position: absolute; left: 50%; transform: translateX(-50%); top: 8px; z-index: 45; display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: #FFE58A; color: #3A2E00; font-size: 12px; }
+  .statebar button { border: 0; background: transparent; padding: 3px 10px; border-radius: 6px; font: inherit; color: inherit; cursor: pointer; }
+  .statebar button.on { background: #3A2E00; color: #FFE58A; }
+  body.clean .statebar { display: none; }
+  .status { display: flex; gap: 12px; padding: 12px 14px; border-radius: 10px; background: var(--hover); }
+  .status b { font-size: 13px; }
+  .meter { height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--text); }
+  table.plans { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+  table.plans th { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 0 8px 6px; }
+  table.plans th:not(:first-child), table.plans td:not(:first-child) { text-align: center; width: 64px; }
+  table.plans td { padding: 8px; border-top: 1px solid var(--border); vertical-align: top; }
+  table.plans td .sub { display: block; font-size: 12px; color: var(--muted); }
+  table.plans td.yes { color: var(--success); font-weight: 600; }
+  table.plans td.no { color: var(--muted); }
+  .promark { display: inline-flex; align-items: center; height: 16px; padding: 0 5px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--muted); }
+</style></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">perro - Omnidict</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>Omnidict</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
+  <div class="header">
+    <div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input focus" value="perro"><span class="clear" title="Clear (Escape)"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+    <span class="chip" title="Search in (Ctrl+L)"><svg class="ic s"><use href="#i-books"/></svg>All dictionaries<svg class="ic s"><use href="#i-down"/></svg></span>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Dictionaries (Ctrl+Shift+D)"><svg class="ic"><use href="#i-books"/></svg></button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="results">
+      <div class="section">Spanish - English <span class="count">(Wiktionary)</span></div>
+      <div class="item selected"><div class="txt"><div class="hw">perro</div><div class="pv">dog (the species Canis familiaris)</div></div><svg class="ic s star"><use href="#i-star-on"/></svg></div>
+      <div class="item"><div class="txt"><div class="hw">perra</div><div class="pv">bitch (female dog); (colloquial) tantrum</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perro caliente</div><div class="pv">hot dog</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perro de agua</div><div class="pv">water dog</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perro guardián</div><div class="pv">watchdog</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perrona <span class="via">from perrón</span></div><div class="pv">(Mexico, colloquial) awesome</div></div></div>
+      <div class="section">English <span class="count">(Wiktionary)</span></div>
+      <div class="item"><div class="txt"><div class="hw">Perro</div><div class="pv">A surname from Spanish.</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">perron</div><div class="pv">An outdoor stairway leading to an entrance.</div></div></div>
+      <div class="section">Also found in definitions <span class="more">Show 12</span></div>
+      <div class="item"><div class="txt"><div class="hw">can</div><div class="pv">Spanish - English: (archaic, poetic) dog, perro</div></div></div>
+      <div class="item"><div class="txt"><div class="hw">chucho</div><div class="pv">Spanish - English: mutt, perro callejero</div></div></div>
+    </div>
+    <div class="entry-wrap">
+      <div class="entry-bar">
+        <button class="btn flat icon" title="Back (Alt+Left)"><svg class="ic"><use href="#i-back"/></svg></button>
+        <button class="btn flat icon disabled" title="Forward (Alt+Right)"><svg class="ic"><use href="#i-forward"/></svg></button>
+        <span class="crumb">Spanish - English (Wiktionary)</span>
+        <span class="grow"></span>
+        <button class="btn flat icon" title="Copy entry (Ctrl+Shift+C)"><svg class="ic"><use href="#i-copy"/></svg></button>
+        <button class="btn flat icon on" title="Remove from favourites (Ctrl+D)"><svg class="ic"><use href="#i-star-on"/></svg></button>
+      </div>
+      <div class="entry">
+        <div class="hw">perro <span class="freq">&#x25C6;&#x25C6;&#x25C6;&#x25C6;&#x25C7;</span></div>
+        <div class="ipa"><b>IPA</b>/ˈpero/ &middot; [ˈpe.ro]</div>
+        <div class="forms">Plural <i>perros</i> &middot; feminine <i>perra</i></div>
+        <div class="sense"><div class="head"><span class="n">1</span><span class="pos">noun</span><span class="pattern">[masculine]</span></div>
+          <div class="def"><a href="#">dog</a> (the species <a href="#">Canis familiaris</a>, domesticated for thousands of years)</div>
+          <ul class="ex"><li><b>perro</b> callejero<span class="tr">stray dog</span></li><li>Mi <b>perro</b> duerme en el jardín.<span class="tr">My dog sleeps in the garden.</span></li></ul>
+        </div>
+        <div class="sense"><div class="head"><span class="n">2</span><span class="pos">noun</span><span class="pattern">[masculine]</span></div>
+          <div class="def"><a href="#">clothes peg</a>, <a href="#">clothespin</a></div></div>
+        <div class="sense"><div class="head"><span class="n">3</span><span class="pos">noun</span><span class="pattern">[masculine]</span></div>
+          <div class="def"><span class="label">derogatory</span><a href="#">scoundrel</a> (despicable person)</div></div>
+        <div class="sense"><div class="head"><span class="n">4</span><span class="pos">adjective</span></div>
+          <div class="def"><span class="label">colloquial</span><a href="#">lazy</a></div></div>
+        <div class="rel"><b>Synonyms</b><a href="#">can</a>, <a href="#">chucho</a></div>
+        <div class="rel"><b>Derived terms</b><a href="#">perro caliente</a>, <a href="#">perro guardián</a>, <a href="#">perrera</a>, <a href="#">perruno</a></div>
+        <div class="attrib">From Wiktionary, CC BY-SA 4.0. Spanish - English, version 2026.09.27.</div>
+      </div>
+    </div>
+  </div>
+<div class="statebar" role="group" aria-label="Mock state"><span style="padding:3px 6px">State</span><button class="on" data-set="trial">Trial</button><button data-set="free">Free</button><button data-set="pro">Pro</button></div>
+  <div class="overlay">
+    <div class="sheet" id="prosheet" style="width:560px">
+      <div class="sheet-head"><h2>Omnidict Pro</h2><span class="grow"></span><button class="btn flat icon" title="Close (Esc)"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="sheet-body" style="gap:0">
+        <div class="status" data-state="trial"><svg class="ic" style="color:var(--text)"><use href="#i-star"/></svg><div class="grow"><b>Pro trial: 12 days left</b><div class="small muted">Everything in Pro is yours to use until 30 November. After that Omnidict stays free with 2 dictionaries at a time.</div><div class="meter" title="2 of 14 days used"><i style="width:14%"></i></div></div></div>
+        <div class="status" data-state="free"><svg class="ic" style="color:var(--muted)"><use href="#i-book"/></svg><div class="grow"><b>Free</b><div class="small muted">Look words up in 2 dictionaries at a time. Pro searches all of them and adds quick lookup from any app.</div></div></div>
+        <div class="status" data-state="pro"><svg class="ic" style="color:var(--success)"><use href="#i-check"/></svg><div class="grow"><b>Pro, Forever</b><div class="small muted">Thank you. Every Pro feature is yours, in every update.</div></div></div>
+
+        <table class="plans" data-state="trial free">
+          <thead><tr><th>What you get</th><th>Free</th><th>Pro</th></tr></thead>
+          <tbody>
+            <tr><td>Look words up in Omnidict<span class="sub">Results as you type, suggestions, wildcards, full text search, favourites and history</span></td><td class="yes" title="Included">&#10003;</td><td class="yes" title="Included">&#10003;</td></tr>
+            <tr><td>Download dictionaries<span class="sub">Any of the 600+, and their updates</span></td><td class="yes" title="Included">&#10003;</td><td class="yes" title="Included">&#10003;</td></tr>
+            <tr><td>Dictionaries searched at once<span class="sub">Free: switch on the 2 you use most</span></td><td class="no">2</td><td class="yes" title="Included">All</td></tr>
+            <tr><td>Quick lookup from any app<span class="sub">Select a word anywhere and press Ctrl+Alt+D</span></td><td class="no" title="Not included">&ndash;</td><td class="yes" title="Included">&#10003;</td></tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin:16px 0 6px;font-size:13px">Account ID</h3>
+        <div class="row" style="gap:8px"><span class="mono grow" style="padding:6px 10px;border-radius:7px;background:var(--input);border:1px solid var(--border)">WINK7Q2M9XD4PLR8TNW3</span><button class="btn small" title="Copy the Account ID"><svg class="ic s"><use href="#i-copy"/></svg>Copy</button></div>
+        <p class="small muted" style="margin:6px 0 0">The checkout asks for it, and it is how a purchase finds this copy of Omnidict. <span data-state="pro">Checked with Ktechpit 2 minutes ago.</span><span data-state="trial free">Bought already? <a href="#">Check again</a>.</span></p>
+      </div>
+      <div class="sheet-foot">
+        <a class="small" href="#" title="Your purchases on ktechpit.com">Manage purchases</a><span class="grow"></span>
+        <button class="btn">Close</button>
+        <button class="btn primary" data-state="trial free"><svg class="ic s"><use href="#i-external"/></svg>Choose a plan</button>
+      </div>
+    </div>
+  </div>
+  <span class="pin" style="left:calc(50% - 300px);top:120px">1</span>
+  <span class="pin" style="left:calc(50% - 300px);top:250px">2</span>
+  <span class="pin" style="left:calc(50% - 300px);top:470px">3</span>
+  <span class="pin" style="left:calc(50% + 290px);top:600px">4</span>
+</div>
+<section class="notes"><h2>Notes</h2><ol>
+  <li><b>Windows only (owner, 2026-11-16).</b> The Microsoft Store build is a free download; Omnidict Pro is sold on ktechpit.com through Ktechpit's licensing module, as PixelFx does, so the Store needs no payment profile (Store policy 10.8.7 lets apps that are not games take their own payments). The snap, Flatpak, AppImage and AUR builds stay free with everything and never show any of this. <b>Omnidict Pro</b> opens from the main menu (above Quit, star glyph), from every Pro prompt's "What Pro adds" (<a href="pro-prompts.html">pro-prompts.html</a>) and from the trial's end note. The yellow switch shows its three states.</li>
+  <li><b>The states.</b> A 14-day trial for every new install, with everything in Pro; then Free; Pro after a purchase. The status box names the state in words and, during the trial, the days left with a meter.</li>
+  <li><b>What is Free.</b> Everything in the main window, every dictionary to download, but 2 dictionaries searched at a time (the user picks which with the switches in Dictionaries, as today); quick lookup (the key and the tray's Quick lookup item) is Pro. The table answers "what is free?" first. Nothing is ever deleted: dictionaries beyond 2 stay installed and switched off.</li>
+  <li><b>Buying.</b> Choose a plan opens the Ktechpit checkout in the browser with this Account ID (app code OMNIDICT, slug omnidict, set up by the owner on the server). Check again asks the server at once; Omnidict also checks on start and weekly, and keeps the last answer, so it works offline. Manage purchases opens the self-service portal. Nothing here is a Microsoft Store purchase.</li>
+</ol></section>
+<script>
+  function showState(state) {
+    document.querySelectorAll('.statebar button').forEach((x) => x.classList.toggle('on', x.dataset.set === state));
+    document.querySelectorAll('#prosheet [data-state]').forEach((el) => { el.hidden = !el.dataset.state.split(' ').includes(state); });
+  }
+  document.querySelectorAll('.statebar button').forEach((b) => b.addEventListener('click', () => showState(b.dataset.set)));
+  showState(new URLSearchParams(location.search).get('state') || 'trial');
+</script>
+</body></html>
