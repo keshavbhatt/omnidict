@@ -57,7 +57,7 @@ FOR LEARNERS, WRITERS AND TRANSLATORS
 • Light and dark themes that follow Windows, and adjustable text size
 • Keyboard shortcuts for everything
 • Works fully offline once a dictionary is downloaded: on a plane, at school or anywhere without internet
-• Private: no ads, no tracking, nothing about you is sent anywhere
+• Private: no ads, no tracking, no sign-in; your lookups never leave your computer
 
 Dictionary content comes from Wiktionary, WordNet, FreeDict, JMdict, CC-CEDICT and Kengdic; the About window credits each source.
 
@@ -113,7 +113,7 @@ Windows at 1366x768 or larger. Captions (up to 200 characters each), keyword fir
 - Developed by: Keshav Bhatt (Ktechpit)
 - Website: https://github.com/keshavbhatt/omnidict
 - Support contact: connect@ktechpit.com
-- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; Omnidict sends nothing about the user)
+- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx; lookups never leave the computer; the Windows build sends only a random Account ID for the weekly Pro check, ADR-024)
 - Category (Properties page): Books & reference (owner, 2026-11-14)
 - Pricing (owner, 2026-11-16, ADR-024): Free in Partner Center, no Store trial. Omnidict Pro
   is sold on ktechpit.com through the app (14-day trial, then Free with one dictionary at a
