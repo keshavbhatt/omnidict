@@ -46,6 +46,7 @@ Newest first. One entry per working session.
   3840x2160 screenshots with captions, the tile and box art, and a 25-second trailer with its
   thumbnail and 16:9 Super hero art, all as for PixelFx (owner). Every section is Complete;
   submitting stays the owner's. Store assets and their tools are in `DOCS/private/` (not in git).
+- The owner submitted Omnidict 1.1.0 to the Microsoft Store for certification (2026-11-16).
 
 ## 2026-11-14 - Windows test package approved; paid on the Store
 
