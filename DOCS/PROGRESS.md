@@ -39,6 +39,13 @@ Newest first. One entry per working session.
   visible meter track, and the layers glyph in the Pass box.
 - Owner tested the CI 43890070183 MSIX (commit 5dd8120) on Windows: works as expected. Its
   unsigned `Omnidict-1.1.0-x64.msix` is the one for Partner Center.
+- Partner Center draft filled in (owner uploaded the package): the English listing rewritten for
+  search (owner: "add SEO friendly description so we get more installs"), privacy policy URL
+  (the personal-information answer is Yes once the package declares internet use), the age
+  ratings questionnaire (IARC 12+: a full dictionary defines profanities and drugs), six
+  3840x2160 screenshots with captions, the tile and box art, and a 25-second trailer with its
+  thumbnail and 16:9 Super hero art, all as for PixelFx (owner). Every section is Complete;
+  submitting stays the owner's. Store assets and their tools are in `DOCS/private/` (not in git).
 
 ## 2026-11-14 - Windows test package approved; paid on the Store
 
