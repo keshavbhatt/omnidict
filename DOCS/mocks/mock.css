@@ -38,7 +38,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 h1 { font-size: 20px; } h2 { font-size: 16px; } h3 { font-size: 14px; }
 p { margin: 0; }
 .muted { color: var(--muted); } .small { font-size: 12px; } .grow { flex: 1; }
-.mono { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 12px; }
+.mono { font-family: ui-monospace, "Cascadia Mono", Consolas, "JetBrains Mono", Menlo, monospace; font-size: 12px; }
 .ic { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .ic.s { width: 15px; height: 15px; } .ic.l { width: 28px; height: 28px; }
 .row { display: flex; align-items: center; gap: 8px; } .row.wrap { flex-wrap: wrap; }
