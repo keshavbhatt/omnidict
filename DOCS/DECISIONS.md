@@ -379,7 +379,7 @@ AppImage has no ready Qt 6.11 runtime to build against.
 
 **Decision.**
 - **Snap** `omnidict` (owner registers the name), core24, kde-neon-6 extension, built by
-  `.github/workflows/snap.yml` for amd64 and arm64; store publishing is opt-in by repo variable
+  `.github/workflows/snap.yml` for amd64 and arm64 (arm64 dropped by ADR-025); store publishing is opt-in by repo variable
   (main to edge, tags to candidate), promotion to stable by hand. Superseded on 2026-10-24
   by ADR-021: tags go straight to stable.
 - **Flatpak** `com.ktechpit.omnidict` on `org.kde.Platform` 6.11, built from source by
@@ -619,3 +619,23 @@ LICENSING.md has reserved the module's paths since the start (ADR-007, "Model B"
 Microsoft Store commerce system. Release text keeps the rule on accounts and licensing; the
 Pro sheet and prompts are UI, not release text. Changing what Free includes is a change to
 `ui::free_limit` and the Pro sheet's table. A plan for a time ends on its date offline too.
+
+## ADR-025: The snap is amd64 only (2026-11-18)
+
+**Status.** Accepted (owner, 2026-11-18: option A).
+
+**Context.** The arm64 snap build (ADR-017) failed on 2026-11-18: `kde-qt6-core24-sdk` is no
+longer published for arm64, only amd64. KDE closed the report (KDE bug 528483, 2026-11-07) as
+intentional: arm64 builds failed more than its maintainer could support. The runtime
+`kf6-core24` still has arm64. The last arm64 build that passed was on 2026-10-27, so the arm64
+snap in the store is 1.1.0.
+
+**Decision.** `snap/snapcraft.yaml` lists amd64 only and `.github/workflows/snap.yml` builds
+only amd64. Rejected: building arm64 against a Qt 6.11 fetched by us while running on KDE's
+runtime (a new dependency, hard to keep in step with the runtime, which KDE may drop next), and
+leaving the job red until KDE changes its mind.
+
+**Consequences.** arm64 snap users stay on 1.1.0, which keeps working while `kf6-core24` has
+arm64. Flathub builds its own arm64 and is where they get updates. If KDE publishes the SDK
+for arm64 again, adding the platform and the matrix row back is enough.
+

@@ -27,8 +27,8 @@ binary, `app/dist/linux/com.ktechpit.omnidict.desktop`,
 - Plugs: the desktop set (desktop, wayland, x11, opengl, unity7) and `network`, for the
   dictionary catalogue and downloads only. The extension adds `audio-playback` and
   `network-bind` itself.
-- **CI**: `.github/workflows/snap.yml` builds amd64 and arm64 on pushes to `main` and on
-  version tags. With the repo variable `PUBLISH_TO_STORE=true` and the
+- **CI**: `.github/workflows/snap.yml` builds amd64 (arm64 dropped, ADR-025) on pushes to
+  `main` and on version tags. With the repo variable `PUBLISH_TO_STORE=true` and the
   `SNAPCRAFT_STORE_CREDENTIALS` secret, `main` goes to **edge** and tags to **stable**. A tag
   that does not match `project(VERSION)` stops the build; every build is kept as a workflow
   artifact for 14 days; a newer push to the same branch cancels the older build (tags never).

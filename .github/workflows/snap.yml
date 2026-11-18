@@ -1,5 +1,5 @@
-# Builds the snap on GitHub's CI for amd64 and arm64 (never on a developer machine) and
-# publishes it (DOCS/DECISIONS.md ADR-021):
+# Builds the snap on GitHub's CI for amd64 (never on a developer machine) and publishes it
+# (DOCS/DECISIONS.md ADR-021). No arm64: KDE's SDK snap is amd64 only (ADR-025).
 #   push to main        -> edge      (version 1.0.1+git<hash>)
 #   version tag v1.2.3  -> stable    (version 1.2.3; the tag must match project(VERSION))
 # Edge is where a build is checked before it is tagged.
@@ -33,8 +33,6 @@ jobs:
         include:
           - arch: amd64
             runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5

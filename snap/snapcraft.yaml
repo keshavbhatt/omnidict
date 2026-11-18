@@ -44,9 +44,9 @@ issues: https://github.com/keshavbhatt/omnidict/issues
 source-code: https://github.com/keshavbhatt/omnidict
 license: GPL-3.0-or-later
 
+# amd64 only: KDE stopped publishing kde-qt6-core24-sdk for arm64 (ADR-025).
 platforms:
   amd64:
-  arm64:
 
 apps:
   omnidict:

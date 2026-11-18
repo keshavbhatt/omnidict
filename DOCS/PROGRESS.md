@@ -34,6 +34,9 @@ Newest first. One entry per working session.
   https://ktechpit.com/privacy/. Corrected in a Partner Center update draft (submission
   1152921505702439156, saved and checked after a reload, not submitted). The 1.2.0 MSIX goes into
   the same draft once `main` is pushed and CI builds it; submitting stays the owner's.
+- Snap arm64 dropped (ADR-025, owner chose option A): the push of `main` made the arm64 snap
+  build fail because KDE no longer publishes `kde-qt6-core24-sdk` for arm64 (KDE bug 528483,
+  closed as intentional). amd64 built and went to edge. arm64 snap users stay on 1.1.0.
 
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 
