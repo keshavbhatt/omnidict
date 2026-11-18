@@ -14,6 +14,18 @@ Newest first. One entry per working session.
 | M5 Packaging | done: desktop file, metainfo, snap (built in CI), Flatpak manifest, snap and release workflows, store screenshots (ADR-017); AppImage workflow (ADR-018, owner 2026-09-30), not yet run |
 | M6 Web app | todo |
 
+## 2026-11-18 - Omnidict live on the Microsoft Store
+
+- Owner: certification passed and Omnidict is public on the Microsoft Store
+  (https://apps.microsoft.com/detail/9P5NP69TJVS6). Checked the live page: listing, screenshots,
+  ESRB E10+ and In-App Purchases shown, and the trailer plays at the top with the window clear
+  of the faded sides.
+- README: "Get it from Microsoft" badge next to Flathub and the Snap Store, and the intro now
+  says Linux and Windows.
+- Next: merge `windows-store` into `main` (owner pushes), the release checklist for the next
+  version, and the owner extends https://ktechpit.com/privacy/ to cover the Account ID and the
+  weekly checks.
+
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 
 - Owner: no Microsoft payout profile, so the Store listing is free and Omnidict Pro is sold on

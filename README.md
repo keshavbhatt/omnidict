@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://flathub.org/apps/com.ktechpit.omnidict"><img height="56" alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en"></a>
   <a href="https://snapcraft.io/omnidict"><img height="56" alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg"></a>
+  <a href="https://apps.microsoft.com/detail/9P5NP69TJVS6?mode=direct"><img height="56" alt="Get it from Microsoft" src="https://get.microsoft.com/images/en-us%20dark.svg"></a>
 </p>
 
 <p align="center">
@@ -13,7 +14,7 @@
 
 # Omnidict
 
-Omnidict is a fast offline dictionary for the Linux desktop. Choose from more than six hundred
+Omnidict is a fast offline dictionary for Linux and Windows. Choose from more than six hundred
 free dictionaries in hundreds of languages, download the ones you need once, and look words up
 instantly, without an internet connection.
 
