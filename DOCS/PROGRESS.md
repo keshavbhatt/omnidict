@@ -31,7 +31,9 @@ Newest first. One entry per working session.
   22.1.8, and no C++ changed.
 - Privacy URL: the owner says the apps' policy is https://ktechpit.com/USS/public/privacy.php,
   which already covers the Account ID and licence checks; the first submission used
-  https://ktechpit.com/privacy/. The next Partner Center submission corrects it.
+  https://ktechpit.com/privacy/. Corrected in a Partner Center update draft (submission
+  1152921505702439156, saved and checked after a reload, not submitted). The 1.2.0 MSIX goes into
+  the same draft once `main` is pushed and CI builds it; submitting stays the owner's.
 
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 
