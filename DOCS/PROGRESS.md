@@ -41,6 +41,10 @@ Newest first. One entry per working session.
   Center) and the signed test copy, identity `12809keshavnrj.Omnidict` 1.2.0.0, in
   `~/Downloads/omnidict-windows-msix-1.2.0`. The owner tests it on Windows and uploads it to the
   update draft.
+- Release 1.2.0 out (owner tagged `v1.2.0` on 8b37f52): GitHub release with the AppImage; snap
+  1.2.0 on stable for amd64 (revision 26) after six re-runs, as GitHub's runners could not reach
+  the Snap Store for about two hours. arm64 stays on 1.1.0 (ADR-025). Flathub update committed on
+  the owner's clone, branch `update-1.2.0`, for the owner to push and open as a PR.
 
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 
