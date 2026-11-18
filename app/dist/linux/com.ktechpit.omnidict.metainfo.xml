@@ -135,6 +135,15 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.2.0" date="2026-11-18" type="stable">
+      <description>
+        <p>Omnidict comes to Windows.</p>
+        <ul>
+          <li>Omnidict for Windows 10 and 11, from the Microsoft Store</li>
+          <li>More apps from Ktechpit: About shows two of them in place of the More apps button, and the main menu lists them all, each with a way to get it</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-10-24" type="stable">
       <description>
         <p>Quick lookup keeps working with the window closed.</p>

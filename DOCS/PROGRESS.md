@@ -22,9 +22,16 @@ Newest first. One entry per working session.
   of the faded sides.
 - README: "Get it from Microsoft" badge next to Flathub and the Snap Store, and the intro now
   says Linux and Windows.
-- Next: merge `windows-store` into `main` (owner pushes), the release checklist for the next
-  version, and the owner extends https://ktechpit.com/privacy/ to cover the Account ID and the
-  weekly checks.
+- `windows-store` merged into `main` (fast-forward, owner: "merge it"; the owner pushes).
+- Release 1.2.0 prepared: changelog dated, metainfo release (appstreamcli validate passes),
+  `project(VERSION)` 1.2.0. The new things Linux users see are the More apps from Ktechpit cards
+  and list (ADR-023); the release text names Windows and leaves Omnidict Pro out, as the standing
+  rule says. The feature lists in the metainfo and snap descriptions are unchanged. `make test`
+  passes; `make lint` passes except the host clang-tidy (LLVM 23), the known mismatch with CI's
+  22.1.8, and no C++ changed.
+- Privacy URL: the owner says the apps' policy is https://ktechpit.com/USS/public/privacy.php,
+  which already covers the Account ID and licence checks; the first submission used
+  https://ktechpit.com/privacy/. The next Partner Center submission corrects it.
 
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 

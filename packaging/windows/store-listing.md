@@ -141,11 +141,12 @@ at the top of the page. `DOCS/private/store-trailer/` holds the video, thumbnail
 - Developed by: Keshav Bhatt (Ktechpit)
 - Website: https://github.com/keshavbhatt/omnidict
 - Support contact: connect@ktechpit.com
-- Privacy policy (Properties page): https://ktechpit.com/privacy/ (as PixelFx), entered 2026-11-16.
-  Partner Center switched the personal-information answer to Yes once the package (internetClient)
-  was uploaded; Yes is right for Windows: the weekly Pro check sends a random Account ID (ADR-024).
-  Lookups never leave the computer. The Ktechpit page is a website policy and does not yet
-  describe the app's Account ID or weekly checks (owner to extend it).
+- Privacy policy (Properties page): https://ktechpit.com/USS/public/privacy.php (owner,
+  2026-11-18), the Ktechpit apps' policy: it names the Account ID and says a licence check sends
+  only that. The first submission used https://ktechpit.com/privacy/, the website's page, and the
+  next submission corrects it. Partner Center switched the personal-information answer to Yes once
+  the package (internetClient) was uploaded; Yes is right for Windows: the weekly Pro check sends
+  a random Account ID (ADR-024). Lookups never leave the computer.
 - Category (Properties page): Books & reference (owner, 2026-11-14)
 - Pricing (owner, 2026-11-16, ADR-024): Free in Partner Center, no Store trial. Omnidict Pro
   is sold on ktechpit.com through the app (14-day trial, then Free with one dictionary at a

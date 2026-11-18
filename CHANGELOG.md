@@ -3,6 +3,14 @@
 All notable changes to Omnidict. The format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-11-18
+
+Omnidict comes to Windows.
+
+### Added
+- Omnidict for Windows 10 and 11, from the Microsoft Store. Quick lookup reads the word selected in the app you are in, and Settings can start Omnidict at login.
+- More apps from Ktechpit: About shows two of them in place of the More apps button, and the main menu lists them all, each with a way to get it.
+
 ## [1.1.0] - 2026-10-24
 
 Quick lookup keeps working with the window closed.
