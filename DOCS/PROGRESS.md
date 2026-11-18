@@ -37,6 +37,10 @@ Newest first. One entry per working session.
 - Snap arm64 dropped (ADR-025, owner chose option A): the push of `main` made the arm64 snap
   build fail because KDE no longer publishes `kde-qt6-core24-sdk` for arm64 (KDE bug 528483,
   closed as intentional). amd64 built and went to edge. arm64 snap users stay on 1.1.0.
+- CI 44317765235 on `main` (08b5b90) green: Omnidict-1.2.0-x64.msix (unsigned, for Partner
+  Center) and the signed test copy, identity `12809keshavnrj.Omnidict` 1.2.0.0, in
+  `~/Downloads/omnidict-windows-msix-1.2.0`. The owner tests it on Windows and uploads it to the
+  update draft.
 
 ## 2026-11-16 - Omnidict Pro on the Microsoft Store build
 
